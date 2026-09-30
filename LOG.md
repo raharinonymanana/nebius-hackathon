@@ -14,3 +14,10 @@
 - Built agent_v1.py: first agent loop (1 tool, Nemotron Super via Token Factory, MAX_STEPS=6, empty/truncated-reply guards).
 - Result: tool calling works in standard OpenAI format, no deviations. 2 steps, ~$0.0004, reasoning 22/41 tokens.
 - Observed: model advice for Log4Shell (2.15.0+) came from memory and is outdated; facts must come from tools.
+
+## Wed 30 Sep 2026 (night) - Day 2: Tavily + agent_v2
+- Tavily key stored in .env (gitignored), tavily-python installed, smoke test OK.
+- Built agent_v2.py: 2 tools (local CVE lookup + Tavily web_search), system message for routing, tool errors returned to model as data.
+- Run: 4 steps, 2 Tavily calls, ~$0.0018. Routing correct, one tool call per step (no parallel calls). Input grew 508 -> 1935 tokens.
+- Weakness: model ignored "cite URLs", emitted odd citation markers and over-stated a snippet. Fix next: code collects source URLs itself.
+- Builders Program: registered long ago, email verification/credit claim still to confirm.

@@ -8,3 +8,7 @@
 {"model": "nvidia/nemotron-3-super-120b-a12b", "secs": 0.92, "in": 31, "out": 79, "reasoning": 39, "cost_usd": 8.04e-05}
 {"ts": 1790784832.030939, "script": "agent_v1", "model": "nvidia/nemotron-3-super-120b-a12b", "step": 1, "in": 407, "out": 65, "reasoning": 22, "est_cost_usd": 0.000181}
 {"ts": 1790784833.1691427, "script": "agent_v1", "model": "nvidia/nemotron-3-super-120b-a12b", "step": 2, "in": 490, "out": 113, "reasoning": 41, "est_cost_usd": 0.000249}
+{"ts": 1790785973.98167, "script": "agent_v2", "model": "nvidia/nemotron-3-super-120b-a12b", "step": 1, "in": 508, "out": 77, "reasoning": 34, "est_cost_usd": 0.000222, "tavily_calls_so_far": 0}
+{"ts": 1790785974.8120668, "script": "agent_v2", "model": "nvidia/nemotron-3-super-120b-a12b", "step": 2, "in": 591, "out": 44, "reasoning": 8, "est_cost_usd": 0.000217, "tavily_calls_so_far": 0}
+{"ts": 1790785978.0603542, "script": "agent_v2", "model": "nvidia/nemotron-3-super-120b-a12b", "step": 3, "in": 1237, "out": 126, "reasoning": 77, "est_cost_usd": 0.000485, "tavily_calls_so_far": 1}
+{"ts": 1790785981.6924775, "script": "agent_v2", "model": "nvidia/nemotron-3-super-120b-a12b", "step": 4, "in": 1935, "out": 349, "reasoning": 162, "est_cost_usd": 0.000895, "tavily_calls_so_far": 2}
