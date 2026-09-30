@@ -1,0 +1,4 @@
+{"model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B", "secs": 0.92, "in": 31, "out": 65}
+{"model": "nvidia/Nemotron-3-Ultra-550b-a55b", "secs": 1.35, "in": 31, "out": 56}
+{"model": "nvidia/Nemotron-3_5-Lightning", "secs": 1.72, "in": 31, "out": 408}
+{"model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.06, "in": 31, "out": 79}
