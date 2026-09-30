@@ -5,3 +5,7 @@
 - Day 1 win: first Nemotron calls via Token Factory OK. Models served: Nano-30B-A3B, Super-120b-a12b, Ultra-550b-a55b, plus Nemotron-3_5-Lightning (new, not yet researched).
 - Single-call timings 0.9-1.7s (not a real benchmark). Lightning: 408 output tokens for a 1-sentence answer, probably hidden reasoning tokens (unverified).
 - Next: check current prices for the four models, add cost per call to the script.
+- Cost-per-call added to compare_models.py (prices from Nebius Nemotron models page; verify vs console Billing > Prices).
+- Confirmed: reasoning tokens are billed as output. Lightning: 444/480 output tokens were reasoning. Super 39/79, Ultra 48/84, Nano not reported.
+- Per call (same prompt): Nano $0.000022, Super $0.000080, Lightning $0.000117, Ultra $0.000283. Single-call timings vary run to run (noise).
+- Rule for agent loops: max_tokens includes hidden reasoning; use generous caps and detect empty/truncated replies.
