@@ -6,3 +6,5 @@
 {"model": "nvidia/Nemotron-3-Ultra-550b-a55b", "secs": 0.84, "in": 31, "out": 84, "reasoning": 48, "cost_usd": 0.000283}
 {"model": "nvidia/Nemotron-3_5-Lightning", "secs": 1.93, "in": 31, "out": 480, "reasoning": 444, "cost_usd": 0.00011706}
 {"model": "nvidia/nemotron-3-super-120b-a12b", "secs": 0.92, "in": 31, "out": 79, "reasoning": 39, "cost_usd": 8.04e-05}
+{"ts": 1790784832.030939, "script": "agent_v1", "model": "nvidia/nemotron-3-super-120b-a12b", "step": 1, "in": 407, "out": 65, "reasoning": 22, "est_cost_usd": 0.000181}
+{"ts": 1790784833.1691427, "script": "agent_v1", "model": "nvidia/nemotron-3-super-120b-a12b", "step": 2, "in": 490, "out": 113, "reasoning": 41, "est_cost_usd": 0.000249}
