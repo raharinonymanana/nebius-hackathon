@@ -27,3 +27,5 @@
 - Run: 3 steps, 1 Tavily call, ~$0.0016. Real URLs printed by our code. Step 3 used 657 reasoning tokens (reconciling sources).
 - Finding: answer quality dropped (said 2.16.0; v2 said 2.17.1+). Cause: single search returned Dec 2021 blog posts, model called them "latest". Receipts prove retrieval, not currency or authority.
 - Next fix: pin web_search to authoritative domains (include_domains) and show source dates in receipts.
+- Finished the simulated Contree Playground tutorial. Key takeaway: `contree session` lists every run as a checkpoint; `contree session rollback <uuid>` restores one. Exact real-CLI fork/rollback syntax to be confirmed once access arrives.
+- Decided fallback (A1): Day 5 first if beta access is late.

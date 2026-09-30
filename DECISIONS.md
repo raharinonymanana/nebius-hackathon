@@ -10,3 +10,6 @@
 ## 2026-09-30 (not final)
 - Provenance receipts are printed by our code after every answer (agent_v3 pattern), reused in the final build.
 - Authoritative-domain pinning + source dates to be added to web_search before it is used in the real project.
+
+## 2026-09-30 (not final)
+- Fallback plan: if Sandboxes beta access has not arrived by Thu 1 Oct Day 3 slot, swap in Day 5 (OpenShell + NemoClaw + Hermes on WSL) first; Day 3 resumes when access arrives.
