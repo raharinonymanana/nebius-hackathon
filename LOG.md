@@ -21,3 +21,9 @@
 - Run: 4 steps, 2 Tavily calls, ~$0.0018. Routing correct, one tool call per step (no parallel calls). Input grew 508 -> 1935 tokens.
 - Weakness: model ignored "cite URLs", emitted odd citation markers and over-stated a snippet. Fix next: code collects source URLs itself.
 - Builders Program: registered long ago, email verification/credit claim still to confirm.
+
+## Wed 30 Sep 2026 (night) - Day 2: agent_v3 + provenance
+- Built agent_v3.py: code-collected provenance (PROVENANCE receipts printed after the answer), system prompt caps web searches at 2 and forbids model-written citations.
+- Run: 3 steps, 1 Tavily call, ~$0.0016. Real URLs printed by our code. Step 3 used 657 reasoning tokens (reconciling sources).
+- Finding: answer quality dropped (said 2.16.0; v2 said 2.17.1+). Cause: single search returned Dec 2021 blog posts, model called them "latest". Receipts prove retrieval, not currency or authority.
+- Next fix: pin web_search to authoritative domains (include_domains) and show source dates in receipts.

@@ -9,3 +9,7 @@
 - Model does not parallelise tool calls (one per step in our run).
 - Model ignored an instruction to cite source URLs and instead emitted non-standard citation markers naming tool ids. Provenance has to be tracked in our own code.
 - reasoning_tokens is exposed in usage.completion_tokens_details, which made cost logging easy. Good.
+
+## 2026-09-30 - Nemotron 3 Super: reasoning spend and source judgment
+- Reasoning tokens vary widely by step (8 to 657) when the model reconciles search results; worth surfacing in docs as expected behaviour for cost planning.
+- Model treats old blog posts as "latest advisory" without checking dates; freshness must be enforced by our tools (domain pinning, dates), not by the prompt.
