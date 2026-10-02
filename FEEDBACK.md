@@ -51,3 +51,8 @@
 - Hermes memory tool call from nemotron-3-super failed with "Unknown action 'None'. Use: add, replace, remove" (missing action parameter): a concrete case of the empty model-compatibility registry listed on NVIDIA's Hermes platform page.
 - Hermes reported a memory file path that does not exist (profiles/default/memories/user.json); the real file is /sandbox/.hermes/memories/USER.md. The agent's self-reported storage location should not be trusted; docs could state the real path.
 - Raw prompts and sessions are stored in plain text in /sandbox/.hermes/.hermes_history and runtime/state.db; memory scope vs. history scope is not explained in the quickstart, which matters for "data under user control" claims.
+
+## Fri 2 Oct 2026 — Serverless AI / AI Cloud onboarding
+- For a builder arriving from Token Factory, nothing we saw there says that Serverless Endpoints/Jobs live in a separate product (Nebius AI Cloud) with its own console, project and billing. We found out only at the "Add billing details" form, which charges the card $25 on submit.
+- The Token Factory balance ($29.50 builder credit) does not visibly apply to AI Cloud. Not stated clearly where we looked. A short note in the hackathon resources would help solo builders who want to try the encouraged Serverless services.
+- Docs examples use region eu-north1; our default AI Cloud project is in eu-west2. Impact on preset availability unverified.

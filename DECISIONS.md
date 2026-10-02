@@ -53,3 +53,8 @@
 ## Thu 1 Oct 2026, 12:02 (not final)
 - Area A feasibility evidence now covers: install on WSL (needs Docker Desktop), Token Factory + Nemotron Super route, sandbox file and network enforcement (our own probes), human approval flow, memory across sessions. Not covered: skills, scheduled/always-on behavior, messaging channels, Tavily web search, hosted demo URL.
 - Test artifacts left in the sandbox: /sandbox/hello.txt, the example.com (curl only) approval, two test lines in memories/USER.md. Decide at wrap-up whether to clean them.
+
+## Fri 2 Oct 2026 (not final)
+- Serverless (AI Cloud): do NOT pay or add a card yet. Check the Builders welcome email and Discord for AI Cloud credits (free check). Decide hosting for the demo URL at build start (Sun 4 Oct).
+- Serverless is optional: the hackathon rule is Token Factory OR AI Cloud, and Token Factory + Nemotron already satisfies it. Only the "other Nebius services" README bonus is at stake.
+- If we deploy our own app: Docker Desktop is started only for the image build/push step, sandbox stays off.
