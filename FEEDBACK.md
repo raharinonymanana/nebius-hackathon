@@ -62,3 +62,11 @@
 - Token Factory Prices: filtering by "Nemotron" lists old Llama-3.1-Nemotron models first, and "Cosmos3-Super-Reasoner" sits next to "Nemotron-3-Super". Easy to read the wrong row. Model IDs in the API (nvidia/nemotron-3-super-120b-a12b) differ in spelling from the price rows (Nvidia-Nemotron-3-Super-120B-A12B).
 - Tavily: the $25 builder credit appears only on the Overview page (Add-on 0/3,125 credits). The Billing page shows just Researcher 0/1000 and Pay-as-you-go disabled, and the credit email does not say where to look.
 - LangSmith: the $100 builder credit is invisible until a card is added; the free plan button reads "Add card to remove trace limit". wrap_openai labels every call ChatOpenAI even when the model is Nemotron on Token Factory, and no cost is shown for it.
+
+## 2026-10-02 - Sandboxes (ConTree) friction, Day 3
+1. Welcome email quickstart: the apt-get update / install example, copied as written (contree-sdk 0.3.6), prints nothing. apt install fails in a separate run (exit 100, "Unable to locate package qrencode") because run() is disposable by default. Fix: disposable=False and call .run() on the returned image. Suggest updating the email and console quickstart.
+2. Opposite defaults: SDK run() is disposable by default, CLI `contree run` persists by default. Easy to lose state or save state by accident when moving between the two.
+3. Env var names differ: SDK reads NEBIUS_PROJECT_ID; CLI `contree auth` reads CONTREE_PROJECT or NEBIUS_AI_PROJECT. The token is NEBIUS_API_KEY in both. After `contree auth`, CLI runtime commands read only the saved profile, not the environment. Positive: the email confirms the SDK variable names.
+4. In the quickstart the variable is called "sandbox" but the object is an image (a saved filesystem state). The docs say "image"; consistent naming would help beginners.
+5. `contree session show` hides the BRANCHES column on a narrow terminal (warning suggests --format json). Consider a compact branch marker in narrow mode.
+6. Security note: `contree auth` stores the token in plain text in ~/.config/contree/auth.ini (mode 600 here). Fine, but worth stating in the docs.

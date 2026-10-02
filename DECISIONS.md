@@ -65,3 +65,9 @@
 - Cost log: store facts, derive estimates from a price table verified on 2 Oct 2026 (re-check before 29 Oct, prices have valid-from dates). Old learning-week scripts stay unmigrated.
 - Trace evidence for README/video: screenshots only (14-day retention). Check the trace metadata for personal data before publishing any screenshot.
 - Hermes baseline is the dominant cost driver (about 97% of Super input billed during Day 5). Input for the Day 7 scorecard and for any Area A cost cap.
+
+## 2026-10-02 (not final)
+- Order change: Day 3 and Day 4 first (beta access arrived), Day 7 scorecard on Sat 3 Oct.
+- In agent code always pass disposable explicitly (SDK default is True, CLI default is non-disposable).
+- Checkpoint chain (non-disposable runs, branch from a saved image) is the mechanism for Area B's "try several attempts, roll back failures".
+- CLI: always use a named session (-S NAME) for manual exploration and scripts.

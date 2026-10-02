@@ -113,3 +113,15 @@
 - Console Billing > Prices checked 2 Oct (base rows, eu-north1): Nano 0.06/0.24 (valid 1 Jan 2026), Super 0.30/0.90 (1 Mar), Ultra 1.00/3.00 (1 Jun), Lightning 0.06/0.24 (1 Aug). Each has a -Batch row at half price; no -fast rows for the Nemotron 3 family. costlog.py PRICES_VERIFIED = True.
 - Console Billing > Usage 1-2 Oct (full numbers): Super input 253,845 tokens ($0.0761535), output 2,381 ($0.0021429), total $0.0783 before VAT (the $0.09 seen earlier includes VAT). Our usage_log had at most 7,789 Super input tokens, so at least 246k billed tokens did not come from our scripts: consistent with about 14-15 Hermes calls at the 16.7k baseline (arithmetic, not proof). Usage page cannot group by API key (only Project, Region, Label).
 - Built costlog.py: log_call() appends facts (ts, label, model, secs, in, out, reasoning, finish) to usage_log.jsonl and never raises; summary() derives cost from PRICES at read time. Verified live via trace_test.py (log line matched the printed numbers). WSL clock is UTC, so ts shows +0000. Old scripts (agent_v1/v2/v3, compare_models) are NOT migrated: learning-week throwaways, the build uses costlog from the first line.
+
+## 2026-10-02 (Fri) - Day 3: Sandboxes (ConTree) DONE
+- Beta access email arrived 08:35 UTC (14:05 IST). Console now shows Sandboxes > About, Images, Operations, Files.
+- Why: Day 3 proves the core mechanic of Area B (run untrusted code in isolation, checkpoint, branch, roll back).
+- SDK (contree-sdk 0.3.6), scripts sandbox_hello/apt/debug/persist/chain.py: code ran in a Nebius microVM (hostname "hostname", kernel Linux 7.0.6), not on our WSL host.
+- SDK run() is disposable by default: apt-get update and install in separate calls failed (exit 100, "Unable to locate package"). With disposable=False each run returns a new image and the next run builds on it (sandbox_chain.py).
+- Fork: two branches from one checkpoint stayed isolated (A vs B); the parent checkpoint was untouched.
+- Timing: apt-get update ~1.0 s; update + install qrencode 4.4 s; small runs ~1-1.5 s.
+- Network: apt-get update reached deb.debian.org from inside the sandbox, so outbound internet is open by default. Restricting egress: not tested.
+- CLI (contree-cli 0.9.4): profile "default" (type iam) created with `contree auth` from env vars in a subshell; auth.ini mode 600. Session -S day3 verified: use, non-disposable runs (history ids 1-4), branch, checkout, rollback, rollback +1. Rollback is non-destructive (file gone, then back).
+- Preloaded public images exist (python 3.10-3.14 variants).
+- Not tested: parallel runs, tag command, file upload, MCP server, resource limits/metrics, egress restriction, use from an agent loop (Day 4).
