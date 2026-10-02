@@ -56,3 +56,9 @@
 - For a builder arriving from Token Factory, nothing we saw there says that Serverless Endpoints/Jobs live in a separate product (Nebius AI Cloud) with its own console, project and billing. We found out only at the "Add billing details" form, which charges the card $25 on submit.
 - The Token Factory balance ($29.50 builder credit) does not visibly apply to AI Cloud. Not stated clearly where we looked. A short note in the hackathon resources would help solo builders who want to try the encouraged Serverless services.
 - Docs examples use region eu-north1; our default AI Cloud project is in eu-west2. Impact on preset availability unverified.
+
+## Fri 2 Oct 2026 — Token Factory console, Tavily, LangSmith
+- Token Factory Usage: cannot group or filter by API key (only Project, Region, Label), so the spend of an agent gateway key cannot be told apart from our scripts. The default "Rounded numbers" shows "< 0.01" for small rows; "Full numbers" exists but is easy to miss. The headline total adds VAT, which makes it differ from subtotal-based estimates.
+- Token Factory Prices: filtering by "Nemotron" lists old Llama-3.1-Nemotron models first, and "Cosmos3-Super-Reasoner" sits next to "Nemotron-3-Super". Easy to read the wrong row. Model IDs in the API (nvidia/nemotron-3-super-120b-a12b) differ in spelling from the price rows (Nvidia-Nemotron-3-Super-120B-A12B).
+- Tavily: the $25 builder credit appears only on the Overview page (Add-on 0/3,125 credits). The Billing page shows just Researcher 0/1000 and Pay-as-you-go disabled, and the credit email does not say where to look.
+- LangSmith: the $100 builder credit is invisible until a card is added; the free plan button reads "Add card to remove trace limit". wrap_openai labels every call ChatOpenAI even when the model is Nemotron on Token Factory, and no cost is shown for it.
