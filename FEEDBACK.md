@@ -70,3 +70,10 @@
 4. In the quickstart the variable is called "sandbox" but the object is an image (a saved filesystem state). The docs say "image"; consistent naming would help beginners.
 5. `contree session show` hides the BRANCHES column on a narrow terminal (warning suggests --format json). Consider a compact branch marker in narrow mode.
 6. Security note: `contree auth` stores the token in plain text in ~/.config/contree/auth.ini (mode 600 here). Fine, but worth stating in the docs.
+
+## 2026-10-02 - contree-mcp 0.5.0 friction, Day 4
+1. Fresh venv: `pip install contree-mcp` succeeds, but `contree-mcp --help` crashes with ImportError: cannot import name FastMCP from mcp.server. The declared dependency is mcp>=1.0.0 (no upper bound; read from the repo pyproject), so pip installs mcp 2.2.0. Workaround: pip install "mcp<2" (mcp 1.30.0). Suggest an upper bound or support for mcp 2.
+2. pip metadata for contree-mcp is empty (Author, Home-page, License), which makes a provenance check harder. The repo pyproject on master reads version 0.1.1 while PyPI/pip has 0.5.0.
+3. Tool count: docs text says 15 tools, the GitHub README table lists 18 (with a contree_ prefix), the server exposes 19 without prefix (including whoami).
+4. HTTP mode: the docs configuration table lists --mode and --http-port only; --http-listen exists in --help. Docs call HTTP mode "for network access". A note on the default bind address would help security-minded users.
+5. Quickstart (docs and README) says to request a token at contree.dev (Early Access), while the Token Factory flow works with the Token Factory API key via contree auth.

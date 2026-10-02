@@ -71,3 +71,8 @@
 - In agent code always pass disposable explicitly (SDK default is True, CLI default is non-disposable).
 - Checkpoint chain (non-disposable runs, branch from a saved image) is the mechanism for Area B's "try several attempts, roll back failures".
 - CLI: always use a named session (-S NAME) for manual exploration and scripts.
+
+## 2026-10-02 (not final)
+- Verdict rule: a vulnerability claim is PROVEN only by replay (fixed harness, model supplies only an input string). Exploration output is never evidence. Verdicts are PROVEN / NOT PROVEN, never "safe".
+- MCP evaluated (smoke test only). Not used: our agent is a Nemotron-driven custom loop and the verdict needs our own replay harness. Revisit only if a README mention is useful.
+- Before the public repo: create requirements.txt; decide whether usage_log.jsonl stays in the repo.
