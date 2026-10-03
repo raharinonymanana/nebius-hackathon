@@ -85,3 +85,12 @@
 - Area A (secure personal AI) dropped.
 - Wording rule kept: verdicts are PROVEN / NOT PROVEN, never "safe".
 - Not decided yet (next): first target repo, exploit-class order (proposed: path traversal, then command injection, then SQL injection, each taught before it is added), hosting (AWS Amplify vs free host vs AI Cloud Serverless).
+
+## 2026-10-03 (Sat, Day 7) — Test targets: ladder (not final)
+- Chosen A1: test on real targets, not only our own mock code, as a ladder:
+  1. Our small seeded target first (already works), to make the engine solid.
+  2. Main proof: real open-source projects in pairs, vulnerable version (expected PROVEN) vs fixed version (expected NOT PROVEN) = a known-answer test set, like the Test Bench.
+  3. Stretch: one deliberately vulnerable app (candidates from general knowledge, unverified: OWASP Juice Shop, DVWA, WebGoat) as the showcase.
+- Rules: attack only our own copies inside the Sandbox, never live sites; check each target's license before use; say clearly what is ours vs borrowed; pick flaws a single input can trigger.
+- Known cost: real software needs dependency install and sometimes a running server inside the Sandbox, which agent_v4 does not do yet.
+- Candidates to verify at scope time (Sun 4 Oct).
