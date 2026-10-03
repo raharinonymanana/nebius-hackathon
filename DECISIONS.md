@@ -76,3 +76,12 @@
 - Verdict rule: a vulnerability claim is PROVEN only by replay (fixed harness, model supplies only an input string). Exploration output is never evidence. Verdicts are PROVEN / NOT PROVEN, never "safe".
 - MCP evaluated (smoke test only). Not used: our agent is a Nemotron-driven custom loop and the verdict needs our own replay harness. Revisit only if a README mention is useful.
 - Before the public repo: create requirements.txt; decide whether usage_log.jsonl stays in the repo.
+
+## 2026-10-03 (Sat, Day 7) — Project choice: FINAL
+- FINAL (stated by Hasina): build a finding-validation agent. Input: a claimed security finding + a small code repo. Nemotron (Super by default) explores inside a Token Factory Sandbox; our own replay harness decides PROVEN / NOT PROVEN with receipts; for a PROVEN flaw, the agent proposes a patch and the same payload is replayed on a patched branch (fix accepted only if the attack fails AND the app still works).
+- Framing: CTEM stage 4 (Validation); TRS (ThreatGraph) covered stage 3 (Prioritization). Pitch: "Scanners flag; this proves."
+- Track: Coding and Agentic Engineering. Bonus target: Best Use of Tavily (advisory/CVE context, authoritative domains, source dates in receipts).
+- Built in layers: (1) prover on a small deliberately vulnerable repo, (2) patch + still-works check, (3) optional later: MCP server and/or CI integration.
+- Area A (secure personal AI) dropped.
+- Wording rule kept: verdicts are PROVEN / NOT PROVEN, never "safe".
+- Not decided yet (next): first target repo, exploit-class order (proposed: path traversal, then command injection, then SQL injection, each taught before it is added), hosting (AWS Amplify vs free host vs AI Cloud Serverless).

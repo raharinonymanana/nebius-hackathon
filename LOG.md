@@ -137,3 +137,11 @@
 - MCP (decision A2, 10 min): pip install contree-mcp 0.5.0 succeeded but the server crashed on import with mcp 2.2.0 (cannot import FastMCP from mcp.server). pip install "mcp<2" (1.30.0) fixed it. mcp_smoke.py started the server over stdio and listed 19 tools; no tool called. HTTP mode not run (docs list no host flag; --http-listen exists in --help). Repo: nebius/contree-mcp, Apache-2.0, Nebius B.V. 2026.
 - Not tested: more targets and exploit classes, a stronger model (Ultra) for hard cases, parallel attempts, using the MCP tools.
 - TODO before the public repo: requirements.txt (the venv now also holds contree-mcp and the mcp<2 pin).
+
+## 2026-10-03 (Sat, Day 7)
+- Scorecard prep done chunk by chunk: decision framing, the 4 criteria, Area A vs B, ideas A1/B1/B2/B3, hosting options.
+- Rules check (Devpost rules page): "runs on Token Factory" = runtime call to the Token Factory API, so hosting elsewhere is allowed; criteria are equally weighted; ties broken by Technological Implementation first; demo must stay free and available until judging ends (15 Dec); one Track award + one Bonus award can be combined.
+- AWS credits verified in the Billing console (read-only): $199.71 of $200 left, all expiring 08 Sep 2027; the $100 Free Tier credit covers Amplify, Lambda, API Gateway, CloudFront, S3. No credit labelled WeMakeDevs.
+- Research 1 (past judging): no past winners for this hackathon (first edition); official updates say judges reward depth within a track (Coding: agent that plans/writes/tests/iterates on a real repo); Nebius Serverless challenge 3rd place = adversarial multi-agent testing tool; winners show measured evidence.
+- Research 2 (our strengths): CTEM validation stage matches our pattern (evidence over claims) and continues TRS; ~6% of published CVEs ever exploited (Cyentia/FIRST).
+- Decision: finding-validation agent, FINAL (see DECISIONS.md).
