@@ -1,5 +1,5 @@
 """Live checks for agent_v4 on a PATCHED target: timeout receipt + no false positive."""
-import agent_v4 as a
+from prover import agent_v4 as a
 
 PATCHED = '''import os
 

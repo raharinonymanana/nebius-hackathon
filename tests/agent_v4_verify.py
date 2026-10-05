@@ -1,5 +1,5 @@
 """Zero-token checks for the replay verdict: can the verdict be fooled?"""
-import agent_v4 as a
+from prover import agent_v4 as a
 
 VULN = a.VULN_SOURCE
 PATCHED = '''import os

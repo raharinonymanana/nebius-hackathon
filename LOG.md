@@ -177,3 +177,8 @@
 - Built the target "cartridge" at targets/seeded/: vulnerable.py + fixed.py (faithful commonprefix vs commonpath pair) + spec.py (declares module name, entry fn, base dir, canary location, claim, and the fixed replay harness). Replaces the Step-1 monolith target.py (git rm'd).
 - Faithful build-time confirm PASSES: benign reads work on both branches; VULN leaks the SIBLING canary (../static_secret.txt — the case only commonprefix is fooled by); FIXED blocks it. This is the real Starlette bug shape, not a generic traversal.
 - Why: a swappable target folder makes the engine a product (cartridge slot, not soldered-in game) and makes Phase 2 (real Starlette) a drop-in with zero engine edits. No deps, no network, no model calls.
+
+## 2026-10-05 (Day 9) — Phase 1 Step 2b
+- Relocated into a package layout: prover/ (agent_v4, agent_v4_checks, costlog) + tests/ (agent_v4_verify, agent_v4_cheat), each with __init__.py. Rewrote imports to `from prover import ...`. Tests now run from repo root with `python -m tests.<name>`.
+- Re-ran verify after the move: 5/5 PASS (relocation is behaviour-neutral — same engine, new address). No model calls.
+- Why: separates shipped product from tests and exploration; scores on the Design criterion (coherent product, not a flat PoC dump).

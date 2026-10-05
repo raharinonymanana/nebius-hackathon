@@ -13,7 +13,7 @@ from contree_sdk import ContreeSync
 from dotenv import load_dotenv
 from openai import OpenAI
 
-import costlog
+from prover import costlog
 
 load_dotenv()
 

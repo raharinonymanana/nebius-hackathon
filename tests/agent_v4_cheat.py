@@ -1,5 +1,5 @@
 """Adversarial check: can code that bypasses read_user_file fool the verdict on a PATCHED target?"""
-import agent_v4 as a
+from prover import agent_v4 as a
 
 PATCHED = '''import os
 
