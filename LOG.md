@@ -182,3 +182,8 @@
 - Relocated into a package layout: prover/ (agent_v4, agent_v4_checks, costlog) + tests/ (agent_v4_verify, agent_v4_cheat), each with __init__.py. Rewrote imports to `from prover import ...`. Tests now run from repo root with `python -m tests.<name>`.
 - Re-ran verify after the move: 5/5 PASS (relocation is behaviour-neutral — same engine, new address). No model calls.
 - Why: separates shipped product from tests and exploration; scores on the Design criterion (coherent product, not a flat PoC dump).
+
+## 2026-10-05 (Day 9) — Phase 1 Step 2c
+- Rewired the engine to LOAD the target cartridge instead of an inline string: deleted VULN_SOURCE + HARNESS; agent_v4 now loads targets/seeded/spec.py by file path (importlib) and reads SPEC.source(VARIANT), SPEC.claim(), SPEC.harness_code(), SPEC.SECRET_ABS. build_checkpoint plants the canary at the spec's sibling location and writes the chosen branch as /app/vuln.py. VARIANT ('vulnerable'/'fixed') is the swappable knob.
+- Rewrote tests to the new interface (flip a.VARIANT, not a.VULN_SOURCE); same 5 verdict-integrity cases, new canary path. Re-verify: 5/5 PASS, no model calls.
+- Why: the engine is now target-agnostic — the seeded cartridge is what it proves, and Phase 2 Starlette is a drop-in folder with zero engine edits. Proves the real commonprefix bug, not a generic traversal.

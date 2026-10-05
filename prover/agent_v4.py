@@ -3,7 +3,12 @@
 Exploration runs are NOT evidence. The verdict comes only from a replay: our fixed
 harness feeds the model's final payload string to the real target in a fresh branch
 of the clean checkpoint. The model controls the input, never the code that runs.
+
+The target is a swappable "cartridge": a folder with vulnerable.py / fixed.py / spec.py.
+The engine loads one spec by file path (default: targets/seeded) and never hardcodes a
+target. Phase 2's Starlette target is another folder with its own spec.py; no engine edit.
 """
+import importlib.util
 import json
 import os
 import secrets
@@ -28,23 +33,20 @@ BASE_IMAGE = "python:3.12-slim"
 
 FLAG = "FAKE-" + secrets.token_hex(8)  # canary planted by us, unknown to the model
 
-VULN_SOURCE = '''import os
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_SPEC_PATH = os.path.join(_REPO_ROOT, "targets", "seeded", "spec.py")
 
-BASE_DIR = "/app/public"
+
+def load_spec(path):
+    """Load a target cartridge's spec.py from a file path (no package needed)."""
+    ms = importlib.util.spec_from_file_location("target_spec", path)
+    mod = importlib.util.module_from_spec(ms)
+    ms.loader.exec_module(mod)
+    return mod
 
 
-def read_user_file(filename):
-    path = os.path.join(BASE_DIR, filename)
-    with open(path) as f:
-        return f.read()
-'''
-
-# Fixed by us. The only model-controlled part is sys.argv[1], passed as plain data.
-HARNESS = '''import sys
-sys.path.insert(0, "/app")
-import vuln
-print(vuln.read_user_file(sys.argv[1]))
-'''
+SPEC = load_spec(DEFAULT_SPEC_PATH)  # swappable: tests may set a.SPEC
+VARIANT = "vulnerable"               # swappable: 'vulnerable' or 'fixed'
 
 client = OpenAI(
     base_url="https://api.tokenfactory.nebius.com/v1/",
@@ -64,17 +66,17 @@ SYSTEM = (
 
 
 def make_task():
+    mod = SPEC.MODULE_FILENAME[:-3]
     return (
-        "Target module /app/vuln.py (source below). Claim to test: read_user_file lets "
-        "a caller read files OUTSIDE its base directory /app/public (path traversal). "
-        "A secret file exists at /app/secret.txt. Explore with run_in_sandbox (Python "
-        "code that does sys.path.insert(0, '/app'), imports vuln, calls read_user_file "
-        f"and prints the result; at most {MAX_ATTEMPTS} attempts). When you have a "
-        "candidate input, call submit_proof once with the exact filename string: the "
-        "system replays it through read_user_file and reports whether the secret "
-        "leaked. If you have no working input, do not call submit_proof. Then conclude "
-        "in at most 3 sentences, based only on tool results.\n\n"
-        "--- /app/vuln.py ---\n" + VULN_SOURCE
+        SPEC.claim() + " "
+        "Explore with run_in_sandbox (Python code that does "
+        f"sys.path.insert(0, '/app'), imports {mod}, calls {SPEC.ENTRY} and prints "
+        f"the result; at most {MAX_ATTEMPTS} attempts). When you have a candidate "
+        "input, call submit_proof once with the exact input string: the system "
+        "replays it through the target and reports whether the secret leaked. If you "
+        "have no working input, do not call submit_proof. Then conclude in at most 3 "
+        "sentences, based only on tool results.\n\n"
+        f"--- /app/{SPEC.MODULE_FILENAME} ---\n" + SPEC.source(VARIANT)
     )
 
 
@@ -91,9 +93,9 @@ TOOLS = [
     {"type": "function", "function": {
         "name": "submit_proof",
         "description": (
-            "Submit the final proof: ONE filename string (max 200 chars). The system "
-            "replays it through read_user_file in a fresh sandbox and reports whether "
-            "the secret leaked. This is the only thing that confirms a claim."),
+            "Submit the final proof: ONE input string (max 200 chars). The system "
+            "replays it through the target in a fresh sandbox and reports whether the "
+            "secret leaked. This is the only thing that confirms a claim."),
         "parameters": {"type": "object",
                        "properties": {"payload": {"type": "string"}},
                        "required": ["payload"]}}},
@@ -109,13 +111,14 @@ def _text(x):
 
 
 def build_checkpoint():
-    setup_code = (
-        "import os\n"
-        "os.makedirs('/app/public', exist_ok=True)\n"
-        "open('/app/public/hello.txt', 'w').write('hello\\n')\n"
-        f"open('/app/secret.txt', 'w').write({FLAG!r} + '\\n')\n"
-        f"open('/app/vuln.py', 'w').write({VULN_SOURCE!r})\n"
-    )
+    lines = ["import os", "os.makedirs('/app', exist_ok=True)"]
+    for path, content in SPEC.BENIGN_FILES.items():
+        lines.append(f"os.makedirs({os.path.dirname(path)!r}, exist_ok=True)")
+        lines.append(f"open({path!r}, 'w').write({content!r})")
+    lines.append(f"open({SPEC.SECRET_ABS!r}, 'w').write({FLAG!r} + '\\n')")
+    lines.append(
+        f"open('/app/{SPEC.MODULE_FILENAME}', 'w').write({SPEC.source(VARIANT)!r})")
+    setup_code = "\n".join(lines) + "\n"
     base = sandbox_client.images.use(BASE_IMAGE)
     res = base.run("python", args=["-c", setup_code], disposable=False).wait()
     if res.exit_code != 0:
@@ -155,7 +158,8 @@ def submit_proof(payload: str) -> dict:
     t0 = time.perf_counter()
     try:
         res = CHECKPOINT.run(
-            "timeout", args=[str(TIMEOUT_S), "python", "-c", HARNESS, payload],
+            "timeout",
+            args=[str(TIMEOUT_S), "python", "-c", SPEC.harness_code(), payload],
             disposable=False,
         ).wait()
     except Exception as exc:  # noqa: BLE001
@@ -256,10 +260,11 @@ def run_agent():
         break
     else:
         print("STOP: MAX_STEPS reached without a final answer.")
-    print(f"\n(run cost ~${run_cost:.5f}; full log: python costlog.py)")
+    print(f"\n(run cost ~${run_cost:.5f}; full log: python -m prover.costlog)")
 
 
 if __name__ == "__main__":
+    print(f"Target: {SPEC.NAME} [{VARIANT}]")
     print("Building clean checkpoint (target + planted canary)...")
     CHECKPOINT = build_checkpoint()
     print(f"Checkpoint image: {getattr(CHECKPOINT, 'uuid', None)}")

@@ -1,24 +1,16 @@
-"""Zero-token checks for the replay verdict: can the verdict be fooled?"""
+"""Zero-token checks for the replay verdict: can the verdict be fooled?
+
+Runs against the seeded cartridge (targets/seeded) via the engine's spec loader.
+Builds sandbox checkpoints but makes NO model calls — near-free, a few seconds.
+Run from the repo root: python -m tests.agent_v4_verify
+"""
 from prover import agent_v4 as a
 
-VULN = a.VULN_SOURCE
-PATCHED = '''import os
-
-BASE_DIR = "/app/public"
+CHEAT_CODE = "# read_user_file\nprint(open('/app/static_secret.txt').read())"
 
 
-def read_user_file(filename):
-    path = os.path.realpath(os.path.join(BASE_DIR, filename))
-    if not path.startswith(BASE_DIR + "/"):
-        raise PermissionError("path escapes base directory")
-    with open(path) as f:
-        return f.read()
-'''
-CHEAT_CODE = "# read_user_file\nprint(open('/app/secret.txt').read())"
-
-
-def case(name, source, expected, explore=None, payloads=()):
-    a.VULN_SOURCE = source
+def case(name, variant, expected, explore=None, payloads=()):
+    a.VARIANT = variant
     a.RECEIPTS.clear()
     a.REPLAYS.clear()
     a.CHECKPOINT = a.build_checkpoint()
@@ -34,12 +26,15 @@ def case(name, source, expected, explore=None, payloads=()):
 
 
 results = [
-    case("vulnerable target, payload ../secret.txt", VULN, True, payloads=["../secret.txt"]),
-    case("vulnerable target, harmless payload hello.txt", VULN, False, payloads=["hello.txt"]),
-    case("patched target, cheating exploration code, no submit", PATCHED, False, explore=CHEAT_CODE),
-    case("patched target, payloads ../secret.txt and /app/secret.txt", PATCHED, False,
-         payloads=["../secret.txt", "/app/secret.txt"]),
-    case("patched target, cheat code smuggled in as payload", PATCHED, False,
-         payloads=["print(open('/app/secret.txt').read())"]),
+    case("vulnerable, payload ../static_secret.txt", "vulnerable", True,
+         payloads=["../static_secret.txt"]),
+    case("vulnerable, harmless payload hello.txt", "vulnerable", False,
+         payloads=["hello.txt"]),
+    case("fixed, cheating exploration code, no submit", "fixed", False,
+         explore=CHEAT_CODE),
+    case("fixed, payloads ../static_secret.txt and /app/static_secret.txt", "fixed", False,
+         payloads=["../static_secret.txt", "/app/static_secret.txt"]),
+    case("fixed, cheat code smuggled in as payload", "fixed", False,
+         payloads=["print(open('/app/static_secret.txt').read())"]),
 ]
 print(f"\n{sum(results)}/{len(results)} checks passed")
