@@ -161,3 +161,9 @@
 ## 2026-10-05 — Day 8, Task 3
 - Verified API Gateway REST default integration timeout = 29s, configurable but a wall for our runs; Lambda Function URL bypasses it (Lambda timeout up to 15 min applies directly).
 - Decided hosting = AWS Lambda + Function URL (A1). Taught Function URL vs API Gateway vs AI Cloud Endpoint.
+
+## 2026-10-05 — Day 8, Task 4 (Phase 0 complete)
+- Private GitHub repo live: raharinonymanana/nebius-hackathon. Pushed full history + scaffold (first remote commit fee174e).
+- Apache-2.0 LICENSE (full text) + NOTICE + requirements.txt (openai, python-dotenv, tavily-python, contree-sdk, contree-client, langsmith; contree-cli and contree-mcp/mcp<2 deliberately excluded).
+- .gitignore protects .env/.env.*/.venv/__pycache__/*.pyc; .env confirmed NOT tracked. usage_log.jsonl kept tracked (cost evidence, no secrets).
+- Remote uses SSH origin. gh repo create had half-run earlier (repo existed, origin unset); fixed by wiring origin manually.
