@@ -215,6 +215,32 @@ def print_receipts_and_verdict():
         print("\nVERDICT (decided by code): NOT PROVEN")
 
 
+def write_receipt():
+    """Dump the run to receipts/<target>_<variant>_<UTC>.json. Audit trail, NOT evidence:
+    the live verdict is decided by proven_replays(); this only records what happened."""
+    import datetime
+    proven = proven_replays()
+    record = {
+        "target": SPEC.NAME,
+        "variant": VARIANT,
+        "model": MODEL,
+        "canary": FLAG,
+        "utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "exploration_runs_not_evidence": RECEIPTS,
+        "replays_only_evidence": REPLAYS,
+        "verdict": "PROVEN" if proven else "NOT PROVEN",
+        "proven_by": (proven[0]["submit"] if proven else None),
+    }
+    out_dir = os.path.join(_REPO_ROOT, "receipts")
+    os.makedirs(out_dir, exist_ok=True)
+    stamp = record["utc"].replace(":", "").replace("-", "").replace(".", "")
+    path = os.path.join(out_dir, f"{SPEC.NAME}_{VARIANT}_{stamp}.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(record, f, indent=2, default=str)
+    print(f"\nReceipt written: {os.path.relpath(path, _REPO_ROOT)}")
+    return path
+
+
 def run_agent():
     messages = [{"role": "system", "content": SYSTEM},
                 {"role": "user", "content": make_task()}]
@@ -272,3 +298,4 @@ if __name__ == "__main__":
         run_agent()
     finally:
         print_receipts_and_verdict()
+        write_receipt()
