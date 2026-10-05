@@ -77,3 +77,6 @@
 3. Tool count: docs text says 15 tools, the GitHub README table lists 18 (with a contree_ prefix), the server exposes 19 without prefix (including whoami).
 4. HTTP mode: the docs configuration table lists --mode and --http-port only; --http-listen exists in --help. Docs call HTTP mode "for network access". A note on the default bind address would help security-minded users.
 5. Quickstart (docs and README) says to request a token at contree.dev (Early Access), while the Token Factory flow works with the Token Factory API key via contree auth.
+
+## 2026-10-05 — model wording vs our verdict (Nemotron Super)
+- On the FIXED target the model's own conclusion said the function "effectively prevents directory traversal" — a universal safety claim. Our code reports only NOT PROVEN (bounded: not shown exploitable by input-triggered traversal within our limits). This gap IS the product's point: model confidence is not evidence; only the replay harness decides. README + video must use PROVEN / NOT PROVEN wording and never repeat the model's "prevents/safe" framing.

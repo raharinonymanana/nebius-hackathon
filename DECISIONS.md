@@ -111,3 +111,6 @@
 
 ## 2026-10-05
 - Phase 1 target interface = a per-target "cartridge" folder (vulnerable.py / fixed.py / spec.py) that the engine LOADS, replacing the inline VULN_SOURCE string. seeded/ is the first; starlette/ (Phase 2) will be the second, same interface. NOT final — spec fields may grow when the real Starlette target needs pip-install + a different entry path.
+
+## 2026-10-05
+- Phase 1 COMPLETE on the seeded cartridge. Verdict wording is PROVEN / NOT PROVEN only; "NOT PROVEN" never upgraded to "safe"/"prevents", even when the model's prose says so. receipts/samples/ holds one committed receipt per branch as demo evidence; live receipts/ gitignored. NOT final — limits (input-triggered flaws only, one exploit class) still to expand in later phases.

@@ -192,3 +192,10 @@
 - Added durable receipts: write_receipt() dumps each run to receipts/<target>_<variant>_<UTC>.json — target, variant, model, planted canary, exploration runs (labelled not-evidence, stdout included), replays (the only evidence), and the code-decided verdict. Wired into __main__ after the verdict print. receipts/ is gitignored (run outputs); one sample committed by hand later as demo evidence.
 - GOTCHA fixed: json.dump crashed with "UUID is not JSON serializable" — the sandbox image id comes back as a UUID object, not a str. print() had masked it (silent str()), so it only surfaced when we made receipts durable. Fix: json.dump(..., default=str). Lesson = the display lied about the type; serialization is what checked it (same spirit as "nothing a tool says about itself is evidence").
 - Verified with a no-model replay on the vulnerable branch: verdict PROVEN, receipt written, canary round-trip visible in stdout. No tokens spent.
+
+## 2026-10-05 (Day 9) — Phase 1 Step 2e — PHASE 1 COMPLETE
+- Two live end-to-end runs, model driving the full loop (explore -> submit -> our replay decides):
+  - vulnerable branch: PROVEN. 3 steps, 1 exploration (canary seen), 1 submit replayed with '../static_secret.txt' -> leaked_secret=True. ~$0.00137.
+  - fixed branch: NOT PROVEN. 3 steps, 2 explorations (no leak), model declined to submit -> REPLAYS none. ~$0.00150.
+- Both wrote receipts. Committed one of each to receipts/samples/ as demo evidence (proven_vulnerable.json, not_proven_fixed.json); all other receipts stay gitignored.
+- The prover now proves a real path-traversal bug AND refuses to confirm it on patched code, with an audit trail either way. This closes Phase 1 (prover core on the seeded cartridge).

@@ -28,3 +28,9 @@
 {"ts": "2026-10-02T15:26:07+0000", "label": "agent_v4 step 2", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.72, "in": 922, "out": 263, "reasoning": 208, "finish": "tool_calls"}
 {"ts": "2026-10-02T15:26:10+0000", "label": "agent_v4 step 3", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.04, "in": 1093, "out": 116, "reasoning": 68, "finish": "tool_calls"}
 {"ts": "2026-10-02T15:26:14+0000", "label": "agent_v4 step 4", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 3.43, "in": 1196, "out": 482, "reasoning": 377, "finish": "stop"}
+{"ts": "2026-10-05T10:20:53+0000", "label": "agent_v4 step 1", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 4.42, "in": 894, "out": 280, "reasoning": 226, "finish": "tool_calls"}
+{"ts": "2026-10-05T10:20:56+0000", "label": "agent_v4 step 2", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.13, "in": 1017, "out": 67, "reasoning": 37, "finish": "tool_calls"}
+{"ts": "2026-10-05T10:21:00+0000", "label": "agent_v4 step 3", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 2.35, "in": 1090, "out": 170, "reasoning": 93, "finish": "stop"}
+{"ts": "2026-10-05T10:24:15+0000", "label": "agent_v4 step 1", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 2.63, "in": 861, "out": 99, "reasoning": 45, "finish": "tool_calls"}
+{"ts": "2026-10-05T10:24:20+0000", "label": "agent_v4 step 2", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 2.87, "in": 1038, "out": 175, "reasoning": 39, "finish": "tool_calls"}
+{"ts": "2026-10-05T10:24:24+0000", "label": "agent_v4 step 3", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 2.87, "in": 1371, "out": 301, "reasoning": 210, "finish": "stop"}
