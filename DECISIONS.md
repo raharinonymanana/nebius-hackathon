@@ -94,3 +94,14 @@
 - Rules: attack only our own copies inside the Sandbox, never live sites; check each target's license before use; say clearly what is ours vs borrowed; pick flaws a single input can trigger.
 - Known cost: real software needs dependency install and sometimes a running server inside the Sandbox, which agent_v4 does not do yet.
 - Candidates to verify at scope time (Sun 4 Oct).
+
+## 2026-10-05 — Day 8, Task 2 FINAL
+- First real target: Starlette StaticFiles path traversal (CVE-2023-29159 / GHSA-v5gw-mw7f-84px). Vulnerable <0.27.0, fixed 0.27.0. License BSD-3-Clause.
+- Build order: seeded mini-target first (engine), then Starlette (first real proof).
+- Exploit-class order: path traversal -> command injection -> SQL injection, each taught before it's added.
+
+## 2026-10-05 — Day 8, Task 3 FINAL
+- Hosting: AWS Lambda + Function URL (NOT API Gateway), on existing AWS credit ($199.71).
+- Why: Function URL avoids API Gateway's 29s integration-timeout wall (verified, AWS docs) for our 10-30s Sandbox runs; $0 extra cost; nothing runs/bills when idle so it stays free + online to 15 Dec with nothing to remember to stop.
+- Rejected: AI Cloud Serverless (needs $25 card charge + Docker image + bills until stopped); free hosts (cold-start risk during live judging).
+- Build-time note: raise Lambda's own function timeout from default 3s to ~60s in Phase 4.

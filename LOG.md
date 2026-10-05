@@ -145,3 +145,19 @@
 - Research 1 (past judging): no past winners for this hackathon (first edition); official updates say judges reward depth within a track (Coding: agent that plans/writes/tests/iterates on a real repo); Nebius Serverless challenge 3rd place = adversarial multi-agent testing tool; winners show measured evidence.
 - Research 2 (our strengths): CTEM validation stage matches our pattern (evidence over claims) and continues TRS; ~6% of published CVEs ever exploited (Cyentia/FIRST).
 - Decision: finding-validation agent, FINAL (see DECISIONS.md).
+
+## 2026-10-05 — Day 8, Task 1: license + fit check (real targets)
+- Verified licenses from each project's own source: Starlette BSD-3-Clause (Kludex/starlette); OWASP Juice Shop MIT (juice-shop/juice-shop); DVWA GPL-3.0 (digininja/DVWA); WebGoat license NOT confirmed -> do not use until confirmed.
+- First real target recommended: Starlette StaticFiles path traversal, CVE-2023-29159 / GHSA-v5gw-mw7f-84px. Vulnerable <0.27.0, fixed 0.27.0 (commonprefix -> commonpath). Pure-Python pip pair, single short input string, no server needed (replay via StaticFiles.lookup_path + planted canary).
+- Why: fits our replay harness exactly; tiny clean fix (good teaching + patch-step target); matches path-traversal-first order.
+- Build-time confirm (not a blocker): verify lookup_path reproduces the traversal without a running uvicorn server.
+- Engine-cost ladder: seeded = zero new work; Starlette = needs "pip install in Sandbox" (light); stretch apps = need "run a server in Sandbox" (heavy).
+- Rule applied: targets stay as SEPARATE clones, never vendored into our repo, so GPL (DVWA) does not affect our repo license.
+
+## 2026-10-05 — Day 8, Task 2
+- Taught path traversal (vs LFI/command injection/SQLi) and the exploration-vs-replay validation model.
+- Locked target path + exploit order as FINAL in DECISIONS.md.
+
+## 2026-10-05 — Day 8, Task 3
+- Verified API Gateway REST default integration timeout = 29s, configurable but a wall for our runs; Lambda Function URL bypasses it (Lambda timeout up to 15 min applies directly).
+- Decided hosting = AWS Lambda + Function URL (A1). Taught Function URL vs API Gateway vs AI Cloud Endpoint.
