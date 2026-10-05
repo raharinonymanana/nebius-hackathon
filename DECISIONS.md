@@ -105,3 +105,6 @@
 - Why: Function URL avoids API Gateway's 29s integration-timeout wall (verified, AWS docs) for our 10-30s Sandbox runs; $0 extra cost; nothing runs/bills when idle so it stays free + online to 15 Dec with nothing to remember to stop.
 - Rejected: AI Cloud Serverless (needs $25 card charge + Docker image + bills until stopped); free hosts (cold-start risk during live judging).
 - Build-time note: raise Lambda's own function timeout from default 3s to ~60s in Phase 4.
+
+## 2026-10-05
+- Repo structure: product vs learning-week exploration separated. 11 standalone probe scripts moved to `archive/` (provenance, not shipped). Product files relocate to `prover/` + `tests/` during Phase 1 Step 2 (piggybacked on the harness rewrite, not a standalone refactor). NOT final — revisit folder naming/packaging before the video.

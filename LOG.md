@@ -167,3 +167,8 @@
 - Apache-2.0 LICENSE (full text) + NOTICE + requirements.txt (openai, python-dotenv, tavily-python, contree-sdk, contree-client, langsmith; contree-cli and contree-mcp/mcp<2 deliberately excluded).
 - .gitignore protects .env/.env.*/.venv/__pycache__/*.pyc; .env confirmed NOT tracked. usage_log.jsonl kept tracked (cost evidence, no secrets).
 - Remote uses SSH origin. gh repo create had half-run earlier (repo existed, origin unset); fixed by wiring origin manually.
+
+## 2026-10-05 (Day 9) — Phase 1 Step 1
+- Built seeded mini-target `targets/seeded/target.py`: ~20-line `read_file()` reproducing Starlette's StaticFiles path-traversal bug class (os.path.commonprefix vs commonpath) with a `fixed=True` branch. Build-time confirm PASSES — vuln branch leaks the canary via `../static_secret.txt`, fixed branch blocks it. No deps, no network, no model calls (cost-free by design).
+- Why: a fully-controlled zero-cost target to build the replay engine on; makes Phase 2 (real Starlette) nearly free — same bug in real code.
+- Repo cleanup: archived 11 learning-week scripts into `archive/` (+README). Product (`agent_v4*`, `costlog`) stays at root; relocation to `prover/`+`tests/` folded into Step 2 to avoid a separate refactor. Why: flat 30-file root buried the engine; separating product from exploration scores on the Design criterion.
