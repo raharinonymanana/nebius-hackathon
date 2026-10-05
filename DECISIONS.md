@@ -108,3 +108,6 @@
 
 ## 2026-10-05
 - Repo structure: product vs learning-week exploration separated. 11 standalone probe scripts moved to `archive/` (provenance, not shipped). Product files relocate to `prover/` + `tests/` during Phase 1 Step 2 (piggybacked on the harness rewrite, not a standalone refactor). NOT final — revisit folder naming/packaging before the video.
+
+## 2026-10-05
+- Phase 1 target interface = a per-target "cartridge" folder (vulnerable.py / fixed.py / spec.py) that the engine LOADS, replacing the inline VULN_SOURCE string. seeded/ is the first; starlette/ (Phase 2) will be the second, same interface. NOT final — spec fields may grow when the real Starlette target needs pip-install + a different entry path.

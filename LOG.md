@@ -172,3 +172,8 @@
 - Built seeded mini-target `targets/seeded/target.py`: ~20-line `read_file()` reproducing Starlette's StaticFiles path-traversal bug class (os.path.commonprefix vs commonpath) with a `fixed=True` branch. Build-time confirm PASSES — vuln branch leaks the canary via `../static_secret.txt`, fixed branch blocks it. No deps, no network, no model calls (cost-free by design).
 - Why: a fully-controlled zero-cost target to build the replay engine on; makes Phase 2 (real Starlette) nearly free — same bug in real code.
 - Repo cleanup: archived 11 learning-week scripts into `archive/` (+README). Product (`agent_v4*`, `costlog`) stays at root; relocation to `prover/`+`tests/` folded into Step 2 to avoid a separate refactor. Why: flat 30-file root buried the engine; separating product from exploration scores on the Design criterion.
+
+## 2026-10-05 (Day 9) — Phase 1 Step 2a
+- Built the target "cartridge" at targets/seeded/: vulnerable.py + fixed.py (faithful commonprefix vs commonpath pair) + spec.py (declares module name, entry fn, base dir, canary location, claim, and the fixed replay harness). Replaces the Step-1 monolith target.py (git rm'd).
+- Faithful build-time confirm PASSES: benign reads work on both branches; VULN leaks the SIBLING canary (../static_secret.txt — the case only commonprefix is fooled by); FIXED blocks it. This is the real Starlette bug shape, not a generic traversal.
+- Why: a swappable target folder makes the engine a product (cartridge slot, not soldered-in game) and makes Phase 2 (real Starlette) a drop-in with zero engine edits. No deps, no network, no model calls.
