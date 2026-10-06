@@ -114,3 +114,10 @@
 
 ## 2026-10-05
 - Phase 1 COMPLETE on the seeded cartridge. Verdict wording is PROVEN / NOT PROVEN only; "NOT PROVEN" never upgraded to "safe"/"prevents", even when the model's prose says so. receipts/samples/ holds one committed receipt per branch as demo evidence; live receipts/ gitignored. NOT final — limits (input-triggered flaws only, one exploit class) still to expand in later phases.
+
+- 6 Oct (Day 10): Phase 2 target approach = A1 — pip-install the REAL Starlette (0.26.1 vulnerable / 0.27.0 fixed) into the sandbox checkpoint and replay the real StaticFiles.lookup_path. The branch difference is the installed version, not our source, so the cartridge holds ONE adapter.py, not vulnerable.py/fixed.py. NOT final. Chosen over A2 (vendoring our own copy of lookup_path) because it proves against the real shipped PyPI artifact + the real patch.
+- 6 Oct (Day 10): engine gains ONE generic hook — build_checkpoint runs SPEC.setup_commands(VARIANT) (default []) before writing files, so a target can install deps once in the trusted checkpoint, never at replay. Seeded declares none -> unchanged. This IS the Phase 2 capability (engine handles a real external dependency). NOT final.
+
+- 6 Oct (Day 10): make_task() now instructs recon-before-guessing (inspect the filesystem / list dirs / read files, then craft a payload from what was observed), and exploration budget raised to MAX_ATTEMPTS=4 / MAX_SUBMITS=3. NOT final. Prompt+budget only; the harness, verdict logic, and PROVEN/NOT PROVEN wording are unchanged. Fixes a prompt-caused miss, not an engine issue.
+
+- 6 Oct (Day 10): Phase 3 remediation loop = a separate composition layer (prover/remediate.py), engine unchanged; both re-prove and still-works go through the engine's trusted submit_proof replay (one evidence path). Remediation verdict wording = FIX VERIFIED / FIX NOT VERIFIED, scoped to "this proven exploit is closed and benign use still works", never "safe". NOT final.

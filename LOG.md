@@ -199,3 +199,22 @@
   - fixed branch: NOT PROVEN. 3 steps, 2 explorations (no leak), model declined to submit -> REPLAYS none. ~$0.00150.
 - Both wrote receipts. Committed one of each to receipts/samples/ as demo evidence (proven_vulnerable.json, not_proven_fixed.json); all other receipts stay gitignored.
 - The prover now proves a real path-traversal bug AND refuses to confirm it on patched code, with an audit trail either way. This closes Phase 1 (prover core on the seeded cartridge).
+
+## Day 10 — Tue 6 Oct 2026 (Phase 2 start)
+- Verified Starlette advisory vs official sources (GHSA-v5gw-mw7f-84px / CVE-2023-29159): vulnerable >=0.13.5 <0.27.0, fixed 0.27.0, fix = commonprefix->commonpath (commit 1797de4). Pinned vulnerable=0.26.1 (last pre-fix release), fixed=0.27.0.
+- Read the real vulnerable lookup_path: a plain synchronous method -> reproduces WITHOUT a server. This is the Phase 2 premise.
+- Target approach A1 (DECISIONS.md): prove against the REAL pip-installed Starlette, not a vendored copy. Branch = installed version, so the cartridge holds ONE adapter.py (not vulnerable.py/fixed.py).
+- Added ONE generic dep hook to prover/agent_v4.py build_checkpoint: runs SPEC.setup_commands(VARIANT) (default empty) before writing files. Seeded unchanged. This IS the Phase 2 capability (engine handles a real external dependency).
+- Built targets/starlette/ (spec.py + adapter.py), same cartridge interface as seeded; faithful sibling-prefix canary.
+- Build-time confirm (local, no server, no tokens): starlette==0.26.1 LEAKS the sibling canary (vulnerable); starlette==0.27.0 BLOCKS it (fixed); benign read works on both. Direct lookup_path replay confirmed.
+- Workflow: adopted the brain/hands split — Claude Code = hands (writes/runs code from briefs), this chat = brain (decisions/records/brief). Added CLAUDE.md to encode the operating rules.
+- Verify suite points at any cartridge via VERIFY_SPEC_PATH env var (unset = seeded, unchanged). Seeded 5/5 AND Starlette 5/5 — anti-cheat verdict logic holds on the REAL library (genuine payload PROVEN; exploration-cheat + cheat-code-as-payload NOT PROVEN; 0.27.0 blocks). No model calls.
+- MILESTONE: the Starlette verify cases built real ConTree checkpoints, so pip-install of a real dependency INTO the sandbox checkpoint (the setup_commands hook) is now confirmed working in the actual sandbox, not just locally.
+- First LIVE Starlette runs. Vulnerable (attempt 1) -> NOT PROVEN: model guessed ../secret.txt, never inspected the filesystem; harness correctly refused (~$0.0095, capped out). Root cause = make_task steered it to guess, not investigate (a prompt problem, not the model/engine).
+- Fix = make_task recon-before-guessing guidance + budget MAX_ATTEMPTS 3->4, MAX_SUBMITS 2->3 (no harness/verdict change). Re-run vulnerable -> PROVEN by replay 1, payload ../static_secret.txt, canary leaked, ~$0.00233. Model listed the dir (step 2 canary_seen), found the sibling name itself, submitted the correct traversal.
+- PHASE 2 CORE PROOF LANDED: real CVE pair on the REAL library -> starlette 0.26.1 PROVEN, 0.27.0 NOT PROVEN, both with durable receipts. Verdict decided by replay, never model prose.
+- Honest scope: the model is still HANDED the adapter source + the claim; it discovered the filename, not the function. The "model LOCATES the vulnerable function itself" harder mode (Quality GAP #2, Coding-track bar) is still outstanding.
+- PHASE 3 LANDED: built prover/remediate.py — a composition layer over the engine (sets globals + calls build_checkpoint/run_agent/submit_proof/proven_replays; NO engine edit, NO second replay path). Flow: prove(vuln) -> patch(=dependency upgrade to FIXED_VERSION) -> re-prove(replay the proven payload on patched) -> still-works(benign replay) -> one remediation receipt.
+- Run on Starlette: Phase A PROVEN (../static_secret.txt on 0.26.1); Phase B exploit_closed=True on 0.27.0; Phase C still_works=True; VERDICT FIX VERIFIED. ~$0.0019 (Phase A only). Receipt: starlette-staticfiles-traversal_remediation_<UTC>.json. Verdict scoped: "this proven exploit is closed and benign use still works", never "safe".
+- Product spine complete: detector -> product (prove-then-patch, CTEM stage 4->5). GAP #1 (completeness) materially closed at the loop level.
+- KNOWN GAP: remediation receipt has cve=null (spec documents CVE in docstring only). Fix brain-side = add CVE constant to targets/starlette/spec.py (queued, one-liner).
