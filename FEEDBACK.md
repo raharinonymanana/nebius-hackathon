@@ -80,3 +80,6 @@
 
 ## 2026-10-05 — model wording vs our verdict (Nemotron Super)
 - On the FIXED target the model's own conclusion said the function "effectively prevents directory traversal" — a universal safety claim. Our code reports only NOT PROVEN (bounded: not shown exploitable by input-triggered traversal within our limits). This gap IS the product's point: model confidence is not evidence; only the replay harness decides. README + video must use PROVEN / NOT PROVEN wording and never repeat the model's "prevents/safe" framing.
+
+## 2026-10-06 — Tavily: result URL shape varies for the same source
+With include_domains=["nvd.nist.gov", ...] + include_domains_mode="restrict", a CVE query sometimes returns NVD's /vuln/search?cpeName=... results-page URL rather than the canonical /vuln/detail/CVE-xxxx page. For tooling that wants to cite the canonical advisory record, the search-page URL is less useful and forces consumer-side normalization. A per-result "canonical_url" or a topic/filter that prefers record/detail pages over search pages would help agents cite authoritative sources cleanly. (SDK tavily-python 0.8.4; include_published_date also absent in this version.)
