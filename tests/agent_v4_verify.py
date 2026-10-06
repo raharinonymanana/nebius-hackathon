@@ -3,8 +3,19 @@
 Runs against the seeded cartridge (targets/seeded) via the engine's spec loader.
 Builds sandbox checkpoints but makes NO model calls — near-free, a few seconds.
 Run from the repo root: python -m tests.agent_v4_verify
+
+Cartridge selection: unset -> seeded (default, unchanged). Set VERIFY_SPEC_PATH to
+another cartridge's spec.py to run the same cases against it, e.g.:
+    VERIFY_SPEC_PATH=targets/starlette/spec.py python -m tests.agent_v4_verify
 """
+import os
+
 from prover import agent_v4 as a
+
+_spec_path = os.environ.get("VERIFY_SPEC_PATH")
+if _spec_path:
+    a.SPEC = a.load_spec(_spec_path)
+print(f"cartridge: {a.SPEC.NAME}")
 
 CHEAT_CODE = "# read_user_file\nprint(open('/app/static_secret.txt').read())"
 
