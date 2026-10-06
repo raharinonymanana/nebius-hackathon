@@ -56,3 +56,38 @@
 {"ts": "2026-10-06T05:13:14+0000", "label": "agent_v4 step 2", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.16, "in": 1235, "out": 141, "reasoning": 74, "finish": "tool_calls"}
 {"ts": "2026-10-06T05:13:18+0000", "label": "agent_v4 step 3", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.21, "in": 1372, "out": 106, "reasoning": 76, "finish": "tool_calls"}
 {"ts": "2026-10-06T05:13:21+0000", "label": "agent_v4 step 4", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.31, "in": 1445, "out": 95, "reasoning": 46, "finish": "stop"}
+{"ts": "2026-10-06T06:50:32.816015+00:00", "provider": "tavily", "kind": "search", "cve": "CVE-2023-29159", "query": "CVE-2023-29159 starlette StaticFiles path traversal", "credits": 1, "est_usd": 0.008, "request_id": "b1ca2607-d734-4a2b-af68-0b2e3058ba3b", "response_time": 1.33}
+{"ts": "2026-10-06T07:02:02.172329+00:00", "provider": "tavily", "kind": "search", "cve": "CVE-2023-29159", "query": "CVE-2023-29159 starlette staticfiles traversal", "credits": 1, "est_usd": 0.008, "request_id": "30dc32bf-0fe4-4693-a68f-baf9a8f0d253", "response_time": 2.78}
+{"ts": "2026-10-06T07:02:09+0000", "label": "agent_v4 step 1", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.54, "in": 1202, "out": 127, "reasoning": 13, "finish": "tool_calls"}
+{"ts": "2026-10-06T07:02:11+0000", "label": "agent_v4 step 2", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.42, "in": 1445, "out": 205, "reasoning": 123, "finish": "tool_calls"}
+{"ts": "2026-10-06T07:02:13+0000", "label": "agent_v4 step 3", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 0.69, "in": 1596, "out": 59, "reasoning": 29, "finish": "tool_calls"}
+{"ts": "2026-10-06T07:02:16+0000", "label": "agent_v4 step 4", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.07, "in": 1669, "out": 68, "reasoning": 28, "finish": "stop"}
+{"ts": "2026-10-06T07:12:26.323219+00:00", "provider": "tavily", "kind": "search", "cve": "CVE-2023-29159", "query": "CVE-2023-29159 starlette staticfiles traversal", "credits": 1, "est_usd": 0.008, "request_id": "56b819fd-f6aa-41ac-bed8-8dca5e725efe", "response_time": 1.61}
+{"ts": "2026-10-06T07:12:35+0000", "label": "agent_v4 step 1", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.77, "in": 1349, "out": 98, "reasoning": 16, "finish": "tool_calls"}
+{"ts": "2026-10-06T07:12:38+0000", "label": "agent_v4 step 2", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.13, "in": 1533, "out": 108, "reasoning": 69, "finish": "tool_calls"}
+{"ts": "2026-10-06T07:12:41+0000", "label": "agent_v4 step 3", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.96, "in": 1641, "out": 239, "reasoning": 160, "finish": "tool_calls"}
+{"ts": "2026-10-06T07:12:43+0000", "label": "agent_v4 step 4", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.02, "in": 1791, "out": 64, "reasoning": 34, "finish": "tool_calls"}
+{"ts": "2026-10-06T07:12:45+0000", "label": "agent_v4 step 5", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 0.86, "in": 1864, "out": 60, "reasoning": 23, "finish": "stop"}
+{"ts": "2026-10-06T07:49:15.083833+00:00", "provider": "tavily", "kind": "search", "cve": "CVE-2023-29159", "query": "CVE-2023-29159 starlette staticfiles traversal", "credits": 1, "est_usd": 0.008, "request_id": "5412c7de-8ce2-4d53-b378-86c95329919a", "response_time": 3.29}
+{"ts": "2026-10-06T07:49:21+0000", "label": "agent_v4 step 1", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.47, "in": 1452, "out": 95, "reasoning": 13, "finish": "tool_calls"}
+{"ts": "2026-10-06T07:49:24+0000", "label": "agent_v4 step 2", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.44, "in": 1636, "out": 161, "reasoning": 92, "finish": "tool_calls"}
+{"ts": "2026-10-06T07:49:26+0000", "label": "agent_v4 step 3", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.07, "in": 1773, "out": 91, "reasoning": 61, "finish": "tool_calls"}
+{"ts": "2026-10-06T07:49:29+0000", "label": "agent_v4 step 4", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.21, "in": 1845, "out": 124, "reasoning": 59, "finish": "stop"}
+{"ts": "2026-10-06T11:38:21.138399+00:00", "provider": "tavily", "kind": "search", "cve": "CVE-2023-29159", "query": "CVE-2023-29159 starlette staticfiles traversal", "credits": 1, "est_usd": 0.008, "request_id": "768b9cc8-d00c-491d-b5c5-24b9c3ba497e", "response_time": 2.11}
+{"ts": "2026-10-06T11:38:29+0000", "label": "agent_v4 step 1", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.87, "in": 1140, "out": 135, "reasoning": 13, "finish": "tool_calls"}
+{"ts": "2026-10-06T11:38:31+0000", "label": "agent_v4 step 2", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 0.82, "in": 1336, "out": 52, "reasoning": 18, "finish": "tool_calls"}
+{"ts": "2026-10-06T11:38:34+0000", "label": "agent_v4 step 3", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.15, "in": 1456, "out": 57, "reasoning": 11, "finish": "tool_calls"}
+{"ts": "2026-10-06T11:38:36+0000", "label": "agent_v4 step 4", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.02, "in": 1828, "out": 88, "reasoning": 47, "finish": "tool_calls"}
+{"ts": "2026-10-06T11:38:38+0000", "label": "agent_v4 step 5", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.3, "in": 1958, "out": 74, "reasoning": 13, "finish": "tool_calls"}
+{"ts": "2026-10-06T11:38:39+0000", "label": "agent_v4 step 6", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.12, "in": 2046, "out": 57, "reasoning": 13, "finish": "tool_calls"}
+{"ts": "2026-10-06T11:38:40+0000", "label": "agent_v4 step 7", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.14, "in": 2117, "out": 106, "reasoning": 44, "finish": "tool_calls"}
+{"ts": "2026-10-06T11:38:42+0000", "label": "agent_v4 step 8", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.78, "in": 2206, "out": 186, "reasoning": 119, "finish": "tool_calls"}
+{"ts": "2026-10-06T12:08:00.074477+00:00", "provider": "tavily", "kind": "search", "cve": "CVE-2023-29159", "query": "CVE-2023-29159 starlette staticfiles traversal", "credits": 1, "est_usd": 0.008, "request_id": "866f89a8-d16b-4dcf-8714-eea6b8f5b267", "response_time": 2.45}
+{"ts": "2026-10-06T12:08:08+0000", "label": "agent_v4 step 1", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.54, "in": 1215, "out": 57, "reasoning": 17, "finish": "tool_calls"}
+{"ts": "2026-10-06T12:08:12.617391+00:00", "provider": "tavily", "kind": "search", "cve": "CVE-2023-29159", "query": "CVE-2023-29159", "credits": 1, "est_usd": 0.008, "request_id": "74bf809d-7c08-4f64-bd87-45b9238f30fa", "response_time": 2.7}
+{"ts": "2026-10-06T12:08:13+0000", "label": "agent_v4 step 2", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 0.98, "in": 1517, "out": 58, "reasoning": 23, "finish": "tool_calls"}
+{"ts": "2026-10-06T12:08:15+0000", "label": "agent_v4 step 3", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 0.81, "in": 1617, "out": 63, "reasoning": 17, "finish": "tool_calls"}
+{"ts": "2026-10-06T12:08:18+0000", "label": "agent_v4 step 4", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.26, "in": 1989, "out": 99, "reasoning": 44, "finish": "tool_calls"}
+{"ts": "2026-10-06T12:08:20+0000", "label": "agent_v4 step 5", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.04, "in": 2133, "out": 78, "reasoning": 11, "finish": "tool_calls"}
+{"ts": "2026-10-06T12:08:22+0000", "label": "agent_v4 step 6", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 0.83, "in": 2268, "out": 57, "reasoning": 27, "finish": "tool_calls"}
+{"ts": "2026-10-06T12:08:25+0000", "label": "agent_v4 step 7", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.15, "in": 2341, "out": 90, "reasoning": 22, "finish": "stop"}
