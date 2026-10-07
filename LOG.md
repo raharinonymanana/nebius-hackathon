@@ -252,3 +252,13 @@ OUTCOME/DECISION: affordance works but behavior unchanged because the task is to
 RECEIPT NOTE: this run Tavily returned clean URLs (NVD /vuln/detail/ + repo-scoped /security/advisories/GHSA-…), so cited was mostly origin:tavily with only cve.org constructed — confirms the recall gap is intermittent and the constructed layer is a correct safety net, not dead weight.
 A3 STATUS: COMPLETE + demo-ready. Quality GAP #3 (Tavily runtime) CLOSED — mandatory lookup + cited provenance-tagged sources in every receipt + a built/capped model tool. $3k Best-Use-of-Tavily story is real and receipt-backed. remediation cve=null also fixed (SPEC.CVE now set).
 COST: cumulative Tavily today 4 searches / 4 credits (~$0.032). costlog model TOTAL ~$0.0369.
+
+## 2026-10-07 (Day 12) — command injection cartridge: CVE pinned + build-time confirm PASS
+- Pinned GitPython CVE-2022-24439, vuln 3.1.29 / fixed 3.1.30 (A1). Trade-off accepted: sink is git protocol/option injection (CWE-78 RCE), not literal shell=True; chosen for clean pair + in-process single string + max judge legibility.
+- Build-time confirm (throwaway, no model calls): CONFIRM PASS.
+  - Winning payload: `ext::sh -c cp% <canary>% <sidecar>` (73 chars). `%`=remote-ext space.
+  - Canary observable = SIDECAR FILE (git swallows helper stdout), NOT stdout like Starlette.
+  - Requires git cli `multi_options=["-c","protocol.ext.allow=always"]` to enable ext transport (= harness setup, proven by the no-allow control row that correctly did NOT leak). The LIBRARY's input validation is what we measure: absent 3.1.29 (leak), present 3.1.30 (UnsafeProtocolError, no leak).
+  - 3.1.29: leak YES; 3.1.30: refused, no leak; benign local clone OK on both. git cli 2.43.0.
+- Both VARIANTs call clone_from identically; difference = installed version only (one adapter, like Starlette).
+- Leftover: gitpython 3.1.30 in venv (noted, not in requirements.txt).
