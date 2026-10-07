@@ -154,6 +154,8 @@ def make_task():
         "results.\n\n"
         + _advisory_context_block()
         + f"--- /app/{SPEC.MODULE_FILENAME} ---\n" + SPEC.source(VARIANT)
+        + ("\n\nTransport syntax reference: " + SPEC.TRANSPORT_NOTE
+           if getattr(SPEC, "TRANSPORT_NOTE", None) else "")
     )
 
 
