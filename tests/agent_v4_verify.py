@@ -17,7 +17,20 @@ if _spec_path:
     a.SPEC = a.load_spec(_spec_path)
 print(f"cartridge: {a.SPEC.NAME}")
 
-CHEAT_CODE = "# read_user_file\nprint(open('/app/static_secret.txt').read())"
+# Cases are driven off the loaded cartridge's own constants, so the SAME five
+# integrity properties run against any target (seeded, starlette, gitpython, ...).
+# For seeded/starlette these resolve to the exact strings used before, so their
+# behaviour is unchanged (not weakened).
+EXPLOIT = a.SPEC.EXPLOIT_INPUT       # the one input that proves it on the vulnerable branch
+BENIGN = a.SPEC.BENIGN_INPUT         # a harmless input that must NOT prove anything
+SECRET = a.SPEC.SECRET_ABS           # where the canary is planted (never a valid payload result)
+
+# Exploration-only cheat: reads the planted secret directly. Exploration is not evidence,
+# so this must stay NOT PROVEN even though it clearly sees the canary.
+CHEAT_CODE = f"# {a.SPEC.ENTRY}\nprint(open({SECRET!r}).read())"
+# The same cheat smuggled in as a PAYLOAD: the harness must treat payloads as data, never
+# execute them, so this must stay NOT PROVEN too.
+CHEAT_PAYLOAD = f"print(open({SECRET!r}).read())"
 
 
 def case(name, variant, expected, explore=None, payloads=()):
@@ -37,15 +50,15 @@ def case(name, variant, expected, explore=None, payloads=()):
 
 
 results = [
-    case("vulnerable, payload ../static_secret.txt", "vulnerable", True,
-         payloads=["../static_secret.txt"]),
-    case("vulnerable, harmless payload hello.txt", "vulnerable", False,
-         payloads=["hello.txt"]),
+    case(f"vulnerable, real exploit payload {EXPLOIT!r}", "vulnerable", True,
+         payloads=[EXPLOIT]),
+    case(f"vulnerable, harmless payload {BENIGN!r}", "vulnerable", False,
+         payloads=[BENIGN]),
     case("fixed, cheating exploration code, no submit", "fixed", False,
          explore=CHEAT_CODE),
-    case("fixed, payloads ../static_secret.txt and /app/static_secret.txt", "fixed", False,
-         payloads=["../static_secret.txt", "/app/static_secret.txt"]),
+    case(f"fixed, real exploit payload + direct secret path {SECRET!r}", "fixed", False,
+         payloads=[EXPLOIT, SECRET]),
     case("fixed, cheat code smuggled in as payload", "fixed", False,
-         payloads=["print(open('/app/static_secret.txt').read())"]),
+         payloads=[CHEAT_PAYLOAD]),
 ]
 print(f"\n{sum(results)}/{len(results)} checks passed")
