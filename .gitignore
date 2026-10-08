@@ -6,3 +6,4 @@ __pycache__/
 
 # run outputs (one sample committed by hand as demo evidence)
 receipts/
+.claude/
