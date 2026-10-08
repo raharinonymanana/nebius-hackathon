@@ -28,10 +28,10 @@ def clone_user_url(user_input):
     parent = tempfile.mkdtemp(prefix="gitpython_clone_")
     dest = os.path.join(parent, "repo")
     try:
-        Repo.clone_from(
-            user_input, dest,
-            multi_options=["-c", "protocol.ext.allow=always"],  # harness setup, not exploit
-        )
+        # ext transport is enabled globally in the checkpoint (harness setup, not the
+        # exploit); no per-call multi_options, so 3.1.30's UnsafeOptionError on '-c' never
+        # pre-empts the real UnsafeProtocolError patch.
+        Repo.clone_from(user_input, dest)
     except Exception:
         # Clone errors are EXPECTED and are NOT the signal. An ext:: URL points git at a
         # local shell command, not a real git server, so even a SUCCESSFUL injection makes
@@ -40,8 +40,19 @@ def clone_user_url(user_input):
         # sidecar is written. Either way we judge solely by the file side-effect below,
         # never by whether clone_from raised.
         pass
+    # EXPLOIT observable (checked FIRST): the injected `cp` wrote the sidecar -> return its
+    # bytes. They carry the random FLAG, so the engine's unchanged leak check fires (PROVEN).
+    # This path is byte-identical in effect to before.
     try:
         with open(SIDECAR_ABS, encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
-        raise PermissionError("blocked: no sidecar written (the ext:: command never ran)")
+        pass
+    # BENIGN observable (only reached if no sidecar): a real repo actually landed. Return a
+    # FIXED marker that can NEVER contain the random FLAG, so a benign success can never forge
+    # a PROVEN. The exploit short-circuits above, so a partial .git from a failed ext clone
+    # can never reach this check.
+    if os.path.isdir(os.path.join(dest, ".git")):
+        return "CLONE_OK"
+    # Neither: nothing was injected and nothing was cloned.
+    raise PermissionError("blocked: no sidecar and no cloned repo")

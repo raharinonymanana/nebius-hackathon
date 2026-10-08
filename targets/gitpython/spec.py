@@ -43,12 +43,15 @@ ENTRY = "clone_user_url"                 # harness calls vuln.clone_user_url(inp
 
 SECRET_ABS = "/app/git_secret.txt"       # canary planted here by the engine (the cp source)
 SIDECAR_ABS = "/app/git_leak_sidecar.txt"  # the injected cp writes here; adapter reads it
+BENIGN_SRC_ABS = "/app/benign_src"       # tiny local git repo (built in setup) for benign clones
 BENIGN_FILES = {}                        # no served files: benign is a harmless URL, not a read
 
 # The one string that proves it (tests/confirm only): an ext:: URL whose shell command copies
 # the canary into the sidecar. The '%' encodes a space for git-remote-ext (cp% A% B -> cp A B).
 EXPLOIT_INPUT = f"ext::sh -c cp% {SECRET_ABS}% {SIDECAR_ABS}"
-BENIGN_INPUT = "ext::sh -c true"         # harmless URL: same code path, writes no sidecar
+# Benign URL: a plain file:// clone of the local source repo built in setup_commands. NON-ext,
+# so 3.1.30 does not block it; the adapter sees a real .git land and returns CLONE_OK.
+BENIGN_INPUT = f"file://{BENIGN_SRC_ABS}"
 
 VULN_VERSION = "3.1.29"                  # last release before the fix
 FIXED_VERSION = "3.1.30"                 # the release that ships the UnsafeProtocolError check
@@ -66,6 +69,22 @@ def setup_commands(variant="vulnerable"):
     return [
         ("sh", ["-c", "apt-get update && apt-get install -y --no-install-recommends git "
                       "&& rm -rf /var/lib/apt/lists/*"]),
+        # Infrastructure (both variants): enable the ext transport system-wide so the adapter
+        # needs no per-call -c option. git >=2.43 blocks ext by default; this is HARNESS
+        # SETUP (identical for both branches), NOT the exploit. Doing it in config (not via
+        # clone_from multi_options) avoids 3.1.30's UnsafeOptionError on '-c', so on the
+        # fixed build the ext:: URL reaches the REAL patch (UnsafeProtocolError). --system
+        # (/etc/gitconfig) is read regardless of $HOME, so the clone_from subprocess picks it
+        # up with no env dependency (--global needs HOME set in every git context).
+        ("sh", ["-c", "git config --system protocol.ext.allow always"]),
+        # Infrastructure (both variants, version-independent): a tiny local source repo with
+        # one commit, so BENIGN_INPUT (file://) has a real repo to clone. Inline commit
+        # identity so it does not depend on any global git config.
+        ("sh", ["-c", f"mkdir -p {BENIGN_SRC_ABS} && git init -q {BENIGN_SRC_ABS} && "
+                      f"printf 'hello\\n' > {BENIGN_SRC_ABS}/README.md && "
+                      f"git -C {BENIGN_SRC_ABS} add README.md && "
+                      f"git -C {BENIGN_SRC_ABS} -c user.email=setup@local "
+                      f"-c user.name=setup commit -q -m init"]),
         ("python", ["-m", "pip", "install", "--no-cache-dir", f"gitpython=={version}"]),
     ]
 
