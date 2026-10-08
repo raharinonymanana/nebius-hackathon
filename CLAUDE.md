@@ -41,3 +41,8 @@ replaying a payload against a target in a Token Factory sandbox (patch step late
 - prover/ = the product (engine agent_v4.py). tests/ = verdict-integrity suite.
 - targets/<name>/spec.py = swappable cartridge the engine loads by file path.
 - Clock is UTC in WSL; log timestamps show +0000.
+
+## Git (updated Day 13)
+- Claude Code MAY commit CODE, but only from an explicit per-file brief (explicit `git add <file>`, never `git add .`; `git status --ignored` safety-check first). No need to re-ask each time once a commit brief is given.
+- Claude Code NEVER pushes. Pushing is Hasina's alone. The brain (this chat) supplies the exact push command after verifying the state is green; Hasina runs it himself.
+- Records files (LOG.md, DECISIONS.md, FEEDBACK.md, the brief) stay brain-side — Hasina edits them, not CC.
