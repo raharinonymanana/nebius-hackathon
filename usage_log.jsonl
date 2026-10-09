@@ -228,3 +228,11 @@
 {"ts": "2026-10-09T06:44:23+0000", "label": "agent_v4 step 11", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 3.0, "in": 4908, "out": 461, "reasoning": 407, "finish": "tool_calls"}
 {"ts": "2026-10-09T06:44:26.056793+00:00", "provider": "tavily", "kind": "search", "cve": "CVE-2022-24439", "query": "CVE-2022-24439 exploit", "credits": 1, "est_usd": 0.008, "request_id": "c99cb0d2-5c02-4e40-96e2-554a2edf58b5", "response_time": 1.65}
 {"ts": "2026-10-09T06:44:30+0000", "label": "agent_v4 step 12", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 4.02, "in": 5219, "out": 636, "reasoning": 588, "finish": "tool_calls"}
+{"ts": "2026-10-09T17:35:42.174381+00:00", "provider": "tavily", "kind": "search", "cve": "CVE-2026-26198", "query": "CVE-2026-26198 ormar aggregate sql injection", "credits": 1, "est_usd": 0.008, "request_id": "c696ea5d-eab2-4b9a-85db-6a68574ff444", "response_time": 1.66}
+{"ts": "2026-10-09T17:36:31+0000", "label": "agent_v4 step 1", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.46, "in": 2243, "out": 66, "reasoning": 12, "finish": "tool_calls"}
+{"ts": "2026-10-09T17:36:35+0000", "label": "agent_v4 step 2", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.47, "in": 2428, "out": 209, "reasoning": 64, "finish": "tool_calls"}
+{"ts": "2026-10-09T17:36:47+0000", "label": "agent_v4 step 3", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 2.97, "in": 2787, "out": 401, "reasoning": 313, "finish": "tool_calls"}
+{"ts": "2026-10-09T17:36:59+0000", "label": "agent_v4 step 4", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 3.07, "in": 2947, "out": 420, "reasoning": 295, "finish": "tool_calls"}
+{"ts": "2026-10-09T17:37:16+0000", "label": "agent_v4 step 5", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 5.15, "in": 3222, "out": 874, "reasoning": 720, "finish": "tool_calls"}
+{"ts": "2026-10-09T17:37:28+0000", "label": "agent_v4 step 6", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 11.09, "in": 3454, "out": 2543, "reasoning": 2507, "finish": "tool_calls"}
+{"ts": "2026-10-09T17:37:33+0000", "label": "agent_v4 step 7", "model": "nvidia/nemotron-3-super-120b-a12b", "secs": 1.64, "in": 3533, "out": 102, "reasoning": 22, "finish": "stop"}
