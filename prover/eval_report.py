@@ -25,6 +25,7 @@ TARGET_KEYS = [
     ("seeded", "seeded"),
     ("starlette", "starlette"),
     ("gitpython", "gitpython"),
+    ("ormar", "ormar"),
 ]
 
 # Error signatures that mean a run crashed on tooling before it could attempt a
@@ -250,7 +251,8 @@ def _print_row(target, axis, rate, ci, n):
 
 def render(metrics, valid, excluded, cost):
     targets = [short for short, _ in TARGET_KEYS]
-    label = {"seeded": "seeded", "starlette": "starlette", "gitpython": "gitpython"}
+    label = {"seeded": "seeded", "starlette": "starlette", "gitpython": "gitpython",
+             "ormar": "ormar"}
 
     print(DRULE)
     print("PROVER EVAL RESULTS  (read-only; verdicts copied verbatim from receipts/*.json)")
