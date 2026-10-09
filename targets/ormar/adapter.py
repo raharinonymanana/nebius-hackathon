@@ -59,6 +59,10 @@ def _bridge_canary():
         flag = f.read().rstrip("\n")
     conn = sqlite3.connect(DB_ABS)
     try:
+        # Test-harness canary seeding: copy the engine-planted FLAG from SECRET_ABS into the
+        # admin credential cell at replay time. This is HARNESS PLUMBING (the equivalent of
+        # planting a secret file), NOT application code; the vulnerable app under test is
+        # price_stat() / Product.objects.max() over the products model.
         conn.execute(
             "UPDATE users SET password_hash = ? WHERE username = 'admin'", (flag,))
         conn.commit()
