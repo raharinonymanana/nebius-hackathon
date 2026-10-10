@@ -262,3 +262,29 @@ COST: cumulative Tavily today 4 searches / 4 credits (~$0.032). costlog model TO
   - 3.1.29: leak YES; 3.1.30: refused, no leak; benign local clone OK on both. git cli 2.43.0.
 - Both VARIANTs call clone_from identically; difference = installed version only (one adapter, like Starlette).
 - Leftover: gitpython 3.1.30 in venv (noted, not in requirements.txt).
+
+## Day 14 — Fri 9 Oct 2026
+
+### Session 1 — eval / results table (engine step 3)
+- Reordered the engine: built the eval (step 3) BEFORE the SQL class (step 2), so a new exploit class would drop into a working measurement table instead of being measured after the fact.
+- Built `prover/eval_report.py` — read-only reporting. Parses `receipts/*.json` (top-level only), skips invalid/no-verdict receipts (disclosed, never deleted), classifies by target/variant/task_mode/verdict + locate booleans, Wilson 95% intervals hand-rolled (no scipy), reads `usage_log.jsonl` for cost. Makes no priced call; never touches the sealed harness.
+- Adopted the 2026 eval standard (verified on web): report pass@k (capability) vs pass^k (consistency) SEPARATELY; grade outcomes with the sealed verifier, never model prose; report small-n plainly with Wilson intervals; keep real traces beside the numbers.
+- The eval caught our OWN overclaim (Starlette 5/5 → 4/5 after excluding an env crash) — the strongest credibility signal we can show the ML judge bloc.
+- Corrupt/invalid receipts: KEEP + EXCLUDE, never `rm` (2 excluded, disclosed).
+- Commits: 265d880, 9b335bd.
+
+### Session 2 — SQL injection cartridge (engine step 2), the 3rd exploit class
+- Built the SQL cartridge: **ormar CVE-2026-26198**. Why ormar: pip-install only, SQLite embedded (no server), MIT license, real 2026 CVE — keeps the engine-cost ladder cheap.
+- Canary via FILE->CELL bridge: the engine plants the FLAG file at SECRET_ABS (data contract unchanged); the adapter reads it with sync sqlite3 and UPDATEs admin.password_hash BEFORE the measured async `Product.objects.max(user_input)`. Sealed engine byte-identical.
+- Realistic schema (for Impact): in-scope `products` + out-of-scope `users(password_hash, is_admin)` + `api_credentials`; EXPLOIT_INPUT reads the admin credential. Reads as a real app DB; grading unchanged (random FLAG in stdout).
+- Verified cartridge 5/5. Handed PROVEN receipt (labelled HANDED, not unaided — handed shows source by design; discovery belongs in LOCATE mode). Remediation FIX VERIFIED (prove-then-patch generalises to SQL; `remediate.py` untouched, worked as-is).
+- Wired ormar into `eval_report` TARGET_KEYS (3rd class in the results table). The "frozen data contract" needed a 1-line target-list touch — the classifier is data-driven, the target list was hardcoded. Noted for the README.
+- Costs (authoritative via costlog, both Day-14 sessions): model $0.20616 (217 priced calls) · Tavily 28 credits ~$0.224 · total ~$0.430. Per-run estimates ran 3-5x low vs logged — cite the log, not the guess.
+- Commits: 0e5942b, f01936f, dfcebb3, ebf1455, 98f105b. All made with attribution off (machine-local). origin=local=98f105b, tree clean.
+
+### Lessons (Day 14)
+- Eval-honesty: pass@k vs pass^k separately; one green run measures luck, not reliability; Wilson makes n=3 honest.
+- Trust-the-generated-number: when a script recomputes from raw records, the script wins over memory/vibes.
+- Diagnose-before-spend (reinforced): inspected the handed prompt for FREE before paying -> caught the source-leak AND that `source()` is executed -> avoided two wasted paid runs.
+- Handed != discovery: handed shows the vulnerable source by design; never inflate a handed PROVEN into an unaided-discovery claim.
+- SQLite-URL trap: `sqlite:///path` (3 slashes) = relative, `sqlite:////path` (4) = absolute; build URL and adapter URL must point at the SAME absolute file or you get a false NOT PROVEN.

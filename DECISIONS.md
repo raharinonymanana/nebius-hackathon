@@ -139,3 +139,22 @@
 - 8 Oct (Day 13): gitpython remediation FIX NOT VERIFIED — root-caused to a CARTRIDGE bug, NOT the fix. Phase A PROVEN, Phase B exploit_closed=TRUE (upgrade DID close it). Phase C still_works=FALSE because (1) BENIGN_INPUT was "ext::sh -c true" — itself an ext:: URL that 3.1.30 blocks by design, AND deeper (2) the adapter's ONLY success path is reading the sidecar, which exists only after the injection fires → a clean clone can never return exit 0 → still_works structurally impossible as written. Our still-works guard correctly refused to over-certify + exposed the cartridge had no representation of benign success. FIX (cartridge-only, sealed engine untouched): give adapter two truthful outcomes — (a) sidecar present → print sidecar (contains random FLAG) → leaked/PROVEN [unchanged]; (b) real repo landed at dest (.git present), no sidecar → print a FIXED non-FLAG marker (e.g. CLONE_OK) → exit 0, no FLAG → still_works=True, can NEVER forge a PROVEN (FLAG is random + only reachable by the real injection); (c) neither → raise. Benign success contingent on a real .git landing (genuine clone, not a rubber stamp). BENIGN_INPUT = local file:// clone of a tiny repo git init'd in setup_commands (A1: deterministic, no network, sandbox-only ethos; chosen over A2 https public clone = network/flaky/external). Re-verify required before trusting: parametrized verify 5/5 + tamper (benign-success not drivable to PROVEN) + re-run remediation expecting FIX VERIFIED. NOT final.
 
 - 8 Oct (Day 13): gitpython remediation Phase C root-caused + fix = B (FINAL direction for this cartridge). Probe (throwaway sandbox, no model) found: benign file:// clone fails on 3.1.30 NOT from the file:// protocol (plain git clone file:// works) or a missing source repo (built fine), but because GitPython 3.1.30's multi_options=["-c",...] triggers git.exc.UnsafeOptionError('-c is not allowed') BEFORE any clone runs — a SEPARATE 3.1.30 hardening from the CVE fix. BIG integrity finding: on 3.1.30 the exploit was being closed by this incidental OPTION guard, NOT by UnsafeProtocolError (the real CVE-2022-24439 patch = ext:: input validation) — so "exploit_closed" was right on outcome, wrong on MECHANISM. git version in sandbox = 2.47.3 (not 2.43). FIX B (chosen over A=allow_unsafe_options=True): move protocol.ext.allow=always into setup_commands as GLOBAL git config (git config --global) and DROP the -c multi_options from the adapter → adapter call becomes plain clone_from(user_input, dest), IDENTICAL both branches (preserves the Day-9 identical-call principle), no new-in-3.1.30 kwarg (no 3.1.29 compat risk). Result: 3.1.30 exploit now blocked by the REAL UnsafeProtocolError (GitPython inspects the ext:: URL in Python before calling git); 3.1.30 benign file:// not an unsafe protocol → clones → CLONE_OK → still_works=True; 3.1.29 both run (global config enables ext). Judge rationale: plain call + version-only difference = strongest "nothing up our sleeve" signal for the repo-reading engineer panel; A's two visible unsafe_* flags next to the exploit read worse. MUST re-verify: keep a no-enable CONTROL (without protocol.ext.allow the exploit does NOT fire = ext is harness setup) + capture Phase B error text to confirm it's UnsafeProtocolError + parametrized verify 5/5 + re-run remediation expecting FIX VERIFIED. NOT final.
+
+## Day 14 — Fri 9 Oct 2026  (nothing final unless marked)
+
+### Session 2
+- SQL cartridge COMPLETE — ormar CVE-2026-26198; FILE->CELL canary bridge (sync sqlite3 UPDATE before the measured async max). NOT final.
+- Realistic schema over toy (products + out-of-scope users/api_credentials; exfil the admin credential). NOT final.
+- Handed keeps full runnable source (handed != discovery; genuine SQL discovery reserved for LOCATE mode). NOT final.
+- ormar handed PROVEN (labelled HANDED) + remediation FIX VERIFIED. NOT final.
+- eval_report TARGET_KEYS now includes ormar (3rd class in the table). NOT final.
+
+### Session 1
+- Engine step order: eval (3) BEFORE SQL (2). NOT final.
+- Eval model: pass@k / pass^k + Wilson 95% + plain small-n. NOT final.
+- Corrupt receipt: KEEP + EXCLUDE, never rm. NOT final.
+- Remediation reported per-target (yes/no). NOT final.
+- Starlette 4/5 raw + 4/4-excl-env-crash footnote. NOT final.
+- LangSmith NOT wired into the agent (receipts are the substrate). NOT final.
+- SQL target = ormar; SQL timebox = Day 17 (now MET). NOT final.
+- Strategic posture: ~85% ML at artifact level; ~40% engine-depth / 60% product-ship at project level. NOT final.
