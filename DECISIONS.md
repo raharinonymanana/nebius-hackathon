@@ -158,3 +158,14 @@
 - LangSmith NOT wired into the agent (receipts are the substrate). NOT final.
 - SQL target = ormar; SQL timebox = Day 17 (now MET). NOT final.
 - Strategic posture: ~85% ML at artifact level; ~40% engine-depth / 60% product-ship at project level. NOT final.
+
+## Day 15 — Sat 10 Oct 2026 (all NOT final unless marked)
+
+- MCP server scope = A4 — expose verify_proof (target+variant+payload -> sealed replay -> verdict) + list_targets, production-bar (typed honest errors, re-checkable receipt, scrubbed reason, documented schema). Remediation deliberately EXCLUDED (weakest-evidence/summary-only receipt — stays in repo + eval table, not a live tool).
+- Subprocess isolation per verify call — engine state is module-global; mcp_server shells to a fresh `python -m prover.replay_once` per call (cwd=repo root, payload as a list arg, no shell). Sealed engine untouched.
+- verify_proof = pure replay, MODEL-FREE — no agent loop, no Tavily -> zero model cost; the parametrized verify test exposed as a tool.
+- Security = name-whitelist registry — accept only a known target NAME scanned from targets/; never a caller path (load_spec execs).
+- reason field = scrubbed one-line — exception class+message, internal paths -> basenames; "" for PROVEN.
+- replay_once forwards the stderr TAIL from REPLAYS[-1] (full, uncut) instead of submit_proof's err[:300] head, so the exception line reaches the scrubber. Read-only on REPLAYS; engine byte-identical.
+- P4 headline demo = agent-drives-verifier (already demonstrated with Claude Code); richer form = CC reads vulnerable source + writes its own ormar exploit, then verify_proof -> PROVEN, labelled HANDED/composition not unaided.
+- RESOLVED: "offer the verifier as an MCP server?" -> YES. Built + real-agent-proven.

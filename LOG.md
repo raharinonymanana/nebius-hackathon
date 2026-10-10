@@ -288,3 +288,29 @@ COST: cumulative Tavily today 4 searches / 4 credits (~$0.032). costlog model TO
 - Diagnose-before-spend (reinforced): inspected the handed prompt for FREE before paying -> caught the source-leak AND that `source()` is executed -> avoided two wasted paid runs.
 - Handed != discovery: handed shows the vulnerable source by design; never inflate a handed PROVEN into an unaided-discovery claim.
 - SQLite-URL trap: `sqlite:///path` (3 slashes) = relative, `sqlite:////path` (4) = absolute; build URL and adapter URL must point at the SAME absolute file or you get a false NOT PROVEN.
+
+## Day 15 — Sat 10 Oct 2026 (BUILD) — Engine step 4: MCP server
+
+**What:** Exposed the sealed verifier as an MCP server so any agent can plug in (CTEM find -> prove). Two files added:
+- prover/replay_once.py — model-free one-shot sealed replay CLI. Loads SPEC from TARGET_SPEC_PATH + VARIANT -> build_checkpoint -> submit_proof(payload) -> one JSON line (verdict strictly from proven_replays; forwards the FULL stderr tail from REPLAYS[-1]). No model call, no costlog. Commit 0cfad0f.
+- prover/mcp_server.py — FastMCP "prove-it-verifier" with two tools: verify_proof (target+variant+payload -> sealed replay -> verdict) and list_targets. Each verify shells out to `python -m prover.replay_once` in a fresh subprocess. Remediation deliberately excluded. Commit 129cda5 (also carries the replay_once stderr-tail edit).
+
+**Why these choices:**
+- Subprocess isolation per call — engine state is module-global (SPEC/VARIANT/FLAG/REPLAYS); a long-running in-process server would bleed a prior verdict. Fresh process per verify = honesty guarantee, sealed engine untouched.
+- Security = name-whitelist registry — load_spec() does exec_module (an RCE surface), so the tool accepts only a known target NAME scanned from targets/*/spec.py, never a caller-supplied path.
+- Reason field = scrubbed one-line — exception class+message with internal paths stripped to basenames; "" for PROVEN. Honest "why" without infra leakage.
+- verify_proof = pure replay, MODEL-FREE -> ~0 cost (~1.8-2.3s/call, Tavily 0).
+
+**Verified 3 ways (all green):**
+1. Unit — _impl calls 6/6 (PROVEN vuln / NOT PROVEN fixed w/ scrubbed QueryDefinitionError / unknown_target / bad_variant / usage / list_targets).
+2. Live stdio smoke — throwaway MCP client over the wire: list_tools returns both tools w/ schemas; verify_proof vuln->PROVEN, fixed->NOT PROVEN; list_targets ok; server logged the crossing requests.
+3. Real-agent — Claude Code connected to prove-it-verifier, discovered the 2 tools, read EXPLOIT_INPUT, called verify_proof vuln->PROVEN / fixed->NOT PROVEN (reason carried QueryDefinitionError, no /app/ leak) + list_targets->4; CC's own summary respected PROVEN/NOT-PROVEN-never-safe.
+
+Registered prove-it-verifier as a local-scope MCP server in Claude Code (~/.claude.json, not committed) — kept for ongoing use + the P4 demo.
+
+**Lessons:**
+- Read-recorded-state: the full QueryDefinitionError was already in REPLAYS[-1]["stderr"] uncut; reading engine-recorded state (read-only) gave the scrubbed reason without editing the sealed engine's err[:300].
+- Exec-is-an-RCE-surface: load_spec execs, so resolve a short NAME against a fixed whitelist; never exec an external caller's path.
+- MCP-pin: on mcp<2, import `from mcp.server.fastmcp import FastMCP` + client `from mcp import ClientSession, StdioServerParameters` / `from mcp.client.stdio import stdio_client` — NOT `from fastmcp import ...` (separate 2.x package).
+
+**State:** generalisation MET at 3 exploit classes; optional MCP layer done + real-agent-proven. Next engine step = Step 5 (CI) = STOP LINE, then P4 ship.
