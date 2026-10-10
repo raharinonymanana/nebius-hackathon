@@ -71,6 +71,13 @@ def main():
     proven = a.proven_replays()
     verdict = "PROVEN" if proven else "NOT PROVEN"
 
+    # submit_proof's result trims stderr to the first 300 chars (traceback HEAD,
+    # boilerplate). The FULL, uncut stderr is appended to a.REPLAYS[-1] (the same
+    # list proven_replays() reads) -- read-only, engine untouched. The exception
+    # line we care about lives in the TAIL, so forward the tail.
+    full_err = (a.REPLAYS[-1].get("stderr", "") if a.REPLAYS
+                else result.get("stderr", "")) or ""
+
     _emit({
         "ok": True,
         "target": spec_path,
@@ -80,7 +87,7 @@ def main():
         "leaked": result.get("leaked_secret"),
         "exit_code": result.get("exit_code"),
         "seconds": result.get("seconds"),
-        "stderr": result.get("stderr", "")[:300],
+        "stderr": full_err[-500:],
     }, 0)
 
 
