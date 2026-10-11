@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  prove-it demo - finding-validation agent. Serves the frozen data contract
+  and demo shell from a single Lambda behind a public Function URL.
+
+Resources:
+  DemoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: prove-it-demo
+      CodeUri: demo/
+      Handler: app.handler
+      Runtime: python3.12
+      MemorySize: 256
+      Timeout: 60
+      FunctionUrlConfig:
+        AuthType: NONE
+
+Outputs:
+  DemoUrl:
+    Description: Public Function URL for the prove-it demo
+    Value: !GetAtt DemoFunctionUrl.FunctionUrl

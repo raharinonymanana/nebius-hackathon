@@ -7,3 +7,7 @@ __pycache__/
 # run outputs (one sample committed by hand as demo evidence)
 receipts/
 .claude/
+
+# AWS SAM deploy artifacts
+.aws-sam/
+samconfig.toml
