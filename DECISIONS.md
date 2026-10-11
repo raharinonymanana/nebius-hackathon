@@ -169,3 +169,16 @@
 - replay_once forwards the stderr TAIL from REPLAYS[-1] (full, uncut) instead of submit_proof's err[:300] head, so the exception line reaches the scrubber. Read-only on REPLAYS; engine byte-identical.
 - P4 headline demo = agent-drives-verifier (already demonstrated with Claude Code); richer form = CC reads vulnerable source + writes its own ormar exploit, then verify_proof -> PROVEN, labelled HANDED/composition not unaided.
 - RESOLVED: "offer the verifier as an MCP server?" -> YES. Built + real-agent-proven.
+
+## Day 15 s2 — 10 Oct 2026 (none final)
+- DevOps spine = CI + architecture diagram + IaC deploy (SAM). Explicitly NOT Docker/K8s/monitoring. Subordinate to the trio; deploy-as-code = the P4 deploy, not extra scope.
+- CI scope = run the 3 runtime-offline tests (advisory/locate/advisory_tool) via a dummy NEBIUS_API_KEY in the workflow, NO engine change. agent_v4_verify EXCLUDED (needs live ConTree + secrets). Sealed-verdict path reproduced via receipts + eval_report, stated honestly in README.
+- Architecture diagram = local-only thinking tool; NOT committed (architecture may still change; honest final diagram for README at P4).
+- SRS PDF = review artifact, NOT committed. Repo docs/SRS.md is a P4 decision. 3 remediation targets logged (product unbuilt / impact under-evidenced / discovery over-readable).
+
+## Day 16 — 11 Oct 2026 (none final)
+- Demo narrative = Refined A3: "AI-era vulnerability noise -> runtime proof." Audience = developers/teams + agents (via MCP). Hero = agent drives MCP verifier -> PROVEN + receipt. Honest on real CVEs (verify CLAIMED vulns by execution; never fake "AI wrote this"). Fixes SRS target #2. [RATIFIED by judge-panel + criteria + 2026 external research; not final.]
+- Do NOT decide the demo UI yet — build the full UI-agnostic backend first, decide UI in a fresh session. Frozen data contract (demo_data.json) is the seam; UI only fetches /api/data; engine never touches the cloud. /api/verify is a 501 stub seam for a possible future "live" mode.
+- Hosting pipeline = SAM (AWS CLI v2 + SAM CLI installed native in WSL). Stack prove-it-demo, us-east-1, public Function URL, 60s timeout, CodeUri: demo/ (ships only the demo). Reuse existing user/hasina-dev creds (acct <aws-account-id>). Proven via throwaway hello-world first.
+- ormar demo not_proven slot = null + honest pending note (Option 1). Rejected deriving negative evidence from the FIX VERIFIED run into the slot (would muddy the verdict). Real ormar fixed NOT-PROVEN receipt to be generated as pre-submission polish.
+- demo/template.yaml lives at repo ROOT (not in demo/) — SAM CodeUri is relative to the template folder; root + CodeUri: demo/ ships only the 3 demo files.
