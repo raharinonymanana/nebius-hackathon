@@ -11,3 +11,6 @@ receipts/
 # AWS SAM deploy artifacts
 .aws-sam/
 samconfig.toml
+
+# compiled React UI copied from frontend/dist (sam ships it from the filesystem)
+demo/web/
