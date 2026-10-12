@@ -1,5 +1,8 @@
 // Types mirroring demo/demo_data.json EXACTLY.
-// Field names and nullability are derived from the real file, not guessed.
+// Field names, nullability and the literal `verdict` / `kind` strings are copied
+// verbatim from the real file, not guessed. `verdict` and `kind` are the
+// discriminants, so human_trace is structurally proven-only (G1 honesty enforced
+// by the compiler).
 
 export interface Meta {
   model_cost_usd: number
@@ -9,12 +12,9 @@ export interface Meta {
   receipts_excluded: number
 }
 
-// One run of the prover against a target variant. The three variants in
-// `Target.runs` (proven / not_proven / fix_verified) all share the base
-// fields below; the trailing fields appear only on specific variants.
-export interface Run {
-  verdict: string
-  mode: string
+// Fields shared by every run variant (demo_data.json: present on all three).
+interface RunBase {
+  mode: 'unaided' | 'handed'
   // null on some runs (e.g. starlette.not_proven, where no payload was submitted).
   input: string | null
   canary: string
@@ -22,12 +22,27 @@ export interface Run {
   verification_is_model_free: boolean
   utc: string
   source_receipt: string
-  // Present on the `proven` variant only.
-  human_trace?: string[]
-  // Present on the `fix_verified` variant only.
-  exploit_closed?: boolean
-  still_works?: boolean
 }
+
+// verdict "PROVEN": the only variant that carries human_trace (required here).
+export interface ProvenRun extends RunBase {
+  verdict: 'PROVEN'
+  human_trace: string[]
+}
+
+// verdict "NOT PROVEN": no human_trace, no exploit_closed / still_works.
+export interface NotProvenRun extends RunBase {
+  verdict: 'NOT PROVEN'
+}
+
+// verdict "FIX VERIFIED": carries the remediation outcome fields.
+export interface FixVerifiedRun extends RunBase {
+  verdict: 'FIX VERIFIED'
+  exploit_closed: boolean
+  still_works: boolean
+}
+
+export type Run = ProvenRun | NotProvenRun | FixVerifiedRun
 
 export interface Target {
   id: string
@@ -37,29 +52,39 @@ export interface Target {
   vulnerable_version: string
   fixed_version: string
   runs: {
-    proven: Run
+    proven: ProvenRun
     // null when no standalone fixed/NOT-PROVEN receipt exists (e.g. ormar).
-    not_proven: Run | null
-    fix_verified: Run
+    not_proven: NotProvenRun | null
+    fix_verified: FixVerifiedRun
   }
 }
 
-// A row in eval.rows. `kind` is "rate" or "count":
-//  - rate rows carry x, ci_lo, ci_hi (ci_* may be null, e.g. ormar discrimination).
-//  - count rows carry count (and no x / ci_lo / ci_hi).
-export interface EvalRow {
+// Fields shared by every eval row (demo_data.json: present on rate and count).
+interface EvalRowBase {
   section: string
   target: string
   axis: string
-  kind: string
   n: number
   rate_str: string
   ci_str: string
-  x?: number
-  ci_lo?: number | null
-  ci_hi?: number | null
-  count?: number
 }
+
+// kind "rate": carries x and the confidence interval (ci_* null, e.g. ormar
+// discrimination). x is always a number in the file.
+export interface RateRow extends EvalRowBase {
+  kind: 'rate'
+  x: number
+  ci_lo: number | null
+  ci_hi: number | null
+}
+
+// kind "count": carries count instead of x / ci_lo / ci_hi.
+export interface CountRow extends EvalRowBase {
+  kind: 'count'
+  count: number
+}
+
+export type EvalRow = RateRow | CountRow
 
 export interface RemediationRow {
   target: string
