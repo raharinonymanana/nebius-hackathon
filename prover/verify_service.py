@@ -247,7 +247,7 @@ def _not_proven(user_input, flag, note):
 
 
 # --- the single server-side entry point --------------------------------------
-def verify(target_key, user_input, *, timeout_s=8.0, base_image=None):
+def verify(target_key, user_input, *, timeout_s=25.0, base_image=None):
     """Prove the ormar aggregate SQL injection by replaying `user_input` as the
     aggregate field name inside a disposable ConTree sandbox. Model-free;
     canary-only verdict. Returns a dict matching contract.ts (ProvenRun on
@@ -256,7 +256,12 @@ def verify(target_key, user_input, *, timeout_s=8.0, base_image=None):
 
     base_image: a PRE-BAKED image tag/uuid (deps already installed) to boot the
     replay from -- this is what Lambda passes, so NO install runs on the request
-    path. When None (WSL/local), ensure_image() bakes python:3.12-slim once."""
+    path. When None (WSL/local), ensure_image() bakes python:3.12-slim once.
+
+    timeout_s is the HARD client-side daemon-thread budget around the replay.
+    Warm Lambda verifies run ~7s; 25s covers a cold start + the us-east-1 ->
+    ConTree hop with margin, and stays under the Lambda function's own 60s
+    ceiling so this client budget still fires first on a genuine hang."""
     # 1. WHITELIST -- never run an arbitrary target or arbitrary code.
     if target_key not in WHITELIST:
         raise ValueError(
@@ -343,4 +348,4 @@ if __name__ == "__main__":
 
     if cold is not None and warm is not None:
         print(f"\ntimings: cold PROVEN {cold:.2f}s | warm PROVEN {warm:.2f}s "
-              f"(budget {8.0:.1f}s)")
+              f"(budget {25.0:.1f}s)")

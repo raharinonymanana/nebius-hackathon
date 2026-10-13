@@ -9,16 +9,20 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: prove-it-demo
-      CodeUri: demo/
+      # CodeUri is the repo root so the Makefile build can reach prover/ and
+      # targets/ (siblings of demo/). The Makefile below copies ONLY an explicit
+      # allowlist into the artifact dir -- the repo root is NOT shipped wholesale.
+      CodeUri: .
       Handler: app.handler
       Runtime: python3.12
       MemorySize: 256
       Timeout: 60
-      # REAL global cap on simultaneous verifies across ALL warm containers.
-      # The per-container rate/concurrency guards in app.py are only speed bumps;
-      # THIS is the actual DoS ceiling. 5 stays well under ConTree's 50-concurrent
-      # limit and caps blast radius for a public, unauthenticated code-runner URL.
-      ReservedConcurrentExecutions: 5
+      # No function-level ReservedConcurrentExecutions: this account's total
+      # concurrency pool (~10) is too small to reserve from (reserving would drop
+      # the unreserved remainder below AWS's account minimum of 10). The global
+      # cap on simultaneous verifies is therefore the account execution pool
+      # (~10), backstopped by the per-container guards in app.py (MAX_INFLIGHT +
+      # token-bucket) and ConTree's own 50-concurrent ceiling.
       Environment:
         Variables:
           # Pre-baked ConTree image tag (deps already installed) - NOT a secret.
@@ -51,6 +55,12 @@ Resources:
                   kms:ViaService: "ssm.us-east-1.amazonaws.com"
       FunctionUrlConfig:
         AuthType: NONE
+    Metadata:
+      # Custom build: the Makefile's build-DemoFunction target assembles the
+      # artifact from an explicit per-file allowlist (app.py + web/ + the two
+      # prover modules + the ormar cartridge) and pip-installs only contree-sdk.
+      # Nothing else from the repo root is shipped.
+      BuildMethod: makefile
 
 Outputs:
   DemoUrl:

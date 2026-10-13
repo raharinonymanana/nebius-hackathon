@@ -165,8 +165,11 @@ def _handle_verify(event):
         base_image = os.environ.get("PROVE_IT_BASE_IMAGE", "prove-it-ormar-base")
         try:
             from prover import verify_service
+            # Warm Lambda verifies run ~7s; 25s covers a cold start + the
+            # us-east-1 -> ConTree hop with margin, and stays under this
+            # function's 60s ceiling so the client budget fires first on a hang.
             result = verify_service.verify(
-                target, user_input, timeout_s=8.0, base_image=base_image)
+                target, user_input, timeout_s=25.0, base_image=base_image)
         except ValueError as ve:  # whitelist / type reject -> client error
             return _response(400, "application/json", json.dumps(
                 {"error": "rejected", "detail": str(ve)}))
