@@ -104,13 +104,42 @@ _BASE_URL = None
 _BAKED = None
 _BAKE_LOCK = threading.Lock()
 
+_API_KEY_UNSET = object()
+_API_KEY = _API_KEY_UNSET  # module-level cache: resolved once, cold-start cost only
+
+
+def _resolve_api_key():
+    """Resolve the Nebius api_key ONCE and cache it for the process.
+
+    WSL/local: NEBIUS_API_KEY is in the environment (via .env) -> use it
+    directly, no SSM, no boto3. Lambda: only the parameter NAME is in the env
+    (NEBIUS_API_KEY_SSM_PARAM); fetch the SecureString from SSM with decryption.
+    If neither is set, return None so IAMAuth() falls back to its own env /
+    ~/.config resolution (the original WSL behaviour, untouched)."""
+    global _API_KEY
+    if _API_KEY is not _API_KEY_UNSET:
+        return _API_KEY
+    key = os.environ.get("NEBIUS_API_KEY")
+    if not key:
+        param = os.environ.get("NEBIUS_API_KEY_SSM_PARAM")
+        if param:
+            import boto3  # Lambda runtime provides it; never imported on the WSL path
+            resp = boto3.client("ssm").get_parameter(Name=param, WithDecryption=True)
+            key = resp["Parameter"]["Value"]
+    _API_KEY = key or None
+    return _API_KEY
+
 
 def get_sdk():
-    """Build the ConTree SDK once (IAMAuth resolves token/base_url/project_id
-    from env / ~/.config, as the spike did) and cache the resolved base_url."""
+    """Build the ConTree SDK once and cache the resolved base_url. The api_key
+    comes from _resolve_api_key() (env on WSL, SSM on Lambda); project_id and
+    base_url are resolved by IAMAuth from the env / its default endpoint."""
     global _SDK, _BASE_URL
     if _SDK is None:
-        auth = IAMAuth()  # IAMAuth sends the required Project header; JWTAuth does NOT
+        key = _resolve_api_key()
+        # Pass token only when we explicitly resolved one; otherwise let IAMAuth
+        # resolve token itself (preserves the original env/~/.config WSL path).
+        auth = IAMAuth(token=key) if key else IAMAuth()
         _SDK = ContreeSync(config=ContreeConfig(auth=auth))
         _BASE_URL = _SDK.config.auth.base_url  # resolved value, for the Lambda env later
     return _SDK

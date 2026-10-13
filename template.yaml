@@ -14,6 +14,41 @@ Resources:
       Runtime: python3.12
       MemorySize: 256
       Timeout: 60
+      # REAL global cap on simultaneous verifies across ALL warm containers.
+      # The per-container rate/concurrency guards in app.py are only speed bumps;
+      # THIS is the actual DoS ceiling. 5 stays well under ConTree's 50-concurrent
+      # limit and caps blast radius for a public, unauthenticated code-runner URL.
+      ReservedConcurrentExecutions: 5
+      Environment:
+        Variables:
+          # Pre-baked ConTree image tag (deps already installed) - NOT a secret.
+          PROVE_IT_BASE_IMAGE: "prove-it-ormar-base"
+          # api_key SECRET: only the SSM parameter NAME lives here (harmless).
+          # CloudFormation forbids {{resolve:ssm-secure}} in Lambda env vars, so
+          # verify_service fetches+decrypts this SecureString at cold start via
+          # boto3 ssm:GetParameter(WithDecryption) - the plaintext is NEVER in
+          # this file NOR rendered into the function's env config.
+          NEBIUS_API_KEY_SSM_PARAM: "/prove-it/NEBIUS_API_KEY"
+          # project_id is not secret; plain ssm resolve is allowed in env vars.
+          NEBIUS_PROJECT_ID: "{{resolve:ssm:/prove-it/NEBIUS_PROJECT_ID}}"
+          # base_url is NOT set: IAMAuth resolves its default Token Factory
+          # endpoint (https://api.tokenfactory.nebius.com/sandboxes/) on its own.
+      # Read+decrypt ONLY the /prove-it/ SSM params. ssm:GetParameter is scoped
+      # to that path; kms:Decrypt is scoped to decryptions made via SSM (the
+      # default aws/ssm managed key), not a blanket decrypt grant.
+      Policies:
+        - Statement:
+            - Sid: ReadProveItSsmParams
+              Effect: Allow
+              Action: ssm:GetParameter
+              Resource: !Sub "arn:aws:ssm:us-east-1:${AWS::AccountId}:parameter/prove-it/*"
+            - Sid: DecryptSsmSecureStringViaSsm
+              Effect: Allow
+              Action: kms:Decrypt
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  kms:ViaService: "ssm.us-east-1.amazonaws.com"
       FunctionUrlConfig:
         AuthType: NONE
 
