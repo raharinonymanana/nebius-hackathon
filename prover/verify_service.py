@@ -218,12 +218,16 @@ def _not_proven(user_input, flag, note):
 
 
 # --- the single server-side entry point --------------------------------------
-def verify(target_key, user_input, *, timeout_s=8.0):
+def verify(target_key, user_input, *, timeout_s=8.0, base_image=None):
     """Prove the ormar aggregate SQL injection by replaying `user_input` as the
     aggregate field name inside a disposable ConTree sandbox. Model-free;
     canary-only verdict. Returns a dict matching contract.ts (ProvenRun on
     PROVEN, NotProvenRun on NOT PROVEN). Raises ValueError on a rejected input
-    (non-whitelisted target_key, or input over MAX_INPUT_LEN)."""
+    (non-whitelisted target_key, or input over MAX_INPUT_LEN).
+
+    base_image: a PRE-BAKED image tag/uuid (deps already installed) to boot the
+    replay from -- this is what Lambda passes, so NO install runs on the request
+    path. When None (WSL/local), ensure_image() bakes python:3.12-slim once."""
     # 1. WHITELIST -- never run an arbitrary target or arbitrary code.
     if target_key not in WHITELIST:
         raise ValueError(
@@ -250,10 +254,14 @@ def verify(target_key, user_input, *, timeout_s=8.0):
     }
 
     try:
-        image = ensure_image()
+        sdk = get_sdk()
+        if base_image:
+            image = sdk.images.use(base_image)  # pre-baked tag/uuid; NO bake on hot path
+        else:
+            image = ensure_image()              # WSL/local: bake python:3.12-slim once
     except Exception as e:  # noqa: BLE001 -- infra failure is NOT PROVEN, never "safe"
         return _not_proven(user_input, flag,
-                           f"sandbox image bake failed: {type(e).__name__}: {e}")
+                           f"sandbox image unavailable: {type(e).__name__}: {e}")
 
     # 5. TIMEOUT -- hard client-side budget around the replay only.
     result_img, elapsed, status = _run_with_budget(image, _RUN_CMD, files, timeout_s)
