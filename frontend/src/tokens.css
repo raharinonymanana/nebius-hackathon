@@ -1,0 +1,22 @@
+/* Mélodie palette — locked. Single source of truth. Dark-only (no light override). */
+:root {
+  /* signals */
+  --green: #4DDBC5;   /* brand · PROVEN · prompt ❯ · headers · links · mascot · diff + */
+  --red: #DD9085;     /* NOT PROVEN · diff − · confidence-gap */
+  --blue: #92B7D9;    /* FIX VERIFIED · shield · info (Tavily/MCP) */
+
+  /* canvas */
+  --bg: #0F1211;
+  --surface: #161A18;
+  --border: #252B27;
+  --fg: #DCE3DD;
+  --dim: #8A938C;     /* meta · honesty flags */
+
+  /* aliases (same hue, semantic names) */
+  --proven: var(--green);
+  --brand: var(--green);
+  --accent: var(--green);
+  --not-proven: var(--red);
+  --fix-verified: var(--blue);
+  --info: var(--blue);
+}

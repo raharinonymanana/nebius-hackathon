@@ -1,13 +1,30 @@
-:root {
-  color-scheme: dark;
+/* Font: self-bundled, no CDN. 400 = body, 700 = emphasis (used in D3). */
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/700.css';
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100vh;
 }
 
 body {
-  margin: 0;
-  padding: 1.5rem;
-  background: #0a0a0a;
-  color: #e6e6e6;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The single centered scrolling column — the stage D2's transcript fills. */
+#root {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 24px 16px; /* 16px side gutter */
 }

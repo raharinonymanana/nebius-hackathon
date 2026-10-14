@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Contract } from './contract'
 import { normalise } from './normalise'
 import Verify from './Verify'
+import MelodieMark from './MelodieMark'
 
 type State =
   | { status: 'loading' }
@@ -54,6 +55,10 @@ function App() {
 
   return (
     <div>
+      <header style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        <MelodieMark size={32} />
+        <span style={{ fontWeight: 700 }}>Mélodie</span>
+      </header>
       <Verify />
       {metaView}
     </div>
