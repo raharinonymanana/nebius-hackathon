@@ -19,4 +19,16 @@
   --not-proven: var(--red);
   --fix-verified: var(--blue);
   --info: var(--blue);
+
+  /* spacing scale (D4) — one 4px-based ratio for all rhythm, no per-element guesses */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+
+  /* type scale (D4) — the three sizes actually in use */
+  --text-sm: 12px;
+  --text-base: 14px;
+  --text-lg: 16px;
 }

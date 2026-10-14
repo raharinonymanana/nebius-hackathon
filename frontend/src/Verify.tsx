@@ -63,7 +63,13 @@ function Verify() {
   }
 
   function scrollToBottom() {
-    bottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' })
+    // D4: smooth autoscroll, but honour prefers-reduced-motion (instant then).
+    // Behaviour value only — the intent/near-bottom gating refs are unchanged.
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    bottomRef.current?.scrollIntoView({
+      behavior: reduceMotion ? 'auto' : 'smooth',
+      block: 'end',
+    })
   }
 
   useLayoutEffect(() => {
@@ -129,7 +135,7 @@ function Verify() {
   return (
     <div>
       {entries.map((e) => (
-        <div key={e.id}>
+        <div key={e.id} className="entry">
           {e.kind === 'banner' && (
             <pre className="entry-banner">
               <span className="banner-head">{BANNER_HEAD}</span>

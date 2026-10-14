@@ -17,46 +17,74 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 14px;
+  font-size: var(--text-base);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
-/* The single centered scrolling column — the stage D2's transcript fills. */
+/* The single centered scrolling column — the stage D2's transcript fills.
+   overflow-wrap on entries + the banner's own x-scroll keep the PAGE from
+   ever scrolling sideways at phone width. */
 #root {
   max-width: 820px;
   margin: 0 auto;
-  padding: 24px 16px; /* 16px side gutter */
+  padding: var(--space-5) var(--space-4); /* 16px side gutter */
 }
 
-.entry-banner { white-space: pre; overflow-x: auto; color: var(--dim); }
+/* Per-entry wrapper — one consistent vertical rhythm between banner / input /
+   verdict / trace / error, instead of per-element margins. */
+.entry { margin-bottom: var(--space-4); }
+
+/* Banner keeps its own x-scroll (D2); smaller size helps the long example lines
+   fit before that scroll kicks in on a phone. Default <pre> margin removed. */
+.entry-banner {
+  margin: 0;
+  white-space: pre;
+  overflow-x: auto;
+  font-size: var(--text-sm);
+  color: var(--dim);
+}
 .banner-head { color: var(--brand); }
 .entry-input,
 .entry-verdict,
 .entry-error { white-space: pre-wrap; overflow-wrap: anywhere; }
-.entry-trace { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--dim); }
-.verifying-line { color: var(--dim); }
+
+/* Trace is dense and multi-line: a touch more line-height, meta-dim but not
+   fainter than --dim, offset below the verdict it belongs to. */
+.entry-trace {
+  margin: var(--space-2) 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+  color: var(--dim);
+}
+.verifying-line { margin-top: var(--space-2); color: var(--dim); }
 
 /* Echoed prompt: the ❯ prefix carries the brand hue, the text stays --fg. */
 .prompt-prefix { color: var(--brand); }
 
-/* Verdict line — arrow + label + glyph; colour is a reinforcement, never the
-   sole signal. Each verdict gets its semantic token. */
-.verdict-line { font-weight: 700; }
+/* Verdict line — arrow + label + glyph; colour reinforces, never the sole
+   signal. Slightly larger + bold so it is the visual anchor of each entry. */
+.verdict-line { font-weight: 700; font-size: var(--text-lg); line-height: 1.4; }
 .verdict-proven { color: var(--proven); }
 .verdict-not-proven { color: var(--not-proven); }
 .verdict-fix-verified { color: var(--fix-verified); }
 
 /* note (ℹ) rides at meta weight; error (⚠) is red + distinct from NOT PROVEN. */
-.entry-note { color: var(--dim); }
+.entry-note { margin-top: var(--space-1); color: var(--dim); }
 .entry-error { color: var(--red); }
 
-.prompt-form { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.prompt-form {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: var(--space-2);
+}
 .prompt-input {
   flex: 1;
   min-width: 0;
   font: inherit;
-  padding: 6px 8px;
+  padding: var(--space-2);
   background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--border);
@@ -64,16 +92,24 @@ body {
 }
 .prompt-input:focus { outline: none; border-color: var(--brand); }
 
-/* Submit button as a quiet ghost: transparent, brand text, border on hover. */
+/* Submit button as a quiet ghost: transparent, brand text, border on hover.
+   nowrap + no-shrink so it stays a clean pill next to the input at 380px. */
 .prompt-form button {
+  flex-shrink: 0;
   font: inherit;
-  padding: 6px 12px;
+  padding: var(--space-2) var(--space-3);
   background: transparent;
   color: var(--brand);
   border: 1px solid transparent;
+  white-space: nowrap;
   cursor: pointer;
 }
 .prompt-form button:hover:not(:disabled) { border-color: var(--border); }
 .prompt-form button:disabled { opacity: 0.5; cursor: default; }
 
-.meta-separator { border-top: 1px solid var(--border); margin: 16px 0; }
+.meta-separator { border-top: 1px solid var(--border); margin: var(--space-4) 0; }
+
+/* Phone (~380px): keep the 16px gutter, drop the larger top/bottom padding. */
+@media (max-width: 480px) {
+  #root { padding: var(--space-4); }
+}
