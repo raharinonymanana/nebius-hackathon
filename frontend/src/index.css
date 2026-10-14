@@ -29,12 +29,51 @@ body {
   padding: 24px 16px; /* 16px side gutter */
 }
 
-.entry-banner { white-space: pre; overflow-x: auto; }
+.entry-banner { white-space: pre; overflow-x: auto; color: var(--dim); }
+.banner-head { color: var(--brand); }
 .entry-input,
 .entry-verdict,
 .entry-error { white-space: pre-wrap; overflow-wrap: anywhere; }
-.entry-trace { white-space: pre-wrap; overflow-wrap: anywhere; }
-.verifying-line { }
+.entry-trace { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--dim); }
+.verifying-line { color: var(--dim); }
+
+/* Echoed prompt: the ❯ prefix carries the brand hue, the text stays --fg. */
+.prompt-prefix { color: var(--brand); }
+
+/* Verdict line — arrow + label + glyph; colour is a reinforcement, never the
+   sole signal. Each verdict gets its semantic token. */
+.verdict-line { font-weight: 700; }
+.verdict-proven { color: var(--proven); }
+.verdict-not-proven { color: var(--not-proven); }
+.verdict-fix-verified { color: var(--fix-verified); }
+
+/* note (ℹ) rides at meta weight; error (⚠) is red + distinct from NOT PROVEN. */
+.entry-note { color: var(--dim); }
+.entry-error { color: var(--red); }
+
 .prompt-form { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
-.prompt-input { flex: 1; min-width: 0; }
+.prompt-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 6px 8px;
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  caret-color: var(--brand);
+}
+.prompt-input:focus { outline: none; border-color: var(--brand); }
+
+/* Submit button as a quiet ghost: transparent, brand text, border on hover. */
+.prompt-form button {
+  font: inherit;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--brand);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.prompt-form button:hover:not(:disabled) { border-color: var(--border); }
+.prompt-form button:disabled { opacity: 0.5; cursor: default; }
+
 .meta-separator { border-top: 1px solid var(--border); margin: 16px 0; }

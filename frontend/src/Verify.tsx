@@ -28,6 +28,22 @@ try   price                                                      (benign)
 try   (SELECT password_hash FROM users WHERE username='admin')   (known exploit)
 first verify may take ~12s (cold start)`
 
+// Banner is one pre block: head line = build name (--brand), remainder (--dim).
+// Sliced at render time so the exact text above is never reflowed.
+const BANNER_HEAD = BANNER.slice(0, BANNER.indexOf('\n'))
+const BANNER_REST = BANNER.slice(BANNER.indexOf('\n'))
+
+// Verdict presentation, keyed on the exact contract literals (Run['verdict']).
+// Colour is never the sole signal: each carries an arrow + label + glyph.
+const VERDICT_META: Record<
+  Run['verdict'],
+  { label: string; glyph: string; cls: string }
+> = {
+  PROVEN: { label: 'PROVEN', glyph: '✓', cls: 'verdict-proven' },
+  'NOT PROVEN': { label: 'NOT PROVEN', glyph: '✗', cls: 'verdict-not-proven' },
+  'FIX VERIFIED': { label: 'FIX VERIFIED', glyph: '⟳', cls: 'verdict-fix-verified' },
+}
+
 function Verify() {
   const [input, setInput] = useState('')
   const [entries, setEntries] = useState<Entry[]>(() => [{ id: 0, kind: 'banner' }])
@@ -114,19 +130,34 @@ function Verify() {
     <div>
       {entries.map((e) => (
         <div key={e.id}>
-          {e.kind === 'banner' && <pre className="entry-banner">{BANNER}</pre>}
-          {e.kind === 'input' && <div className="entry-input">❯ {e.text}</div>}
-          {e.kind === 'verdict' && (
-            <div className="entry-verdict">
-              <div>{e.run.verdict}</div>
-              {e.note && <div>{e.note}</div>}
-              {e.run.verdict === 'PROVEN' && (
-                <pre className="entry-trace">{e.run.human_trace.join('\n')}</pre>
-              )}
+          {e.kind === 'banner' && (
+            <pre className="entry-banner">
+              <span className="banner-head">{BANNER_HEAD}</span>
+              {BANNER_REST}
+            </pre>
+          )}
+          {e.kind === 'input' && (
+            <div className="entry-input">
+              <span className="prompt-prefix">❯</span> {e.text}
             </div>
           )}
+          {e.kind === 'verdict' &&
+            (() => {
+              const v = VERDICT_META[e.run.verdict]
+              return (
+                <div className="entry-verdict">
+                  <div className={`verdict-line ${v.cls}`}>
+                    → {v.label} {v.glyph}
+                  </div>
+                  {e.note && <div className="entry-note">ℹ {e.note}</div>}
+                  {e.run.verdict === 'PROVEN' && (
+                    <pre className="entry-trace">{e.run.human_trace.join('\n')}</pre>
+                  )}
+                </div>
+              )
+            })()}
           {e.kind === 'error' && (
-            <div className="entry-error">error: {e.message}</div>
+            <div className="entry-error">⚠ error: {e.message}</div>
           )}
         </div>
       ))}
