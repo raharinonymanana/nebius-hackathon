@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Contract } from './contract'
 import { normalise } from './normalise'
+import Verify from './Verify'
 
 type State =
   | { status: 'loading' }
@@ -32,23 +33,29 @@ function App() {
     }
   }, [])
 
+  let metaView
   if (state.status === 'loading') {
-    return <p>loading contract…</p>
+    metaView = <p>loading contract…</p>
+  } else if (state.status === 'error') {
+    metaView = <p>error: {state.message}</p>
+  } else {
+    const { meta } = state.contract
+    metaView = (
+      <div>
+        <div>model cost: ${meta.model_cost_usd}</div>
+        <div>model calls: {meta.model_calls}</div>
+        <div>
+          valid receipts: {meta.receipts_valid} (+{meta.receipts_excluded} excluded)
+        </div>
+        <div>tavily credits: {meta.tavily_credits}</div>
+      </div>
+    )
   }
 
-  if (state.status === 'error') {
-    return <p>error: {state.message}</p>
-  }
-
-  const { meta } = state.contract
   return (
     <div>
-      <div>model cost: ${meta.model_cost_usd}</div>
-      <div>model calls: {meta.model_calls}</div>
-      <div>
-        valid receipts: {meta.receipts_valid} (+{meta.receipts_excluded} excluded)
-      </div>
-      <div>tavily credits: {meta.tavily_credits}</div>
+      <Verify />
+      {metaView}
     </div>
   )
 }
