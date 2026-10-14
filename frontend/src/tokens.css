@@ -31,4 +31,12 @@
   --text-sm: 12px;
   --text-base: 14px;
   --text-lg: 16px;
+
+  /* layout scale (D5) — pane framing, no new colours */
+  --radius-sm: 3px;    /* chips */
+  --radius-md: 6px;    /* about box */
+  --radius-lg: 10px;   /* the pane */
+  --rail: 2px;         /* result rail + chip rhythm */
+  --pane-inset: 48px;  /* 24px breathing room each side of the pane */
+  --pane-max: 110ch;
 }

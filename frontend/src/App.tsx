@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import type { Contract } from './contract'
 import { normalise } from './normalise'
 import Verify from './Verify'
@@ -34,34 +35,42 @@ function App() {
     }
   }, [])
 
-  let metaView
+  // Eval ledger (status line, row 3). These are the ENGINE/eval numbers, not the
+  // live replay path — labels --dim, numbers --fg, money fixed to 2dp (no raw float).
+  let ledger: ReactNode
   if (state.status === 'loading') {
-    metaView = <p>loading contract…</p>
+    ledger = (
+      <>
+        eval ledger · <span className="led-dim">loading…</span>
+      </>
+    )
   } else if (state.status === 'error') {
-    metaView = <p>error: {state.message}</p>
+    ledger = (
+      <>
+        eval ledger · <span className="led-dim">unavailable</span>
+      </>
+    )
   } else {
     const { meta } = state.contract
-    metaView = (
-      <div>
-        <div>model cost: ${meta.model_cost_usd}</div>
-        <div>model calls: {meta.model_calls}</div>
-        <div>
-          valid receipts: {meta.receipts_valid} (+{meta.receipts_excluded} excluded)
-        </div>
-        <div>tavily credits: {meta.tavily_credits}</div>
-      </div>
+    ledger = (
+      <>
+        eval ledger · receipts <span className="led-n">{meta.receipts_valid}</span> (+
+        <span className="led-n">{meta.receipts_excluded}</span> excl) · calls{' '}
+        <span className="led-n">{meta.model_calls}</span> ·{' '}
+        <span className="led-n">${meta.model_cost_usd.toFixed(2)}</span> · tavily{' '}
+        <span className="led-n">{meta.tavily_credits}</span>
+      </>
     )
   }
 
   return (
-    <div>
-      <header style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-        <MelodieMark size={32} />
-        <span style={{ fontWeight: 700 }}>Mélodie</span>
+    <div className="pane">
+      <header className="titlebar">
+        <MelodieMark size={22} />
+        <span className="wordmark">mélodie</span>
+        <span className="tt-status">● ready</span>
       </header>
-      <Verify />
-      <div className="meta-separator" />
-      {metaView}
+      <Verify ledger={ledger} />
     </div>
   )
 }

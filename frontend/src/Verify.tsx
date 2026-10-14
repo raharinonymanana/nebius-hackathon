@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react'
+import type { ReactNode } from 'react'
 import type { Run } from './contract'
 import { normaliseRun } from './normalise'
 
@@ -28,23 +29,31 @@ try   price                                                      (benign)
 try   (SELECT password_hash FROM users WHERE username='admin')   (known exploit)
 first verify may take ~12s (cold start)`
 
-// Banner is one pre block: head line = build name (--brand), remainder (--dim).
-// Sliced at render time so the exact text above is never reflowed.
+// About box re-layout: the banner copy is kept VERBATIM, only sliced for colour.
+//   head           = build-name line           -> --brand
+//   boundary       = the "does / doesn't" honesty sentence -> --fg (not dim)
+//   everything else= body                       -> --dim
+// Slicing never adds or drops a character, so the G1 boundary text is intact.
 const BANNER_HEAD = BANNER.slice(0, BANNER.indexOf('\n'))
 const BANNER_REST = BANNER.slice(BANNER.indexOf('\n'))
+const BANNER_BOUNDARY =
+  'This confirms a known finding. It does not discover vulnerabilities, scan apps,\nor cover arbitrary CVEs.'
+const BANNER_BI = BANNER_REST.indexOf(BANNER_BOUNDARY)
+const BANNER_PRE = BANNER_REST.slice(0, BANNER_BI)
+const BANNER_POST = BANNER_REST.slice(BANNER_BI + BANNER_BOUNDARY.length)
 
 // Verdict presentation, keyed on the exact contract literals (Run['verdict']).
-// Colour is never the sole signal: each carries an arrow + label + glyph.
+// Colour is never the sole signal: each chip carries a glyph + text label.
 const VERDICT_META: Record<
   Run['verdict'],
   { label: string; glyph: string; cls: string }
 > = {
   PROVEN: { label: 'PROVEN', glyph: '✓', cls: 'verdict-proven' },
   'NOT PROVEN': { label: 'NOT PROVEN', glyph: '✗', cls: 'verdict-not-proven' },
-  'FIX VERIFIED': { label: 'FIX VERIFIED', glyph: '⟳', cls: 'verdict-fix-verified' },
+  'FIX VERIFIED': { label: 'FIX VERIFIED', glyph: '◆', cls: 'verdict-fix-verified' },
 }
 
-function Verify() {
+function Verify({ ledger }: { ledger: ReactNode }) {
   const [input, setInput] = useState('')
   const [entries, setEntries] = useState<Entry[]>(() => [{ id: 0, kind: 'banner' }])
   const [verifying, setVerifying] = useState(false)
@@ -133,63 +142,89 @@ function Verify() {
   }
 
   return (
-    <div>
-      {entries.map((e) => (
-        <div key={e.id} className="entry">
-          {e.kind === 'banner' && (
-            <pre className="entry-banner">
-              <span className="banner-head">{BANNER_HEAD}</span>
-              {BANNER_REST}
-            </pre>
-          )}
-          {e.kind === 'input' && (
-            <div className="entry-input">
-              <span className="prompt-prefix">❯</span> {e.text}
-            </div>
-          )}
-          {e.kind === 'verdict' &&
-            (() => {
-              const v = VERDICT_META[e.run.verdict]
-              return (
-                <div className="entry-verdict">
-                  <div className={`verdict-line ${v.cls}`}>
-                    → {v.label} {v.glyph}
+    <>
+      {/* row 2 of the pane grid — the ONLY scroll region (overflow-y:auto) */}
+      <div className="transcript">
+        {entries.map((e) => (
+          <div key={e.id} className="entry">
+            {e.kind === 'banner' && (
+              <section className="about">
+                <span className="about-title">ℹ about</span>
+                <pre className="about-body">
+                  <span className="about-head">{BANNER_HEAD}</span>
+                  <span className="about-dim">{BANNER_PRE}</span>
+                  <span className="about-boundary">{BANNER_BOUNDARY}</span>
+                  <span className="about-dim">{BANNER_POST}</span>
+                </pre>
+              </section>
+            )}
+            {e.kind === 'input' && (
+              <div className="echo">
+                <span className="echo-prefix">❯</span>
+                <span className="echo-text">{e.text}</span>
+                <span className="echo-run">#{e.id}</span>
+              </div>
+            )}
+            {e.kind === 'verdict' &&
+              (() => {
+                const v = VERDICT_META[e.run.verdict]
+                return (
+                  <div className={`result ${v.cls}`}>
+                    <div className="result-head">
+                      <span className={`chip ${v.cls}`}>
+                        {v.glyph} {v.label}
+                      </span>
+                      {e.note && <span className="result-note">{e.note}</span>}
+                    </div>
+                    {e.run.verdict === 'PROVEN' && (
+                      <div className="entry-trace">
+                        {e.run.human_trace.map((step, i) => (
+                          <div key={i} className="trace-step">
+                            {step}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {e.note && <div className="entry-note">ℹ {e.note}</div>}
-                  {e.run.verdict === 'PROVEN' && (
-                    <pre className="entry-trace">{e.run.human_trace.join('\n')}</pre>
-                  )}
-                </div>
-              )
-            })()}
-          {e.kind === 'error' && (
-            <div className="entry-error">⚠ error: {e.message}</div>
-          )}
-        </div>
-      ))}
+                )
+              })()}
+            {e.kind === 'error' && (
+              <div className="entry-error">
+                <span className="err-glyph">⚠</span> error: {e.message}
+              </div>
+            )}
+          </div>
+        ))}
 
-      {verifying && (
-        <div className="verifying-line">verifying… (cold start ~12s)</div>
-      )}
+        {verifying && (
+          <div className="verifying-line">verifying… (cold start ~12s)</div>
+        )}
 
-      <form className="prompt-form" onSubmit={onSubmit}>
-        <input
-          ref={inputRef}
-          className="prompt-input"
-          value={input}
-          onChange={(ev) => setInput(ev.target.value)}
-          maxLength={2000}
-          disabled={verifying}
-          autoComplete="off"
-          spellCheck={false}
-        />
-        <button type="submit" disabled={verifying || input.trim() === ''}>
-          verify
-        </button>
-      </form>
+        <div ref={bottomRef} />
+      </div>
 
-      <div ref={bottomRef} />
-    </div>
+      {/* row 3 of the pane grid — prompt line + status (eval ledger) */}
+      <div className="promptbar">
+        <form className="prompt-form" onSubmit={onSubmit}>
+          <span className="prompt-prefix">❯</span>
+          <input
+            ref={inputRef}
+            className="prompt-input"
+            value={input}
+            onChange={(ev) => setInput(ev.target.value)}
+            maxLength={2000}
+            disabled={verifying}
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="type an input, then verify"
+          />
+          <button type="submit" disabled={verifying || input.trim() === ''}>
+            {verifying ? 'verifying…' : 'verify'}
+          </button>
+        </form>
+        <div className="status-line">{ledger}</div>
+      </div>
+    </>
   )
 }
 
