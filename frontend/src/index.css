@@ -28,3 +28,13 @@ body {
   margin: 0 auto;
   padding: 24px 16px; /* 16px side gutter */
 }
+
+.entry-banner { white-space: pre; overflow-x: auto; }
+.entry-input,
+.entry-verdict,
+.entry-error { white-space: pre-wrap; overflow-wrap: anywhere; }
+.entry-trace { white-space: pre-wrap; overflow-wrap: anywhere; }
+.verifying-line { }
+.prompt-form { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.prompt-input { flex: 1; min-width: 0; }
+.meta-separator { border-top: 1px solid var(--border); margin: 16px 0; }

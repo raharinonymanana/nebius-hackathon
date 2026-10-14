@@ -60,6 +60,7 @@ function App() {
         <span style={{ fontWeight: 700 }}>Mélodie</span>
       </header>
       <Verify />
+      <div className="meta-separator" />
       {metaView}
     </div>
   )
