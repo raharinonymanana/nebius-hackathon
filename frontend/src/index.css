@@ -189,7 +189,44 @@ body {
   overflow-wrap: anywhere;
 }
 
-.verifying-line { color: var(--dim); }
+/* ─ IN-FLIGHT SPINNER ─ honest subset of a live run: liveness + elapsed only.
+   No step counter, no step verbs, no glint — the backend returns one final
+   result, so we show only what is observable client-side. */
+.verifying-line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  color: var(--dim);
+}
+.verifying-line .run-elapsed,
+.verifying-line .run-hint,
+.verifying-line .run-sep { color: var(--dim); }
+
+/* Braille spinner glyph, CSS-driven: ::before cycles the 10 frames. The glyph is
+   decorative (aria-hidden on the span); the verb carries status to a reader. */
+.spinner { color: var(--brand); }
+.spinner::before {
+  content: '⠋';
+  animation: braille-spin 1s steps(1) infinite;
+}
+@keyframes braille-spin {
+  0%   { content: '⠋'; }
+  10%  { content: '⠙'; }
+  20%  { content: '⠹'; }
+  30%  { content: '⠸'; }
+  40%  { content: '⠼'; }
+  50%  { content: '⠴'; }
+  60%  { content: '⠦'; }
+  70%  { content: '⠧'; }
+  80%  { content: '⠇'; }
+  90%  { content: '⠏'; }
+}
+
+/* Reduced motion: freeze the glyph (no cycling). The elapsed timer still ticks —
+   a number updating is not vestibular motion. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner::before { animation: none; }
+}
 
 /* row 3 — prompt line + status (eval ledger). */
 .promptbar {

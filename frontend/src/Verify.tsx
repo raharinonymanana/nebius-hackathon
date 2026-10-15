@@ -64,6 +64,7 @@ function Verify({
   const [input, setInput] = useState('')
   const [entries, setEntries] = useState<Entry[]>(() => [{ id: 0, kind: 'banner' }])
   const [verifying, setVerifying] = useState(false)
+  const [elapsedMs, setElapsedMs] = useState(0) // ephemeral spinner timer, not logged
   const idRef = useRef(1) // banner took 0; next id starts at 1
   const inputRef = useRef<HTMLInputElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null) // empty div rendered last, the scroll target
@@ -104,6 +105,18 @@ function Verify({
 
   useEffect(() => {
     if (!verifying) inputRef.current?.focus()
+  }, [verifying])
+
+  // Live elapsed timer for the in-flight spinner. Ephemeral UI state ONLY — it
+  // never touches entries / idRef / the append-only log. Ticks ~10x/s while a
+  // verify is in flight; a number updating is not vestibular motion, so it keeps
+  // ticking under prefers-reduced-motion (only the spinner glyph freezes, via CSS).
+  useEffect(() => {
+    if (!verifying) return
+    const start = Date.now()
+    setElapsedMs(0)
+    const id = setInterval(() => setElapsedMs(Date.now() - start), 100)
+    return () => clearInterval(id)
   }, [verifying])
 
   async function onSubmit(e: React.FormEvent) {
@@ -173,6 +186,15 @@ function Verify({
     (acc, e) => (e.kind === 'input' ? e.id : acc),
     0,
   )
+  // Spinner elapsed: one decimal under 10s (e.g. "3.2s"), whole seconds beyond.
+  const elapsedSeconds = elapsedMs / 1000
+  const elapsedLabel =
+    elapsedSeconds < 10
+      ? `${elapsedSeconds.toFixed(1)}s`
+      : `${Math.floor(elapsedSeconds)}s`
+  // Cold-start hint rides the FIRST verify of the session only (one input entry so
+  // far — the in-flight one). Honest: only the backend's first call is cold.
+  const isFirstRun = entries.filter((e) => e.kind === 'input').length <= 1
 
   return (
     <>
@@ -276,7 +298,15 @@ function Verify({
         ))}
 
         {verifying && (
-          <div className="verifying-line">verifying… (cold start ~12s)</div>
+          <div className="verifying-line">
+            <span className="spinner" aria-hidden="true" />
+            <span className="run-verb">Keeping time…</span>
+            <span className="run-sep" aria-hidden="true">
+              ·
+            </span>
+            <span className="run-elapsed">{elapsedLabel}</span>
+            {isFirstRun && <span className="run-hint">(cold start ~12s)</span>}
+          </div>
         )}
 
         <div ref={bottomRef} />
