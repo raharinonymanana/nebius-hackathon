@@ -54,7 +54,43 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .titlebar .wordmark { color: var(--dim); }
-.titlebar .tt-status { margin-left: auto; color: var(--dim); }
+
+/* Title-bar right slot: live tally + mode, pushed right. --dim meta weight, like
+   the eval-ledger footer. Two derived pieces separated by a gap. */
+.titlebar .tt-status {
+  margin-left: auto;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  color: var(--dim);
+  font-size: var(--text-sm);
+}
+
+/* TALLY — "N runs · ✓x ✗y" (empty: "no runs yet"). Each count = coloured glyph
+   + number + sr-only word, so it survives greyscale; colour only reinforces. */
+.tt-tally .tt-n { color: var(--fg); }
+.tt-count { white-space: nowrap; }
+.tt-count.tt-proven { color: var(--proven); }
+.tt-count.tt-not-proven { color: var(--not-proven); }
+
+/* MODE — "● READY" / "● RUNNING #NN". The word carries the signal; the dot
+   reinforces (--dim at rest, --brand while a verify is in flight). */
+.tt-mode { white-space: nowrap; }
+.tt-mode .tt-dot { color: var(--dim); }
+.tt-mode.tt-running .tt-dot { color: var(--brand); }
+
+/* Visually-hidden label for screen readers (carries verdict words under glyphs). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* row 2 — transcript: the one scroll region. Blocks separated by ~24px. */
 .transcript {

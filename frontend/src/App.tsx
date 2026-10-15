@@ -12,6 +12,10 @@ type State =
 
 function App() {
   const [state, setState] = useState<State>({ status: 'loading' })
+  // Portal host for the live title-bar status. The tally + mode are DERIVED and
+  // rendered by Verify (where entries/verifying live); App only lends the slot.
+  // This useState holds a DOM handle, not the tally — the tally is never stored.
+  const [statusSlot, setStatusSlot] = useState<HTMLSpanElement | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -68,9 +72,9 @@ function App() {
       <header className="titlebar">
         <MelodieMark size={22} />
         <span className="wordmark">mélodie</span>
-        <span className="tt-status">● ready</span>
+        <span className="tt-status" ref={setStatusSlot} />
       </header>
-      <Verify ledger={ledger} />
+      <Verify ledger={ledger} statusSlot={statusSlot} />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import type { ReactNode } from 'react'
 import type { Run } from './contract'
 import { normaliseRun } from './normalise'
@@ -53,7 +54,13 @@ const VERDICT_META: Record<
   'FIX VERIFIED': { label: 'FIX VERIFIED', glyph: '◆', cls: 'verdict-fix-verified' },
 }
 
-function Verify({ ledger }: { ledger: ReactNode }) {
+function Verify({
+  ledger,
+  statusSlot,
+}: {
+  ledger: ReactNode
+  statusSlot: HTMLElement | null
+}) {
   const [input, setInput] = useState('')
   const [entries, setEntries] = useState<Entry[]>(() => [{ id: 0, kind: 'banner' }])
   const [verifying, setVerifying] = useState(false)
@@ -146,8 +153,69 @@ function Verify({ ledger }: { ledger: ReactNode }) {
     }
   }
 
+  // Title-bar status — DERIVED each render from entries/verifying; nothing is
+  // stored (no new counter state, no field on Entry). "runs" = completed verify
+  // attempts: today that is PROVEN + NOT PROVEN. A future failed-run chip would be
+  // a run that is neither ✓ nor ✗, so counting the two buckets keeps this
+  // forward-compatible. FIX VERIFIED is intentionally not a tally bucket.
+  const proven = entries.filter(
+    (e) => e.kind === 'verdict' && e.run.verdict === 'PROVEN',
+  ).length
+  const notProven = entries.filter(
+    (e) => e.kind === 'verdict' && e.run.verdict === 'NOT PROVEN',
+  ).length
+  const runs = proven + notProven
+  // While a verify is in flight the mode shows the SAME number as that run's echo
+  // row (the id of the most recent input entry). It is rendered with the exact
+  // same expression the echo uses — a bare #{id}, no padding — so the two formats
+  // can never diverge.
+  const inFlightId = entries.reduce(
+    (acc, e) => (e.kind === 'input' ? e.id : acc),
+    0,
+  )
+
   return (
     <>
+      {/* Live title-bar status, portalled into App's title-bar right slot. Derived
+          above; appears only once App has lent us the slot (ref callback). */}
+      {statusSlot &&
+        createPortal(
+          <>
+            <span className="tt-tally">
+              {runs === 0 ? (
+                'no runs yet'
+              ) : (
+                <>
+                  <span className="tt-n">{runs}</span> run{runs === 1 ? '' : 's'}{' '}
+                  ·{' '}
+                  {proven > 0 && (
+                    <span className="tt-count tt-proven">
+                      <span aria-hidden="true">✓</span>
+                      {proven}
+                      <span className="sr-only"> proven</span>
+                    </span>
+                  )}
+                  {proven > 0 && notProven > 0 && ' '}
+                  {notProven > 0 && (
+                    <span className="tt-count tt-not-proven">
+                      <span aria-hidden="true">✗</span>
+                      {notProven}
+                      <span className="sr-only"> not proven</span>
+                    </span>
+                  )}
+                </>
+              )}
+            </span>
+            <span className={`tt-mode${verifying ? ' tt-running' : ''}`}>
+              <span className="tt-dot" aria-hidden="true">
+                ●
+              </span>{' '}
+              {verifying ? <>RUNNING #{inFlightId}</> : 'READY'}
+            </span>
+          </>,
+          statusSlot,
+        )}
+
       {/* row 2 of the pane grid — the ONLY scroll region (overflow-y:auto) */}
       <div className="transcript" ref={containerRef}>
         {entries.map((e, idx) => (
