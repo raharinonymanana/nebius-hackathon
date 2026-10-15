@@ -127,6 +127,18 @@ body {
 .chip.verdict-not-proven { background: var(--not-proven); }
 .chip.verdict-fix-verified { background: var(--fix-verified); }
 
+/* human_trace (PROVEN only): collapsible via native <details>. Newest open;
+   older collapsed. The ▸ summary is a dim, clickable affordance — glyph + text,
+   so it reads with colour off. */
+.trace-summary {
+  cursor: pointer;
+  color: var(--dim);
+  font-size: var(--text-sm);
+  list-style: none; /* drop the default disclosure triangle; we draw our own ▸ */
+  padding: var(--space-1) 0;
+}
+.trace-summary::-webkit-details-marker { display: none; }
+
 /* human_trace (PROVEN only): one step per line, --dim, offset under the chip. */
 .entry-trace { margin-top: var(--space-2); }
 .trace-step { color: var(--dim); overflow-wrap: anywhere; }

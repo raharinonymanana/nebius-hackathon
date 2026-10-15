@@ -150,7 +150,7 @@ function Verify({ ledger }: { ledger: ReactNode }) {
     <>
       {/* row 2 of the pane grid — the ONLY scroll region (overflow-y:auto) */}
       <div className="transcript" ref={containerRef}>
-        {entries.map((e) => (
+        {entries.map((e, idx) => (
           <div key={e.id} className="entry">
             {e.kind === 'banner' && (
               <section className="about">
@@ -182,13 +182,19 @@ function Verify({ ledger }: { ledger: ReactNode }) {
                       {e.note && <span className="result-note">{e.note}</span>}
                     </div>
                     {e.run.verdict === 'PROVEN' && (
-                      <div className="entry-trace">
-                        {e.run.human_trace.map((step, i) => (
-                          <div key={i} className="trace-step">
-                            {step}
-                          </div>
-                        ))}
-                      </div>
+                      <details
+                        className="trace-details"
+                        {...(idx === entries.length - 1 ? { open: true } : {})}
+                      >
+                        <summary className="trace-summary">▸ trace</summary>
+                        <div className="entry-trace">
+                          {e.run.human_trace.map((step, i) => (
+                            <div key={i} className="trace-step">
+                              {step}
+                            </div>
+                          ))}
+                        </div>
+                      </details>
                     )}
                   </div>
                 )
