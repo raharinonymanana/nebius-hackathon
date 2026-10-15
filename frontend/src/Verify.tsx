@@ -60,6 +60,7 @@ function Verify({ ledger }: { ledger: ReactNode }) {
   const idRef = useRef(1) // banner took 0; next id starts at 1
   const inputRef = useRef<HTMLInputElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null) // empty div rendered last, the scroll target
+  const containerRef = useRef<HTMLDivElement>(null) // .transcript — the scroll region (overflow-y:auto)
   const scrollIntent = useRef<'always' | 'if-near' | null>(null)
   const wasNearBottom = useRef(false)
 
@@ -68,16 +69,20 @@ function Verify({ ledger }: { ledger: ReactNode }) {
   }
 
   function isNearBottom() {
-    return window.innerHeight + window.scrollY >= document.body.offsetHeight - 80
+    const el = containerRef.current
+    if (!el) return true
+    return el.scrollTop + el.clientHeight >= el.scrollHeight - 80
   }
 
   function scrollToBottom() {
     // D4: smooth autoscroll, but honour prefers-reduced-motion (instant then).
     // Behaviour value only — the intent/near-bottom gating refs are unchanged.
+    const el = containerRef.current
+    if (!el) return
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    bottomRef.current?.scrollIntoView({
+    el.scrollTo({
+      top: el.scrollHeight,
       behavior: reduceMotion ? 'auto' : 'smooth',
-      block: 'end',
     })
   }
 
@@ -144,7 +149,7 @@ function Verify({ ledger }: { ledger: ReactNode }) {
   return (
     <>
       {/* row 2 of the pane grid — the ONLY scroll region (overflow-y:auto) */}
-      <div className="transcript">
+      <div className="transcript" ref={containerRef}>
         {entries.map((e) => (
           <div key={e.id} className="entry">
             {e.kind === 'banner' && (
