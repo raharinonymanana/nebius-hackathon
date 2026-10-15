@@ -290,8 +290,16 @@ function Verify({
                 )
               })()}
             {e.kind === 'error' && (
-              <div className="entry-error">
-                <span className="err-glyph">⚠</span> error: {e.message}
+              <div className="failed">
+                <div className="failed-head">
+                  <span className="chip-outline">
+                    <span aria-hidden="true">!</span> RUN FAILED
+                  </span>
+                  <span className="failed-reason">
+                    {e.message}
+                    <span className="failed-tag"> — not a verdict</span>
+                  </span>
+                </div>
               </div>
             )}
           </div>

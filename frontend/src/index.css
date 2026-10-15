@@ -179,14 +179,35 @@ body {
 .entry-trace { margin-top: var(--space-2); }
 .trace-step { color: var(--dim); overflow-wrap: anywhere; }
 
-/* ─ ERROR ─ system error, NOT a verdict: dashed red outline, no solid chip,
-   no rail. Must not read as a NOT PROVEN block. */
-.entry-error {
-  border: 1px dashed var(--red);
+/* ─ FAILED RUN ─ a run that did not complete is NOT a verdict and must never read
+   as a NOT PROVEN. Two signals set it apart from a verdict block: an OUTLINED
+   (hollow) chip vs the filled reverse-video verdict chip, and a DASHED left rail
+   vs the solid verdict rail. Both survive greyscale. Failed runs are excluded
+   from the tally (kind 'error' is never counted). */
+.failed {
+  border-left: var(--rail) dashed var(--red);
+  padding-left: var(--space-3);
+}
+.failed-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.failed-reason { color: var(--fg); overflow-wrap: anywhere; }
+.failed-tag { color: var(--dim); }
+
+/* Outlined chip: hollow (border + text in the fail colour), the deliberate
+   opposite of the reverse-video verdict chip. Glyph "!" (aria-hidden) + the word
+   "RUN FAILED" carry the meaning; colour only reinforces. */
+.chip-outline {
+  display: inline-block;
+  padding: 0 1ch;
   border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-3);
+  font-weight: 700;
   color: var(--red);
-  overflow-wrap: anywhere;
+  border: 1px solid var(--red);
+  background: transparent;
 }
 
 /* ─ IN-FLIGHT SPINNER ─ honest subset of a live run: liveness + elapsed only.
