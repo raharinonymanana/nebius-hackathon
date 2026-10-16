@@ -12,6 +12,15 @@ export interface Meta {
   receipts_excluded: number
 }
 
+// One structured trace step (verify_service emits these alongside human_trace).
+// Additive: the UI prefers steps[] when present, else falls back to human_trace.
+export interface Step {
+  name: string
+  status: 'ok' | 'fail' | 'skipped'
+  decided: boolean
+  seconds: number | null
+}
+
 // Fields shared by every run variant (demo_data.json: present on all three).
 interface RunBase {
   mode: 'unaided' | 'handed'
@@ -22,6 +31,9 @@ interface RunBase {
   verification_is_model_free: boolean
   utc: string
   source_receipt: string
+  // Optional on every variant: present on live PROVEN / NOT PROVEN runs from
+  // verify_service; absent on older receipts — do not make required.
+  steps?: Step[]
 }
 
 // verdict "PROVEN": the only variant that carries human_trace (required here).

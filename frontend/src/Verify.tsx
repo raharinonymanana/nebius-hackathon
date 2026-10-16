@@ -312,11 +312,17 @@ function Verify({
             }
             if (e.kind === 'verdict') {
               const v = VERDICT_META[e.run.verdict]
-              // Capture the narrowed array in a const so the ProvenRun narrowing
-              // survives inside the .map callback (property-access narrowing does
-              // not persist across a nested closure; a const does).
+              // Prefer structured steps[] when the run carries them; else fall
+              // back to the flat human_trace (PROVEN-only). Captured as consts so
+              // any narrowing survives inside the .map callbacks below.
+              const steps = e.run.steps ?? null
               const trace =
                 e.run.verdict === 'PROVEN' ? e.run.human_trace : null
+              // Structured-trace summary bits (only consumed when steps render).
+              const decidedIdx = steps ? steps.findIndex((s) => s.decided) : -1
+              const stopped = steps
+                ? steps.some((s) => s.status === 'skipped')
+                : false
               return (
                 <div key={e.id} className={`result ${v.cls}`}>
                   <p className="verdict">
@@ -326,7 +332,53 @@ function Verify({
                     </span>
                     {e.note && <span>{e.note}</span>}
                   </p>
-                  {trace && (
+                  {steps && steps.length > 0 ? (
+                    <details
+                      className="trace"
+                      {...(idx === entries.length - 1 ? { open: true } : {})}
+                    >
+                      <summary>
+                        trace · {steps.length} step
+                        {steps.length === 1 ? '' : 's'}
+                        {decidedIdx >= 0
+                          ? ` · ${stopped ? 'stopped' : 'decided'} at step ${decidedIdx + 1}`
+                          : ''}
+                      </summary>
+                      <ol className="steps">
+                        {steps.map((s, i) => {
+                          const last = i === steps.length - 1
+                          const glyph =
+                            s.status === 'ok'
+                              ? '✓'
+                              : s.status === 'fail'
+                                ? '✗'
+                                : '·'
+                          return (
+                            <li
+                              key={i}
+                              className={s.decided ? 'key' : undefined}
+                            >
+                              <span aria-hidden="true">
+                                {last ? '└─' : '├─'}
+                              </span>
+                              <span className="s">{glyph}</span>
+                              <span>
+                                {s.name}
+                                {s.decided ? (
+                                  <span className="why">← decided</span>
+                                ) : null}
+                              </span>
+                              <span className="dur">
+                                {s.seconds != null
+                                  ? `${s.seconds.toFixed(1)}s`
+                                  : ''}
+                              </span>
+                            </li>
+                          )
+                        })}
+                      </ol>
+                    </details>
+                  ) : trace ? (
                     <details
                       className="trace"
                       {...(idx === entries.length - 1 ? { open: true } : {})}
@@ -351,7 +403,7 @@ function Verify({
                         })}
                       </ol>
                     </details>
-                  )}
+                  ) : null}
                 </div>
               )
             }
