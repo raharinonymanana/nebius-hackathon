@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import type { ReactNode } from 'react'
 import type { Run } from './contract'
 import { normaliseRun } from './normalise'
+import { WIDE_CHARS, useBlockCursor, Verb } from './terminal-hooks'
 
 const TARGET = 'ormar'
 // Backend budget is ~25s (cold start ~12s). Give the browser headroom above that
@@ -69,7 +70,9 @@ function Verify({
   const [verifying, setVerifying] = useState(false)
   const [elapsedMs, setElapsedMs] = useState(0) // ephemeral spinner timer, not logged
   const idRef = useRef(1) // banner took 0; next id starts at 1
-  const inputRef = useRef<HTMLInputElement>(null)
+  // Block cursor (HANDOFF §9): owns the input ref + the sibling .cursor ref, and
+  // positions the block at caret index × 1ch. inputRef also serves the focus effect.
+  const { inputRef, cursorRef, place } = useBlockCursor(input)
   const bottomRef = useRef<HTMLDivElement>(null) // empty div rendered last, the scroll target
   const containerRef = useRef<HTMLDivElement>(null) // .transcript — the scroll region (overflow-y:auto)
   const scrollIntent = useRef<'always' | 'if-near' | null>(null)
@@ -374,7 +377,7 @@ function Verify({
               <p className="verdict">
                 <span aria-hidden="true">
                   <span className="spin" />
-                  <span className="verb">Keeping time…</span>
+                  <Verb text="Keeping time" />
                 </span>
                 <span className="dim stats">
                   {elapsedLabel}
@@ -398,16 +401,22 @@ function Verify({
           <span className="p" aria-hidden="true">
             ❯
           </span>
-          {/* native-caret: the block-cursor hook (HANDOFF §9) lands in a later
-              commit; until then show the real green caret (and keep .cursor,
-              dormant, present per the markup contract). */}
-          <div className="field native-caret">
+          {/* native-caret only for wide chars (emoji/CJK), where a per-cell block
+              can't track the caret — then the native green caret shows and .cursor
+              hides (CSS). For normal ASCII the block cursor shows, native hidden. */}
+          <div
+            className={`field${WIDE_CHARS.test(input) ? ' native-caret' : ''}`}
+          >
             <input
               id="q"
               ref={inputRef}
               type="text"
               value={input}
               onChange={(ev) => setInput(ev.target.value)}
+              onKeyUp={place}
+              onClick={place}
+              onScroll={place}
+              onSelect={place}
               maxLength={2000}
               disabled={verifying}
               autoComplete="off"
@@ -416,7 +425,7 @@ function Verify({
               enterKeyHint="go"
               placeholder="paste an input to verify"
             />
-            <span className="cursor" aria-hidden="true" />
+            <span className="cursor" ref={cursorRef} aria-hidden="true" />
           </div>
           <button
             type="submit"
