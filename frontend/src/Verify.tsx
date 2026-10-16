@@ -31,7 +31,7 @@ try   (SELECT password_hash FROM users WHERE username='admin')   (known exploit)
 first verify may take ~12s (cold start)`
 
 // About box re-layout: the banner copy is kept VERBATIM, only sliced for colour.
-//   head           = build-name line           -> --brand
+//   head           = build-name line           -> --brand (.g)
 //   boundary       = the "does / doesn't" honesty sentence -> --fg (not dim)
 //   everything else= body                       -> --dim
 // Slicing never adds or drops a character, so the G1 boundary text is intact.
@@ -44,14 +44,17 @@ const BANNER_PRE = BANNER_REST.slice(0, BANNER_BI)
 const BANNER_POST = BANNER_REST.slice(BANNER_BI + BANNER_BOUNDARY.length)
 
 // Verdict presentation, keyed on the exact contract literals (Run['verdict']).
-// Colour is never the sole signal: each chip carries a glyph + text label.
+// Colour is never the sole signal: each chip carries a glyph + text label. The
+// class is the RESULT class (sets --rail); the chip itself is just .chip.
+// FIX VERIFIED is dead in the live verify flow (the backend returns only
+// PROVEN / NOT PROVEN); its entry stays only to satisfy the Record type.
 const VERDICT_META: Record<
   Run['verdict'],
   { label: string; glyph: string; cls: string }
 > = {
-  PROVEN: { label: 'PROVEN', glyph: '✓', cls: 'verdict-proven' },
-  'NOT PROVEN': { label: 'NOT PROVEN', glyph: '✗', cls: 'verdict-not-proven' },
-  'FIX VERIFIED': { label: 'FIX VERIFIED', glyph: '◆', cls: 'verdict-fix-verified' },
+  PROVEN: { label: 'PROVEN', glyph: '✓', cls: 'is-proven' },
+  'NOT PROVEN': { label: 'NOT PROVEN', glyph: '✗', cls: 'is-not-proven' },
+  'FIX VERIFIED': { label: 'FIX VERIFIED', glyph: '◆', cls: 'is-proven' },
 }
 
 function Verify({
@@ -168,15 +171,16 @@ function Verify({
 
   // Title-bar status — DERIVED each render from entries/verifying; nothing is
   // stored (no new counter state, no field on Entry). "runs" = completed verify
-  // attempts: today that is PROVEN + NOT PROVEN. A future failed-run chip would be
-  // a run that is neither ✓ nor ✗, so counting the two buckets keeps this
-  // forward-compatible. FIX VERIFIED is intentionally not a tally bucket.
+  // attempts (PROVEN + NOT PROVEN). A failed run is neither ✓ nor ✗, so it is
+  // NOT folded into "runs"; it gets its own "! n" bucket (D30). FIX VERIFIED is
+  // intentionally not a tally bucket.
   const proven = entries.filter(
     (e) => e.kind === 'verdict' && e.run.verdict === 'PROVEN',
   ).length
   const notProven = entries.filter(
     (e) => e.kind === 'verdict' && e.run.verdict === 'NOT PROVEN',
   ).length
+  const failed = entries.filter((e) => e.kind === 'error').length
   const runs = proven + notProven
   // While a verify is in flight the mode shows the SAME number as that run's echo
   // row (the id of the most recent input entry). It is rendered with the exact
@@ -198,149 +202,236 @@ function Verify({
 
   return (
     <>
-      {/* Live title-bar status, portalled into App's title-bar right slot. Derived
-          above; appears only once App has lent us the slot (ref callback). */}
+      {/* Live title-bar status, portalled into App's title-bar slot (display:
+          contents, so .tally + .mode sit as direct flex children of .top).
+          Derived above; appears only once App has lent us the slot. */}
       {statusSlot &&
         createPortal(
           <>
-            <span className="tt-tally">
-              {runs === 0 ? (
-                'no runs yet'
+            <p className="tally" aria-label="Session tally">
+              {runs === 0 && failed === 0 ? (
+                <span className="dim">no runs yet</span>
               ) : (
                 <>
-                  <span className="tt-n">{runs}</span> run{runs === 1 ? '' : 's'}{' '}
-                  ·{' '}
+                  {runs > 0 && (
+                    <span className="wide">
+                      {runs} run{runs === 1 ? '' : 's'}
+                    </span>
+                  )}
                   {proven > 0 && (
-                    <span className="tt-count tt-proven">
-                      <span aria-hidden="true">✓</span>
+                    <span>
+                      <span className="g" aria-hidden="true">
+                        ✓
+                      </span>{' '}
                       {proven}
                       <span className="sr-only"> proven</span>
                     </span>
                   )}
-                  {proven > 0 && notProven > 0 && ' '}
                   {notProven > 0 && (
-                    <span className="tt-count tt-not-proven">
-                      <span aria-hidden="true">✗</span>
+                    <span>
+                      <span className="r" aria-hidden="true">
+                        ✗
+                      </span>{' '}
                       {notProven}
                       <span className="sr-only"> not proven</span>
                     </span>
                   )}
+                  {failed > 0 && (
+                    <span>
+                      <span aria-hidden="true">!</span> {failed}
+                      <span className="sr-only"> run failed</span>
+                    </span>
+                  )}
                 </>
               )}
-            </span>
-            <span className={`tt-mode${verifying ? ' tt-running' : ''}`}>
-              <span className="tt-dot" aria-hidden="true">
-                ●
-              </span>{' '}
+            </p>
+            <span
+              className={`mode${verifying ? ' is-busy' : ''}`}
+              role="status"
+            >
               {verifying ? <>RUNNING #{inFlightId}</> : 'READY'}
             </span>
           </>,
           statusSlot,
         )}
 
-      {/* row 2 of the pane grid — the ONLY scroll region (overflow-y:auto) */}
-      <div className="transcript" ref={containerRef}>
-        {entries.map((e, idx) => (
-          <div key={e.id} className="entry">
-            {e.kind === 'banner' && (
-              <section className="about">
-                <span className="about-title">ℹ about</span>
-                <pre className="about-body">
-                  <span className="about-head">{BANNER_HEAD}</span>
-                  <span className="about-dim">{BANNER_PRE}</span>
-                  <span className="about-boundary">{BANNER_BOUNDARY}</span>
-                  <span className="about-dim">{BANNER_POST}</span>
-                </pre>
-              </section>
-            )}
-            {e.kind === 'input' && (
-              <div className="echo">
-                <span className="echo-prefix">❯</span>
-                <span className="echo-text">{e.text}</span>
-                <span className="echo-run">#{e.id}</span>
-              </div>
-            )}
-            {e.kind === 'verdict' &&
-              (() => {
-                const v = VERDICT_META[e.run.verdict]
-                return (
-                  <div className={`result ${v.cls}`}>
-                    <div className="result-head">
-                      <span className={`chip ${v.cls}`}>
-                        {v.glyph} {v.label}
-                      </span>
-                      {e.note && <span className="result-note">{e.note}</span>}
-                    </div>
-                    {e.run.verdict === 'PROVEN' && (
-                      <details
-                        className="trace-details"
-                        {...(idx === entries.length - 1 ? { open: true } : {})}
-                      >
-                        <summary className="trace-summary">▸ trace</summary>
-                        <div className="entry-trace">
-                          {e.run.human_trace.map((step, i) => (
-                            <div key={i} className="trace-step">
-                              {step}
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    )}
-                  </div>
-                )
-              })()}
-            {e.kind === 'error' && (
-              <div className="failed">
-                <div className="failed-head">
-                  <span className="chip-outline">
-                    <span aria-hidden="true">!</span> RUN FAILED
-                  </span>
-                  <span className="failed-reason">
-                    {e.message}
-                    <span className="failed-tag"> — not a verdict</span>
-                  </span>
+      {/* ROW 2 — transcript: the ONLY scroll region. containerRef stays on
+          .transcript (the scroller), NOT the inner .log. */}
+      <section
+        className="transcript"
+        role="log"
+        aria-label="Session transcript"
+        ref={containerRef}
+      >
+        <div className="log">
+          {entries.map((e, idx) => {
+            if (e.kind === 'banner') {
+              return (
+                <section
+                  key={e.id}
+                  className="box about"
+                  aria-labelledby="about-h"
+                >
+                  <h2 className="box-title" id="about-h">
+                    about
+                  </h2>
+                  {/* Banner copy kept verbatim (two-lane parser); only sliced for
+                      colour. Inline style keeps the terminal font + grid rhythm and
+                      wraps instead of overflowing the page (no custom CSS hook). */}
+                  <pre
+                    style={{
+                      margin: 0,
+                      font: 'inherit',
+                      whiteSpace: 'pre-wrap',
+                      overflowWrap: 'anywhere',
+                    }}
+                  >
+                    <span className="g">{BANNER_HEAD}</span>
+                    <span className="dim">{BANNER_PRE}</span>
+                    {BANNER_BOUNDARY}
+                    <span className="dim">{BANNER_POST}</span>
+                  </pre>
+                </section>
+              )
+            }
+            if (e.kind === 'input') {
+              return (
+                <div key={e.id} className="echo">
+                  <p className="cmd">
+                    <span className="p" aria-hidden="true">
+                      ❯
+                    </span>
+                    {e.text}
+                  </p>
+                  <span className="stamp">#{e.id}</span>
                 </div>
+              )
+            }
+            if (e.kind === 'verdict') {
+              const v = VERDICT_META[e.run.verdict]
+              // Capture the narrowed array in a const so the ProvenRun narrowing
+              // survives inside the .map callback (property-access narrowing does
+              // not persist across a nested closure; a const does).
+              const trace =
+                e.run.verdict === 'PROVEN' ? e.run.human_trace : null
+              return (
+                <div key={e.id} className={`result ${v.cls}`}>
+                  <p className="verdict">
+                    <span className="chip">
+                      <span aria-hidden="true">{v.glyph} </span>
+                      {v.label}
+                    </span>
+                    {e.note && <span>{e.note}</span>}
+                  </p>
+                  {trace && (
+                    <details
+                      className="trace"
+                      {...(idx === entries.length - 1 ? { open: true } : {})}
+                    >
+                      <summary>
+                        trace · {trace.length} step
+                        {trace.length === 1 ? '' : 's'}
+                      </summary>
+                      <ol className="steps">
+                        {trace.map((step, i) => {
+                          const last = i === trace.length - 1
+                          return (
+                            <li key={i}>
+                              <span aria-hidden="true">
+                                {last ? '└─' : '├─'}
+                              </span>
+                              <span className="s" />
+                              <span>{step}</span>
+                              <span className="dur" />
+                            </li>
+                          )
+                        })}
+                      </ol>
+                    </details>
+                  )}
+                </div>
+              )
+            }
+            // kind === 'error' — a RUN FAILED is NOT a verdict: dashed rail +
+            // outlined chip set it apart from PROVEN / NOT PROVEN.
+            return (
+              <div key={e.id} className="result is-fail">
+                <p className="verdict">
+                  <span className="chip chip-outline">
+                    <span aria-hidden="true">! </span>RUN FAILED
+                  </span>
+                  <span>{e.message} — not a verdict</span>
+                </p>
               </div>
-            )}
+            )
+          })}
+
+          {/* Running — honest subset: CSS quadrant spinner + one static music
+              verb + live elapsed. No step counter / no fake steps (no live step
+              data). Dim rail (no is-* class). */}
+          {verifying && (
+            <div className="result" aria-busy="true">
+              <p className="verdict">
+                <span aria-hidden="true">
+                  <span className="spin" />
+                  <span className="verb">Keeping time…</span>
+                </span>
+                <span className="dim stats">
+                  {elapsedLabel}
+                  {isFirstRun ? ' · cold start ~12s' : ''}
+                </span>
+                <span className="sr-only">Verifying — {elapsedLabel} elapsed</span>
+              </p>
+            </div>
+          )}
+
+          <div ref={bottomRef} />
+        </div>
+      </section>
+
+      {/* ROW 3 — prompt: pinned under the transcript, full width */}
+      <div className="prompt">
+        <label className="sr-only" htmlFor="q">
+          Input to verify
+        </label>
+        <form className="prompt-box" onSubmit={onSubmit}>
+          <span className="p" aria-hidden="true">
+            ❯
+          </span>
+          {/* native-caret: the block-cursor hook (HANDOFF §9) lands in a later
+              commit; until then show the real green caret (and keep .cursor,
+              dormant, present per the markup contract). */}
+          <div className="field native-caret">
+            <input
+              id="q"
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(ev) => setInput(ev.target.value)}
+              maxLength={2000}
+              disabled={verifying}
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              enterKeyHint="go"
+              placeholder="paste an input to verify"
+            />
+            <span className="cursor" aria-hidden="true" />
           </div>
-        ))}
-
-        {verifying && (
-          <div className="verifying-line">
-            <span className="spinner" aria-hidden="true" />
-            <span className="run-verb">Keeping time…</span>
-            <span className="run-sep" aria-hidden="true">
-              ·
-            </span>
-            <span className="run-elapsed">{elapsedLabel}</span>
-            {isFirstRun && <span className="run-hint">(cold start ~12s)</span>}
-          </div>
-        )}
-
-        <div ref={bottomRef} />
-      </div>
-
-      {/* row 3 of the pane grid — prompt line + status (eval ledger) */}
-      <div className="promptbar">
-        <form className="prompt-form" onSubmit={onSubmit}>
-          <span className="prompt-prefix">❯</span>
-          <input
-            ref={inputRef}
-            className="prompt-input"
-            value={input}
-            onChange={(ev) => setInput(ev.target.value)}
-            maxLength={2000}
-            disabled={verifying}
-            autoComplete="off"
-            spellCheck={false}
-            placeholder="type an input, then verify"
-          />
-          <button type="submit" disabled={verifying || input.trim() === ''}>
-            {verifying ? 'verifying…' : 'verify'}
+          <button
+            type="submit"
+            className={`go${input.trim() !== '' && !verifying ? ' is-ready' : ''}`}
+            disabled={verifying || input.trim() === ''}
+          >
+            {verifying ? 'verifying…' : '⏎ verify'}
           </button>
         </form>
-        <div className="status-line">{ledger}</div>
       </div>
+
+      {/* ROW 4 — eval-ledger footer */}
+      <footer className="status">
+        <ul aria-label="Eval ledger">{ledger}</ul>
+      </footer>
     </>
   )
 }

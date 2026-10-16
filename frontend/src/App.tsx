@@ -39,40 +39,48 @@ function App() {
     }
   }, [])
 
-  // Eval ledger (status line, row 3). These are the ENGINE/eval numbers, not the
-  // live replay path — labels --dim, numbers --fg, money fixed to 2dp (no raw float).
+  // Eval ledger (status footer, row 4) — the ENGINE/eval numbers, not the live
+  // replay path. Rendered as <li> items (Verify wraps them in <footer.status><ul>).
+  // Numbers in --fg via .n; money fixed to 2dp (no raw float). Lower-priority
+  // items carry .wide so the ≤640px rule can drop them.
   let ledger: ReactNode
   if (state.status === 'loading') {
-    ledger = (
-      <>
-        eval ledger · <span className="led-dim">loading…</span>
-      </>
-    )
+    ledger = <li className="dim">eval ledger · loading…</li>
   } else if (state.status === 'error') {
-    ledger = (
-      <>
-        eval ledger · <span className="led-dim">unavailable</span>
-      </>
-    )
+    ledger = <li className="dim">eval ledger · unavailable</li>
   } else {
     const { meta } = state.contract
     ledger = (
       <>
-        eval ledger · receipts <span className="led-n">{meta.receipts_valid}</span> (+
-        <span className="led-n">{meta.receipts_excluded}</span> excl) · calls{' '}
-        <span className="led-n">{meta.model_calls}</span> ·{' '}
-        <span className="led-n">${meta.model_cost_usd.toFixed(2)}</span> · tavily{' '}
-        <span className="led-n">{meta.tavily_credits}</span>
+        <li>
+          receipts <span className="n">{meta.receipts_valid}</span>
+          <span className="wide"> (+{meta.receipts_excluded} excluded)</span>
+        </li>
+        <li className="wide">
+          model calls <span className="n">{meta.model_calls}</span>
+        </li>
+        <li>
+          cost <span className="n">${meta.model_cost_usd.toFixed(2)}</span>
+        </li>
+        <li className="wide">
+          tavily credits <span className="n">{meta.tavily_credits}</span>
+        </li>
       </>
     )
   }
 
   return (
-    <div className="pane">
-      <header className="titlebar">
-        <MelodieMark size={22} />
-        <span className="wordmark">mélodie</span>
-        <span className="tt-status" ref={setStatusSlot} />
+    <div className="term">
+      <header className="top">
+        <span className="rule end" aria-hidden="true" />
+        <MelodieMark size={16} />
+        <h1>mélodie</h1>
+        <span className="rule" aria-hidden="true" />
+        {/* Title-bar status slot — portal host. display:contents so the tally +
+            mode Verify portals in here become direct flex children of .top (the
+            1ch gap + the flexible .rule before them lay them out exactly as v3). */}
+        <span ref={setStatusSlot} style={{ display: 'contents' }} />
+        <span className="rule end" aria-hidden="true" />
       </header>
       <Verify ledger={ledger} statusSlot={statusSlot} />
     </div>

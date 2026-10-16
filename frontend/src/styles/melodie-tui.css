@@ -1,0 +1,169 @@
+/* ==========================================================================
+   Mélodie — terminal UI stylesheet (v3)
+   Rule of the house: every size is a whole number of cells.
+   One cell = 1ch wide × var(--row) tall. One font size (14px) everywhere.
+   ========================================================================== */
+
+/* 3. Reset + containment. Also neutralises the Vite starter CSS
+      (body flex-centering, #root { max-width: 1280px; margin: 0 auto; padding: 2rem; text-align: center }). */
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; max-width: none; text-align: left; }
+html, body { overflow: hidden; background: var(--bg); }
+body { display: block; min-width: 0; min-height: 0; }
+::selection { background: var(--dim); color: var(--bg); }
+
+/* 4. The shell — fills the viewport, four rows, only the transcript scrolls */
+.term {
+  position: relative;          /* contains absolutely-positioned children (sr-only text, box titles) */
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "top" "transcript" "prompt" "status";
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: var(--row);
+}
+
+/* 4a. Title bar:  ─ mélodie ────────────── 4 runs  ✓ 1  ✗ 1  ! 1  RUNNING #04 ─ */
+.top { grid-area: top; display: flex; align-items: center; gap: 1ch; height: var(--row); color: var(--dim); white-space: nowrap; overflow: hidden; }
+.top h1 { margin: 0; font: inherit; font-weight: 700; color: var(--fg); }
+.rule { flex: 1; min-width: 1ch; height: 1px; background: var(--line); }
+.rule.end { flex: none; width: 1ch; }
+.tally { display: flex; gap: 2ch; margin: 0; }
+.mode { flex: none; padding: 0 1ch; background: var(--green); color: var(--bg); font-weight: 700; }   /* READY */
+.mode.is-busy { background: var(--blue); }                                                         /* RUNNING #04 */
+.g { color: var(--green); } .r { color: var(--red); } .b { color: var(--blue); } .dim { color: var(--dim); }
+
+/* 4b. Transcript — the ONLY scrolling element. Normal direction: scrollTop 0 = top (your autoscroll measures this). */
+.transcript { grid-area: transcript; position: relative; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.log { display: flex; flex-direction: column; gap: var(--row); padding: var(--row) 1ch; }
+
+/* 4c. Prompt row — pinned under the transcript, full width */
+.prompt { grid-area: prompt; display: flex; flex-direction: column; padding: 0 1ch; background: var(--bg); }
+
+/* 4d. Ledger footer — full-width tinted row */
+.status { grid-area: status; display: flex; align-items: center; gap: 2ch; height: var(--row); padding: 0 1ch; background: var(--surface); color: var(--dim); white-space: nowrap; overflow: hidden; }
+.status ul { display: flex; gap: 1ch; min-width: 0; margin: 0; padding: 0; list-style: none; overflow: hidden; }
+.status li + li::before { content: "·"; margin-right: 1ch; }
+.status .n { color: var(--fg); }
+
+/* 5. Boxes — the border runs through the middle of a cell, where ╭─╮ would draw.
+      Text inside lands on column 3, the same column as run text. */
+.box { position: relative; margin: calc(var(--row) / 2) 0.5ch; padding: calc(var(--row) / 2 - 1px) calc(1.5ch - 1px); border: 1px solid var(--line); border-radius: 4px; }
+.box-title { position: absolute; top: calc(var(--row) / -2 - 1px); left: calc(1.5ch - 1px); margin: 0; padding: 0 1ch; background: var(--bg); font: inherit; color: var(--blue); }
+
+/* 5a. About box (intro + boundaries) — first item in the transcript, scrolls away naturally */
+.about { max-width: 92ch; }                                  /* content measure, left-aligned — not a container */
+.brand { display: flex; gap: 2ch; margin: 0 0 var(--row); }
+.logo { flex: none; line-height: 18px; color: var(--green); } /* fixed 18px so half-blocks always tile */
+.logo div { white-space: pre; }
+.logo .lo { color: var(--logo-dim); }
+.logo .sp { margin-left: 1ch; }
+.brand-text { display: flex; flex-direction: column; margin: 0; }
+.brand-text strong { font-weight: 700; }
+.brand-text span { color: var(--dim); }
+.lede { max-width: 80ch; margin: 0 0 var(--row); }
+.facts { display: grid; grid-template-columns: 8ch minmax(0, 1fr); column-gap: 2ch; margin: 0; }
+.facts dt { color: var(--dim); }
+.facts dd { margin: 0; }
+.facts dd > span { white-space: nowrap; }                     /* never split a glyph from its label */
+.facts .gap { margin-top: var(--row); }
+.examples { display: flex; flex-wrap: wrap; column-gap: 3ch; }
+.example { padding: 0; border: 0; background: none; font: inherit; color: var(--fg); text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--dim); text-underline-offset: 3px; }
+.example::before { content: "❯"; display: inline-block; margin-right: 1ch; color: var(--green); }
+.example:hover { text-decoration-color: var(--green); }
+
+/* 6. A run — command on a full-width tinted row, result on a rail in the verdict colour */
+.run { margin: 0; }
+.echo { display: flex; justify-content: space-between; gap: 2ch; margin: 0 -1ch; padding: 0 1ch; background: var(--surface); }
+.cmd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-variant-ligatures: none; }   /* echo input literally */
+.cmd .p { margin-right: 1ch; color: var(--dim); }
+.stamp { flex: none; color: var(--dim); }
+.result { --rail: var(--dim); margin-left: calc(0.5ch - 1px); padding-left: calc(1.5ch - 1px); border-left: 2px solid var(--rail); }
+.is-proven, .is-ok { --rail: var(--green); }                 /* PROVEN      (.is-ok = melodie-tui.js v2 alias) */
+.is-not-proven, .is-no { --rail: var(--red); }               /* NOT PROVEN  (.is-no = melodie-tui.js v2 alias) */
+.is-fail { border-left-style: dashed; }                       /* not a verdict: RUN FAILED / CANCELLED */
+.verdict { display: flex; flex-wrap: wrap; column-gap: 1ch; margin: 0; }
+.chip { padding: 0 1ch; background: var(--rail); color: var(--bg); font-weight: 700; white-space: nowrap; }  /* reverse video, 1 cell tall */
+.chip-outline { background: none; color: var(--fg); box-shadow: inset 0 0 0 1px var(--dim); }
+.meta { margin: 0; color: var(--dim); }
+.meta kbd { font: inherit; color: var(--fg); }
+
+/* 6a. Trace — native <details> */
+.trace > summary { width: fit-content; list-style: none; cursor: pointer; color: var(--dim); }
+.trace > summary::-webkit-details-marker { display: none; }
+.trace > summary::before { content: "▸"; display: inline-block; width: 2ch; }
+.trace[open] > summary::before { content: "▾"; }
+.trace > summary:hover { color: var(--fg); }
+.steps { max-width: 64ch; margin: 0; padding: 0 0 0 2ch; list-style: none; color: var(--dim); }  /* keeps durations near names */
+.steps li { display: grid; grid-template-columns: 3ch 2ch minmax(0, 1fr) auto; }
+.steps .dur { padding-left: 2ch; text-align: right; }
+.steps .key { color: var(--fg); }                             /* the step that decided the verdict */
+.steps .key .s, .steps .key .why { color: var(--rail); }
+.steps .now { color: var(--fg); }                             /* the step running right now */
+.why { margin-left: 1ch; }
+
+/* 6b. Running — quadrant spinner + a music verb with a glint that steps one cell at a time */
+.spin::before { content: "▘"; display: inline-block; width: 2ch; color: var(--blue); animation: quad 0.8s steps(1, end) infinite; }
+@keyframes quad {
+  0% { content: "▘"; }
+  25% { content: "▝"; }
+  50% { content: "▗"; }
+  75% { content: "▖"; }
+}
+.verb { color: var(--dim); }
+.verb .hi { color: var(--fg); }
+.stats { margin-left: 1ch; }                                  /* 2 cells between verb and timer */
+
+/* 7. Prompt box — full width, block cursor, native caret hidden */
+.prompt-box { display: flex; align-items: center; gap: 1ch; margin: calc(var(--row) / 2) 0.5ch; padding: calc(var(--row) / 2 - 1px) calc(1.5ch - 1px); border: 1px solid var(--dim); border-radius: 4px; }
+.prompt-box:focus-within { border-color: var(--green); }
+.prompt-box .p { flex: none; color: var(--green); font-weight: 700; }
+.field { position: relative; flex: 1; min-width: 0; height: var(--row); }
+.field input { position: absolute; top: calc(var(--row) / -2); left: 0; width: 100%; height: calc(var(--row) * 2); padding: 0; border: 0; outline: 0; background: none; color: var(--fg); font: inherit; font-variant-ligatures: none; caret-color: transparent; }
+.field input::placeholder { color: var(--dim); opacity: 1; }
+.field input:disabled { color: var(--dim); }
+.field.native-caret input { caret-color: var(--green); }      /* fallback for wide chars (emoji/CJK) */
+.field.native-caret .cursor { display: none; }
+.cursor { position: absolute; top: 0; left: 0; width: 1ch; height: var(--row); background: var(--fg); mix-blend-mode: difference; pointer-events: none; animation: blink 1s steps(1, end) infinite; }
+.cursor.is-typing { animation: none; }                        /* solid while typing */
+.prompt-box:not(:focus-within) .cursor { visibility: hidden; }
+@keyframes blink {
+  50% { opacity: 0; }
+}
+.go { flex: none; height: calc(var(--row) * 2); margin: calc(var(--row) / -2) -1ch; padding: 0 1ch; border: 0; background: none; color: var(--dim); font: inherit; cursor: pointer; white-space: nowrap; }
+.go.is-ready { color: var(--green); }
+.go:disabled { cursor: default; }
+.hint { margin: 0 0 0 2ch; color: var(--dim); }
+.hint kbd { font: inherit; color: var(--fg); }
+
+/* 8. Focus + screen-reader utility */
+:focus-visible { outline: 1px solid var(--green); outline-offset: 1px; }
+.field input:focus-visible { outline: none; }                 /* the box border already shows focus */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* 9. Reduced motion — nothing moves; meaning is unchanged */
+@media (prefers-reduced-motion: reduce) {
+  .spin::before { animation: none; content: "…"; }
+  .cursor { animation: none; }
+  .verb .hi { color: inherit; }                                /* JS also stops the glint + rotation */
+}
+
+/* 10. Phone (≤640px) — same grid and rows, bigger touch targets, fewer extras */
+@media (max-width: 640px) {
+  .about { max-width: none; }
+  .facts { grid-template-columns: minmax(0, 1fr); }
+  .examples { flex-direction: column; row-gap: var(--row); }
+  .example { padding: 13px 0; margin: -13px 0; }              /* ≥44px tap target, layout unchanged */
+  .trace > summary { padding: 13px 0; margin: -13px 0; }
+  .wide, .clock, .steps .dur, .hint { display: none; }
+  .prompt { padding-bottom: calc(var(--row) / 2); }
+  .prompt-box { padding-block: calc(var(--row) - 1px); }      /* box = 3 cells tall ≈ 54px */
+  .field { font-size: 16px; }                                 /* <16px makes iOS zoom on focus */
+  .go { height: calc(var(--row) * 3); margin-block: calc(var(--row) * -1); }
+}
