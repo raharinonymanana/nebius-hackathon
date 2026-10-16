@@ -217,7 +217,48 @@ def _base_fields(user_input, flag):
     }
 
 
-def _proven(user_input, flag):
+# Six-step structured trace (additive to human_trace). Status + the single
+# deciding step are DERIVED from the run's real signals (leaked, exit_ok);
+# nothing is hard-coded and no duration is re-measured -- only step 5 carries a
+# number, the elapsed total _run_with_budget already returned.
+_STEP_NAMES = (
+    "pre-flight gates",
+    "boot sandbox + fresh DB",
+    "harden SQLite",
+    "plant canary + deliver input as file",
+    "replay in sealed sandbox",
+    "observe canary in stdout",
+)
+
+
+def _steps(*, leaked, exit_ok, replay_seconds):
+    """Assemble steps[] from verify()'s own signals -- no new measurement.
+
+    leaked  : exit 0 AND canary in stdout  (the PROVEN condition)
+    exit_ok : the sandbox replay exited 0  (result_img.exit_code == 0)
+
+    Step 5 (replay) is ok when the replay exited clean, else fail. Step 6
+    (observe canary) is ok when the canary leaked, fail when it ran clean but
+    did not leak (canary intact), skipped when the replay never produced a
+    clean result. Exactly one step is decided: step 6 when the replay ran
+    clean, else step 5. Only step 5 carries `replay_seconds`.
+    """
+    replay_status = "ok" if exit_ok else "fail"
+    observe_status = "ok" if leaked else ("fail" if exit_ok else "skipped")
+    decided_index = 5 if exit_ok else 4
+    statuses = ("ok", "ok", "ok", "ok", replay_status, observe_status)
+    return [
+        {
+            "name": _STEP_NAMES[i],
+            "status": statuses[i],
+            "decided": i == decided_index,
+            "seconds": replay_seconds if i == 4 else None,
+        }
+        for i in range(6)
+    ]
+
+
+def _proven(user_input, flag, elapsed):
     d = _base_fields(user_input, flag)
     d["verdict"] = "PROVEN"
     d["human_trace"] = [
@@ -236,13 +277,19 @@ def _proven(user_input, flag):
         f"Harness observed the canary {flag} in sandbox stdout with exit 0 (leaked=true).",
         "Verdict: PROVEN - confirmed solely by the model-free ConTree replay harness.",
     ]
+    # Additive structured trace. PROVEN ⟹ leaked (exit 0 AND canary present).
+    d["steps"] = _steps(leaked=True, exit_ok=True, replay_seconds=elapsed)
     return d
 
 
-def _not_proven(user_input, flag, note):
+def _not_proven(user_input, flag, note, *, elapsed=None, exit_code=None):
     d = _base_fields(user_input, flag)
     d["verdict"] = "NOT PROVEN"
     d["note"] = note  # diagnostic superset field; frontend reads only the union fields
+    # Additive structured trace. Not-proven ⟹ not leaked; exit_ok distinguishes
+    # "canary intact" (exit 0, no flag -> step 6 fails, decided) from "replay
+    # errored" (exit != 0 or no result -> step 5 fails, decided; step 6 skipped).
+    d["steps"] = _steps(leaked=False, exit_ok=(exit_code == 0), replay_seconds=elapsed)
     return d
 
 
@@ -302,19 +349,22 @@ def verify(target_key, user_input, *, timeout_s=25.0, base_image=None):
 
     if status == "TIMEOUT":
         return _not_proven(user_input, flag,
-                           f"verification timed out after {timeout_s:.1f}s")
+                           f"verification timed out after {timeout_s:.1f}s",
+                           elapsed=elapsed, exit_code=None)
     if status != "ok" or result_img is None:
         return _not_proven(user_input, flag,
-                           f"sandbox error after {elapsed:.1f}s: {status!r}")
+                           f"sandbox error after {elapsed:.1f}s: {status!r}",
+                           elapsed=elapsed, exit_code=None)
 
     # 4. CANARY-ONLY verdict: PROVEN iff exit 0 AND the planted canary leaked.
     stdout = result_img.stdout or ""
     leaked = result_img.exit_code == 0 and flag in stdout
     if leaked:
-        return _proven(user_input, flag)
+        return _proven(user_input, flag, elapsed)
     return _not_proven(
         user_input, flag,
-        f"canary not leaked (exit={result_img.exit_code}); input did not prove the injection")
+        f"canary not leaked (exit={result_img.exit_code}); input did not prove the injection",
+        elapsed=elapsed, exit_code=result_img.exit_code)
 
 
 # --- self-test (SPENDS ConTree compute; briefed) -----------------------------
