@@ -487,6 +487,12 @@ function Verify({
             {verifying ? 'verifying…' : '⏎ verify'}
           </button>
         </form>
+        {/* Prompt hint (HANDOFF §5 p.hint). Only ⏎ verify is real behavior —
+            Enter submits the form (onSubmit). ↑ history / esc are not built, so
+            they are intentionally omitted: the hint states only true behavior. */}
+        <p className="hint">
+          <kbd>⏎</kbd> verify
+        </p>
       </div>
 
       {/* ROW 4 — eval-ledger footer */}
