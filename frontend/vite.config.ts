@@ -1,5 +1,9 @@
 import dns from 'node:dns'
+import net from 'node:net'
+// Happy Eyeballs races IPv6+IPv4 and times out on this network (dead IPv6 route);
+// force a single IPv4 connect so the dev proxy can reach the Lambda.
 dns.setDefaultResultOrder('ipv4first')
+net.setDefaultAutoSelectFamily(false)
 
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
