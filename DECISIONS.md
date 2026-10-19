@@ -182,3 +182,6 @@
 - Hosting pipeline = SAM (AWS CLI v2 + SAM CLI installed native in WSL). Stack prove-it-demo, us-east-1, public Function URL, 60s timeout, CodeUri: demo/ (ships only the demo). Reuse existing user/hasina-dev creds (acct <aws-account-id>). Proven via throwaway hello-world first.
 - ormar demo not_proven slot = null + honest pending note (Option 1). Rejected deriving negative evidence from the FIX VERIFIED run into the slot (would muddy the verdict). Real ormar fixed NOT-PROVEN receipt to be generated as pre-submission polish.
 - demo/template.yaml lives at repo ROOT (not in demo/) — SAM CodeUri is relative to the template folder; root + CodeUri: demo/ ships only the 3 demo files.
+
+## 2026-10-19 (Day 25)
+- Chose A1: fix the dev proxy at the root (disable Node Happy Eyeballs) rather than work around it, because the 503 blocked the local witness loop for this AND every future UI change. Considered + rejected: A2 (witness on a deploy preview), A3 (commit on verified logic alone). [not final]
