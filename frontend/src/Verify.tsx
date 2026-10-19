@@ -332,6 +332,15 @@ function Verify({
                     </span>
                     {e.note && <span>{e.note}</span>}
                   </p>
+                  {/* Canary token — surfaced verbatim as the run's evidence.
+                      Rendered on any verdict (PROVEN / NOT PROVEN); never on the
+                      RUN FAILED branch, which is a separate return below. */}
+                  {e.run.canary && (
+                    <p className="meta">
+                      canary{' '}
+                      <span className="canary-token">{e.run.canary}</span>
+                    </p>
+                  )}
                   {steps && steps.length > 0 ? (
                     <details
                       className="trace"
