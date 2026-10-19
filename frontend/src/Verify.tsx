@@ -58,6 +58,37 @@ const VERDICT_META: Record<
   'FIX VERIFIED': { label: 'FIX VERIFIED', glyph: '◆', cls: 'is-proven' },
 }
 
+// Transcript persistence (sessionStorage — per-tab, cleared when the tab closes).
+// Only `entries` is persisted; every other piece of state stays transient. The key
+// is versioned so a future shape change can invalidate old data cleanly.
+const TRANSCRIPT_KEY = 'melodie.transcript.v1'
+const DEFAULT_ENTRIES: Entry[] = [{ id: 0, kind: 'banner' }]
+
+// Lazy initializer for `entries`. Reads sessionStorage defensively: any parse error,
+// wrong shape, or empty array falls back to the banner-only default, and a corrupt
+// value is dropped so it can't wedge every future load. Never throws (storage access
+// itself can throw in private-mode / blocked-cookie contexts).
+function loadEntries(): Entry[] {
+  try {
+    const raw = sessionStorage.getItem(TRANSCRIPT_KEY)
+    if (!raw) return DEFAULT_ENTRIES
+    const parsed = JSON.parse(raw)
+    const ok =
+      Array.isArray(parsed) &&
+      parsed.length > 0 &&
+      parsed.every(
+        (e) => e && typeof e.id === 'number' && typeof e.kind === 'string',
+      )
+    if (!ok) {
+      sessionStorage.removeItem(TRANSCRIPT_KEY)
+      return DEFAULT_ENTRIES
+    }
+    return parsed as Entry[]
+  } catch {
+    return DEFAULT_ENTRIES
+  }
+}
+
 function Verify({
   ledger,
   statusSlot,
@@ -66,10 +97,12 @@ function Verify({
   statusSlot: HTMLElement | null
 }) {
   const [input, setInput] = useState('')
-  const [entries, setEntries] = useState<Entry[]>(() => [{ id: 0, kind: 'banner' }])
+  const [entries, setEntries] = useState<Entry[]>(loadEntries)
   const [verifying, setVerifying] = useState(false)
   const [elapsedMs, setElapsedMs] = useState(0) // ephemeral spinner timer, not logged
-  const idRef = useRef(1) // banner took 0; next id starts at 1
+  // Seed past the max restored id so new entries never collide with persisted ones
+  // (banner took 0 on a fresh load; nextId()'s increment logic is unchanged).
+  const idRef = useRef(entries.reduce((m, e) => Math.max(m, e.id), 0) + 1)
   // Block cursor (HANDOFF §9): owns the input ref + the sibling .cursor ref, and
   // positions the block at caret index × 1ch. inputRef also serves the focus effect.
   const { inputRef, cursorRef, place } = useBlockCursor(input)
@@ -81,7 +114,12 @@ function Verify({
   const draftRef = useRef('')
   const bottomRef = useRef<HTMLDivElement>(null) // empty div rendered last, the scroll target
   const containerRef = useRef<HTMLDivElement>(null) // .transcript — the scroll region (overflow-y:auto)
-  const scrollIntent = useRef<'always' | 'if-near' | null>(null)
+  // On a restored (non-empty) transcript, the first layout pass jumps to the latest
+  // run; a fresh load starts neutral. Reuses the existing scrollIntent → scrollToBottom
+  // path (the [entries] layout effect below), not a separate scroll mechanism.
+  const scrollIntent = useRef<'always' | 'if-near' | null>(
+    entries.length > 1 ? 'always' : null,
+  )
   const wasNearBottom = useRef(false)
 
   function nextId() {
@@ -113,6 +151,17 @@ function Verify({
       scrollToBottom()
     }
     scrollIntent.current = null
+  }, [entries])
+
+  // Persist the transcript on every change. sessionStorage can throw (quota,
+  // private mode, blocked storage), so the write is best-effort — a failure
+  // never breaks the live session, it just means no restore after reload.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(TRANSCRIPT_KEY, JSON.stringify(entries))
+    } catch {
+      // ignore — persistence is a convenience, not a correctness guarantee
+    }
   }, [entries])
 
   useEffect(() => {
