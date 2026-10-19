@@ -73,6 +73,12 @@ function Verify({
   // Block cursor (HANDOFF §9): owns the input ref + the sibling .cursor ref, and
   // positions the block at caret index × 1ch. inputRef also serves the focus effect.
   const { inputRef, cursorRef, place } = useBlockCursor(input)
+  // ↑/↓ input history (in-memory, this session only — no storage). histIdx === null
+  // means the live draft is showing; otherwise it indexes `history` (derived below).
+  // draftRef stashes the live draft while walking history, so stepping ↓ past the
+  // newest entry restores exactly what the user was typing.
+  const [histIdx, setHistIdx] = useState<number | null>(null)
+  const draftRef = useRef('')
   const bottomRef = useRef<HTMLDivElement>(null) // empty div rendered last, the scroll target
   const containerRef = useRef<HTMLDivElement>(null) // .transcript — the scroll region (overflow-y:auto)
   const scrollIntent = useRef<'always' | 'if-near' | null>(null)
@@ -113,6 +119,18 @@ function Verify({
     if (!verifying) inputRef.current?.focus()
   }, [verifying])
 
+  // After a history recall, drop the caret at the end of the recalled text and
+  // resync the block cursor. Keyed on histIdx so it fires only on a recall step;
+  // it sets the selection, never the value, so it does not fight the controlled input.
+  useLayoutEffect(() => {
+    if (histIdx === null) return
+    const el = inputRef.current
+    if (!el) return
+    const end = el.value.length
+    el.setSelectionRange(end, end)
+    place()
+  }, [histIdx, place])
+
   // Live elapsed timer for the in-flight spinner. Ephemeral UI state ONLY — it
   // never touches entries / idRef / the append-only log. Ticks ~10x/s while a
   // verify is in flight; a number updating is not vestibular motion, so it keeps
@@ -133,6 +151,8 @@ function Verify({
     scrollIntent.current = 'always'
     setEntries((prev) => [...prev, { id: nextId(), kind: 'input', text }])
     setInput('')
+    setHistIdx(null) // leaving history mode: next ↑ starts from the newest entry
+    draftRef.current = ''
     setVerifying(true)
 
     const controller = new AbortController()
@@ -169,6 +189,41 @@ function Verify({
     } finally {
       clearTimeout(timer)
       setVerifying(false)
+    }
+  }
+
+  // Submitted inputs, oldest→newest — derived from entries, not a second state array.
+  const history = entries
+    .filter((e): e is Extract<Entry, { kind: 'input' }> => e.kind === 'input')
+    .map((e) => e.text)
+
+  // ↑/↓ walk submitted-input history. Enter is deliberately NOT handled here — the
+  // native <form onSubmit> owns submit. Typing (onChange) and submit both reset
+  // histIdx to null, so history is always re-entered from the newest entry.
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'ArrowUp') {
+      if (history.length === 0) return // nothing to recall — let the caret move
+      e.preventDefault()
+      let next: number
+      if (histIdx === null) {
+        draftRef.current = input // stash the live draft before walking back
+        next = history.length - 1
+      } else {
+        next = Math.max(0, histIdx - 1)
+      }
+      setHistIdx(next)
+      setInput(history[next])
+    } else if (e.key === 'ArrowDown') {
+      if (histIdx === null) return // already on the live draft — let the caret move
+      e.preventDefault()
+      if (histIdx < history.length - 1) {
+        const next = histIdx + 1
+        setHistIdx(next)
+        setInput(history[next])
+      } else {
+        setHistIdx(null) // stepped past the newest → restore the stashed draft
+        setInput(draftRef.current)
+      }
     }
   }
 
@@ -473,7 +528,11 @@ function Verify({
               ref={inputRef}
               type="text"
               value={input}
-              onChange={(ev) => setInput(ev.target.value)}
+              onChange={(ev) => {
+                setInput(ev.target.value)
+                setHistIdx(null) // typing exits history mode, back to a live draft
+              }}
+              onKeyDown={onKeyDown}
               onKeyUp={place}
               onClick={place}
               onScroll={place}
@@ -496,11 +555,12 @@ function Verify({
             {verifying ? 'verifying…' : '⏎ verify'}
           </button>
         </form>
-        {/* Prompt hint (HANDOFF §5 p.hint). Only ⏎ verify is real behavior —
-            Enter submits the form (onSubmit). ↑ history / esc are not built, so
-            they are intentionally omitted: the hint states only true behavior. */}
+        {/* Prompt hint (HANDOFF §5 p.hint). Both items are real behavior: ⏎ submits
+            the form (onSubmit); ↑/↓ walk submitted-input history (in-memory, this
+            session). esc is still not built, so it stays omitted — the hint states
+            only true behavior. */}
         <p className="hint">
-          <kbd>⏎</kbd> verify
+          <kbd>⏎</kbd> verify · <kbd>↑</kbd> history
         </p>
       </div>
 
