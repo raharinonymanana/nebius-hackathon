@@ -15,6 +15,8 @@ type Entry =
   | { id: number; kind: 'input'; text: string }
   | { id: number; kind: 'verdict'; run: Run; note: string | null }
   | { id: number; kind: 'error'; message: string }
+  | { id: number; kind: 'help' }
+  | { id: number; kind: 'notice'; text: string }
 
 const BANNER = `Mélodie — runtime proof harness for dependency vulnerabilities
 Every verify is a real run: your input is replayed, model-free, in a disposable
@@ -43,6 +45,15 @@ const BANNER_BOUNDARY =
 const BANNER_BI = BANNER_REST.indexOf(BANNER_BOUNDARY)
 const BANNER_PRE = BANNER_REST.slice(0, BANNER_BI)
 const BANNER_POST = BANNER_REST.slice(BANNER_BI + BANNER_BOUNDARY.length)
+
+// /help output. Lists ONLY what is actually built — the two commands and the two
+// real key behaviours. No invented commands, no unbuilt keys (e.g. esc).
+const HELP = `commands
+  /help     show this help
+  /clear    clear the transcript
+keys
+  ⏎         verify the current input
+  ↑ / ↓     walk input history`
 
 // Verdict presentation, keyed on the exact contract literals (Run['verdict']).
 // Colour is never the sole signal: each chip carries a glyph + text label. The
@@ -197,6 +208,44 @@ function Verify({
     if (verifying) return
     const text = input
     if (text.trim() === '') return
+    // Slash-commands are handled entirely client-side — they never POST /api/verify.
+    const trimmed = text.trim()
+    if (trimmed.startsWith('/')) {
+      const name = trimmed.slice(1).split(/\s+/)[0].toLowerCase()
+      setInput('')
+      setHistIdx(null)
+      draftRef.current = ''
+      if (name === 'clear') {
+        idRef.current = 1 // back to a fresh id sequence (banner is 0)
+        try {
+          sessionStorage.removeItem(TRANSCRIPT_KEY)
+        } catch {
+          // ignore — nothing to restore anyway
+        }
+        scrollIntent.current = 'always'
+        setEntries([{ id: 0, kind: 'banner' }])
+        return
+      }
+      scrollIntent.current = 'always'
+      if (name === 'help') {
+        setEntries((prev) => [
+          ...prev,
+          { id: nextId(), kind: 'input', text: trimmed },
+          { id: nextId(), kind: 'help' },
+        ])
+      } else {
+        setEntries((prev) => [
+          ...prev,
+          { id: nextId(), kind: 'input', text: trimmed },
+          {
+            id: nextId(),
+            kind: 'notice',
+            text: `unknown command: /${name} — try /help`,
+          },
+        ])
+      }
+      return
+    }
     scrollIntent.current = 'always'
     setEntries((prev) => [...prev, { id: nextId(), kind: 'input', text }])
     setInput('')
@@ -399,6 +448,42 @@ function Verify({
                     <span className="dim">{BANNER_POST}</span>
                   </pre>
                 </section>
+              )
+            }
+            if (e.kind === 'help') {
+              return (
+                <section
+                  key={e.id}
+                  className="box about"
+                  aria-labelledby={`help-h-${e.id}`}
+                >
+                  <h2 className="box-title" id={`help-h-${e.id}`}>
+                    help
+                  </h2>
+                  {/* HELP rendered verbatim — dim, whitespace preserved, same
+                      monospace block treatment as the banner above. */}
+                  <pre
+                    className="dim"
+                    style={{
+                      margin: 0,
+                      font: 'inherit',
+                      whiteSpace: 'pre-wrap',
+                      overflowWrap: 'anywhere',
+                    }}
+                  >
+                    {HELP}
+                  </pre>
+                </section>
+              )
+            }
+            if (e.kind === 'notice') {
+              // Neutral client-side notice (e.g. a mistyped command). Nothing ran,
+              // so it gets NO run-failure badge and NO "— not a verdict" suffix —
+              // just a dim line, the same muted treatment as the .meta canary label.
+              return (
+                <p key={e.id} className="meta">
+                  {e.text}
+                </p>
               )
             }
             if (e.kind === 'input') {
@@ -609,7 +694,7 @@ function Verify({
             session). esc is still not built, so it stays omitted — the hint states
             only true behavior. */}
         <p className="hint">
-          <kbd>⏎</kbd> verify · <kbd>↑</kbd> history
+          <kbd>⏎</kbd> verify · <kbd>↑</kbd> history · /help
         </p>
       </div>
 
