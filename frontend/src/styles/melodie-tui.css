@@ -124,14 +124,22 @@ body { display: block; min-width: 0; min-height: 0; }
 .steps .now { color: var(--fg); }                             /* the step running right now */
 .why { margin-left: 1ch; }
 
-/* 6b. Running — quadrant spinner + a music verb with a glint that steps one cell at a time */
-.spin::before { content: "▘"; display: inline-block; width: 2ch; color: var(--blue); animation: quad 0.8s steps(1, end) infinite; }
-@keyframes quad {
-  0% { content: "▘"; }
-  25% { content: "▝"; }
-  50% { content: "▗"; }
-  75% { content: "▖"; }
+/* 6b. Running — clover spinner (orbit + bloom + shimmer) + a music verb with a glint.
+   Same inline footprint as the old quadrant glyph (1ch × --row) so text never shifts.
+   The CONTAINER orbits (cloverSpin); each DOT blooms (cloverBloom) + shimmers
+   (cloverShimmer) — the two transforms live on different elements so they compose. */
+.spin-clover { position: relative; display: inline-block; width: 1ch; height: var(--row); vertical-align: bottom; margin-right: 1ch; animation: cloverSpin 2.2s linear infinite; }
+.spin-clover .cd { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; margin: -2px; border-radius: 50%; background: var(--blue); animation: cloverBloom 1.9s ease-in-out infinite, cloverShimmer 1.9s linear infinite; }  /* running = blue, never a verdict colour */
+.spin-clover .cd1 { --x: -1; --y: -1; animation-delay: 0s, 0s; }
+.spin-clover .cd2 { --x:  1; --y: -1; animation-delay: 0s, .47s; }
+.spin-clover .cd3 { --x:  1; --y:  1; animation-delay: 0s, .95s; }
+.spin-clover .cd4 { --x: -1; --y:  1; animation-delay: 0s, 1.42s; }
+@keyframes cloverSpin { to { transform: rotate(360deg); } }
+@keyframes cloverBloom {
+  0%, 100% { transform: translate(calc(var(--x) * 1.5px), calc(var(--y) * 1.5px)); }
+  50%      { transform: translate(calc(var(--x) * 4px),   calc(var(--y) * 4px)); }
 }
+@keyframes cloverShimmer { 0%, 100% { opacity: .35; } 45% { opacity: 1; } }
 .verb { color: var(--dim); }
 .verb .hi { color: var(--fg); }
 .stats { margin-left: 1ch; }                                  /* 2 cells between verb and timer */
@@ -165,7 +173,8 @@ body { display: block; min-width: 0; min-height: 0; }
 
 /* 9. Reduced motion — nothing moves; meaning is unchanged */
 @media (prefers-reduced-motion: reduce) {
-  .spin::before { animation: none; content: "…"; }
+  .spin-clover { animation: none; }
+  .spin-clover .cd { animation: none; opacity: .8; transform: translate(calc(var(--x) * 3px), calc(var(--y) * 3px)); }  /* static resting 4-dot clover */
   .cursor { animation: none; }
   .verb .hi { color: inherit; }                                /* JS also stops the glint + rotation */
 }

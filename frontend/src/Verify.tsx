@@ -646,7 +646,12 @@ function Verify({
             <div className="result" aria-busy="true">
               <p className="verdict">
                 <span aria-hidden="true">
-                  <span className="spin" />
+                  <span className="spin-clover" aria-hidden="true">
+                    <i className="cd cd1" />
+                    <i className="cd cd2" />
+                    <i className="cd cd3" />
+                    <i className="cd cd4" />
+                  </span>
                   <Verb text={runVerb} />
                 </span>
                 <span className="dim stats">
