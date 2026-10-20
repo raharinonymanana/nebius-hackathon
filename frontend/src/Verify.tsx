@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import type { ReactNode } from 'react'
 import type { Run } from './contract'
 import { normaliseRun } from './normalise'
-import { WIDE_CHARS, useBlockCursor, Verb } from './terminal-hooks'
+import { WIDE_CHARS, useBlockCursor, useRotatingVerb, Verb } from './terminal-hooks'
 
 const TARGET = 'ormar'
 // Backend budget is ~25s (cold start ~12s). Give the browser headroom above that
@@ -117,6 +117,10 @@ function Verify({
   // Block cursor (HANDOFF §9): owns the input ref + the sibling .cursor ref, and
   // positions the block at caret index × 1ch. inputRef also serves the focus effect.
   const { inputRef, cursorRef, place } = useBlockCursor(input)
+  // Running-state verb: rotates every 3s through step-agnostic phrases while a
+  // verify is in flight (honours reduced-motion internally). Keyed on the real
+  // in-flight boolean; the hook takes no step param, so it can't name a phase.
+  const runVerb = useRotatingVerb(verifying)
   // ↑/↓ input history (in-memory, this session only — no storage). histIdx === null
   // means the live draft is showing; otherwise it indexes `history` (derived below).
   // draftRef stashes the live draft while walking history, so stepping ↓ past the
@@ -619,15 +623,15 @@ function Verify({
             )
           })}
 
-          {/* Running — honest subset: CSS quadrant spinner + one static music
-              verb + live elapsed. No step counter / no fake steps (no live step
-              data). Dim rail (no is-* class). */}
+          {/* Running — honest subset: CSS quadrant spinner + a rotating music
+              verb (step-agnostic, route B) + live elapsed. No step counter / no
+              fake steps (no live step data). Dim rail (no is-* class). */}
           {verifying && (
             <div className="result" aria-busy="true">
               <p className="verdict">
                 <span aria-hidden="true">
                   <span className="spin" />
-                  <Verb text="Keeping time" />
+                  <Verb text={runVerb} />
                 </span>
                 <span className="dim stats">
                   {elapsedLabel}

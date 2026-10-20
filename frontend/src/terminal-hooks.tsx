@@ -1,8 +1,8 @@
 // Terminal UI hooks — copied from design/melodie-HANDOFF-v3.md §9, as written.
 // Scope: presentation/behaviour only (block cursor, reduced-motion, verb glint).
-// useStepVerb / verb ROTATION are intentionally NOT ported: there is no live
-// step data yet, so the running verb stays a single static string and only
-// glints. (Rotation is deferred to the structured-trace backend session.)
+// useStepVerb is intentionally NOT ported: there is no live step data, so the
+// running verb never names a phase. The verb DOES rotate (useRotatingVerb,
+// route B / decorative) through step-agnostic phrases — it takes no step param.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
@@ -63,6 +63,38 @@ export function useGlint(length: number, enabled: boolean): number {
     return () => window.clearInterval(id)
   }, [length, enabled])
   return at
+}
+
+// Step-AGNOSTIC music phrases for the running state. None names or implies an
+// observable internal step, and none implies invention — a run really is in
+// flight, so "a run is happening" phrasing is honest; naming a phase is not.
+const ROTATING_VERBS = [
+  'Keeping time', 'Holding the note', 'Letting it ring', 'Running the take',
+  'Minding the tempo', 'Counting the bars', 'Playing it through', 'Holding the line',
+]
+
+/** The running verb, rotated every 3s through step-agnostic phrases (route B,
+ * decorative). Takes NO step param by construction — it cannot name a phase.
+ * Reduced-motion or not-running: a single stable phrase, no interval. */
+export function useRotatingVerb(running: boolean): string {
+  const reduce = usePrefersReducedMotion()
+  const [verb, setVerb] = useState(
+    () => ROTATING_VERBS[Math.floor(Math.random() * ROTATING_VERBS.length)],
+  )
+  useEffect(() => {
+    if (!running || reduce) return
+    const id = window.setInterval(() => {
+      setVerb((prev) => {
+        let next = prev
+        while (next === prev) {
+          next = ROTATING_VERBS[Math.floor(Math.random() * ROTATING_VERBS.length)]
+        }
+        return next // never the same twice in a row
+      })
+    }, 3000)
+    return () => window.clearInterval(id)
+  }, [running, reduce])
+  return verb
 }
 
 export function Verb({ text }: { text: string }) {
