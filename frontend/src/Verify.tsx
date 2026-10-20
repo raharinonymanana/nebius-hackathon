@@ -4,6 +4,8 @@ import type { ReactNode } from 'react'
 import type { Run } from './contract'
 import { normaliseRun } from './normalise'
 import { WIDE_CHARS, useBlockCursor, useRotatingVerb, Verb } from './terminal-hooks'
+import { AsciiArt } from './AsciiArt'
+import { WORDMARK_BOLD, CANARY } from './melodie-art'
 
 const TARGET = 'ormar'
 // Backend budget is ~25s (cold start ~12s). Give the browser headroom above that
@@ -18,33 +20,6 @@ type Entry =
   | { id: number; kind: 'help' }
   | { id: number; kind: 'notice'; text: string }
 
-const BANNER = `Mélodie — runtime proof harness for dependency vulnerabilities
-Every verify is a real run: your input is replayed, model-free, in a disposable
-Nebius Token Factory Sandbox with a planted canary.
-
-Scope — bounded by design:
-  target   ormar 0.22.0 · Product.objects.max() · SQL injection (CVE-2026-26198)
-  test     one input string → did the canary leak?
-  verdict  PROVEN = exploit confirmed · NOT PROVEN = not confirmed by this input (never "safe")
-This confirms a known finding. It does not discover vulnerabilities, scan apps,
-or cover arbitrary CVEs.
-
-try   price                                                      (benign)
-try   (SELECT password_hash FROM users WHERE username='admin')   (known exploit)
-first verify may take ~12s (cold start)`
-
-// About box re-layout: the banner copy is kept VERBATIM, only sliced for colour.
-//   head           = build-name line           -> --brand (.g)
-//   boundary       = the "does / doesn't" honesty sentence -> --fg (not dim)
-//   everything else= body                       -> --dim
-// Slicing never adds or drops a character, so the G1 boundary text is intact.
-const BANNER_HEAD = BANNER.slice(0, BANNER.indexOf('\n'))
-const BANNER_REST = BANNER.slice(BANNER.indexOf('\n'))
-const BANNER_BOUNDARY =
-  'This confirms a known finding. It does not discover vulnerabilities, scan apps,\nor cover arbitrary CVEs.'
-const BANNER_BI = BANNER_REST.indexOf(BANNER_BOUNDARY)
-const BANNER_PRE = BANNER_REST.slice(0, BANNER_BI)
-const BANNER_POST = BANNER_REST.slice(BANNER_BI + BANNER_BOUNDARY.length)
 
 // /help output. Lists ONLY what is actually built — the two commands and the two
 // real key behaviours. No invented commands, no unbuilt keys (e.g. esc).
@@ -426,6 +401,12 @@ function Verify({
         <div className="log">
           {entries.map((e, idx) => {
             if (e.kind === 'banner') {
+              // Identity-card try lines: pad the two example inputs so their
+              // (benign) / (known exploit) annotations line up in one column.
+              const tryBenign = 'price'
+              const tryExploit =
+                "(SELECT password_hash FROM users WHERE username='admin')"
+              const annCol = Math.max(tryBenign.length, tryExploit.length) + 3
               return (
                 <section
                   key={e.id}
@@ -435,22 +416,58 @@ function Verify({
                   <h2 className="box-title" id="about-h">
                     about
                   </h2>
-                  {/* Banner copy kept verbatim (two-lane parser); only sliced for
-                      colour. Inline style keeps the terminal font + grid rhythm and
-                      wraps instead of overflowing the page (no custom CSS hook). */}
-                  <pre
-                    style={{
-                      margin: 0,
-                      font: 'inherit',
-                      whiteSpace: 'pre-wrap',
-                      overflowWrap: 'anywhere',
-                    }}
-                  >
-                    <span className="g">{BANNER_HEAD}</span>
-                    <span className="dim">{BANNER_PRE}</span>
-                    {BANNER_BOUNDARY}
-                    <span className="dim">{BANNER_POST}</span>
-                  </pre>
+                  {/* Gradient MÉLODIE wordmark — decorative, full width, first in
+                      the about section; hidden ≤640px (.splash-mark) so it can't
+                      force horizontal page scroll on phones. */}
+                  <div className="splash-mark">
+                    <AsciiArt piece={WORDMARK_BOLD} />
+                  </div>
+                  {/* Two columns: dotted canary mascot (fixed width) + identity
+                      card (flexes, wins the space if tight). Stacks ≤640px. */}
+                  <div className="about-cols">
+                    <div className="about-canary">
+                      <AsciiArt piece={CANARY} />
+                    </div>
+                    {/* Identity card — dim labels, --fg values, green ❯. Rendered
+                        as literal strings (exact spacing) with spans only for the
+                        coloured bits, so the monospace columns stay aligned. */}
+                    <pre
+                      className="about-card"
+                      style={{
+                        margin: 0,
+                        font: 'inherit',
+                        whiteSpace: 'pre-wrap',
+                        overflowWrap: 'anywhere',
+                      }}
+                    >
+                      {'Mélodie · exploit-validation harness        v1.0 · ormar SQL cartridge\n'}
+                      {'\n'}
+                      {'  '}
+                      <span className="dim">WHAT</span>
+                      {'      detonates a proof-of-concept in a sealed Nebius Token Factory\n'}
+                      {'            sandbox, canary-checked → PROVEN / NOT PROVEN with a full trace\n'}
+                      {'  '}
+                      <span className="dim">TARGET</span>
+                      {'    ormar 0.22.0 · Product.objects.max() · SQL injection (CVE-2026-26198)\n'}
+                      {'  '}
+                      <span className="dim">STACK</span>
+                      {'     Nebius Token Factory Sandboxes (ConTree) · model-free replay\n'}
+                      {'  '}
+                      <span className="dim">BOUNDARY</span>
+                      {'  confirms a KNOWN finding — does not discover, scan, or cover arbitrary CVEs\n'}
+                      {'\n'}
+                      {'  '}
+                      <span className="dim">try</span>
+                      {'  '}
+                      <span className="g">❯</span>
+                      {' ' + tryBenign.padEnd(annCol) + '(benign)\n'}
+                      {'  '}
+                      <span className="dim">try</span>
+                      {'  '}
+                      <span className="g">❯</span>
+                      {' ' + tryExploit.padEnd(annCol) + '(known exploit)'}
+                    </pre>
+                  </div>
                 </section>
               )
             }

@@ -19,6 +19,14 @@
   --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   --row: 18px;         /* one cell tall ≈ the font's own cell (1.32em @ 14px) → ▀▄█ tile with no seams */
 
+  /* splash gradient ramp (#15 splash art ONLY — the MÉLODIE wordmark + canary
+     mascot). Intentional new tones; leave --green / --logo-dim untouched. */
+  --mk-1: #196B5F;
+  --mk-2: #239F8C;
+  --mk-3: #4DDBC5;
+  --mk-4: #86EADA;
+  --mk-5: #C1F6EE;
+
   /* aliases (same hue, semantic names) */
   --proven: var(--green);
   --brand: var(--green);

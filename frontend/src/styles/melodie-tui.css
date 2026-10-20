@@ -59,6 +59,11 @@ body { display: block; min-width: 0; min-height: 0; }
 
 /* 5a. About box (intro + boundaries) — first item in the transcript, scrolls away naturally */
 .about { max-width: 92ch; }                                  /* content measure, left-aligned — not a container */
+/* Splash art (#15): gradient wordmark + canary mascot, both decorative. */
+.splash-mark { margin: 0 0 var(--row); }                     /* ~61 cols wide; hidden ≤640px (rule 10) */
+.about-cols { display: flex; gap: 3ch; align-items: flex-start; }
+.about-canary { flex: none; }                                /* keeps its width; text column wins when tight */
+.about-card { flex: 1; min-width: 0; }                       /* min-width:0 → wraps instead of overflowing */
 .brand { display: flex; gap: 2ch; margin: 0 0 var(--row); }
 .logo { flex: none; line-height: 18px; color: var(--green); } /* fixed 18px so half-blocks always tile */
 .logo div { white-space: pre; }
@@ -158,6 +163,8 @@ body { display: block; min-width: 0; min-height: 0; }
 /* 10. Phone (≤640px) — same grid and rows, bigger touch targets, fewer extras */
 @media (max-width: 640px) {
   .about { max-width: none; }
+  .splash-mark { display: none; }                            /* ~61-col wordmark would force page scroll */
+  .about-cols { flex-direction: column; }                    /* canary stacks above the identity card */
   .facts { grid-template-columns: minmax(0, 1fr); }
   .examples { flex-direction: column; row-gap: var(--row); }
   .example { padding: 13px 0; margin: -13px 0; }              /* ≥44px tap target, layout unchanged */
