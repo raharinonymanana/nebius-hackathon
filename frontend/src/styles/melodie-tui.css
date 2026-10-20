@@ -58,12 +58,20 @@ body { display: block; min-width: 0; min-height: 0; }
 .box-title { position: absolute; top: calc(var(--row) / -2 - 1px); left: calc(1.5ch - 1px); margin: 0; padding: 0 1ch; background: var(--bg); font: inherit; color: var(--blue); }
 
 /* 5a. About box (intro + boundaries) — first item in the transcript, scrolls away naturally */
-.about { max-width: 92ch; }                                  /* content measure, left-aligned — not a container */
-/* Splash art (#15): gradient wordmark + canary mascot, both decorative. */
-.splash-mark { margin: 0 0 var(--row); }                     /* ~61 cols wide; hidden ≤640px (rule 10) */
-.about-cols { display: flex; gap: 3ch; align-items: flex-start; }
-.about-canary { flex: none; }                                /* keeps its width; text column wins when tight */
-.about-card { flex: 1; min-width: 0; }                       /* min-width:0 → wraps instead of overflowing */
+.about { max-width: none; }                                  /* full-width rectangle — shares the log's edges, not a centred card */
+/* Splash (#15): canary + identity card pinned left, wordmark parked top-right. */
+.splash-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 3ch; width: 100%; }
+.splash-left { display: flex; align-items: center; gap: 3ch; flex: 1; min-width: 0; }  /* canary + text, vertically centred together */
+.splash-mark { flex: none; }                                 /* wordmark top-right; top-aligned by the row; hidden ≤640px (rule 10) */
+.about-canary { flex: none; }                                /* keeps its width; the text column flexes */
+.about-card { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--row); }  /* readable rows, one blank row apart */
+.card-lead { margin: 0; }
+.card-row { display: flex; align-items: flex-start; margin: 0; }
+.card-k { flex: none; min-width: 9ch; color: var(--dim); }   /* label column */
+.card-v { flex: 1; min-width: 0; }                           /* value wraps within the flexing column */
+.card-v .em { font-weight: 700; }                            /* verdict keywords (colour via .g / .r) */
+.card-v .mk4 { color: var(--mk-4); }                         /* STACK highlight — light-green splash tone */
+.card-div { border-top: 1px solid var(--line); }             /* thin dim divider before the try lines */
 .brand { display: flex; gap: 2ch; margin: 0 0 var(--row); }
 .logo { flex: none; line-height: 18px; color: var(--green); } /* fixed 18px so half-blocks always tile */
 .logo div { white-space: pre; }
@@ -164,7 +172,8 @@ body { display: block; min-width: 0; min-height: 0; }
 @media (max-width: 640px) {
   .about { max-width: none; }
   .splash-mark { display: none; }                            /* ~61-col wordmark would force page scroll */
-  .about-cols { flex-direction: column; }                    /* canary stacks above the identity card */
+  .splash-row { flex-direction: column; }                    /* only the left group remains */
+  .splash-left { flex-direction: column; align-items: flex-start; }  /* canary stacks above the text */
   .facts { grid-template-columns: minmax(0, 1fr); }
   .examples { flex-direction: column; row-gap: var(--row); }
   .example { padding: 13px 0; margin: -13px 0; }              /* ≥44px tap target, layout unchanged */

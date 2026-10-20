@@ -401,12 +401,6 @@ function Verify({
         <div className="log">
           {entries.map((e, idx) => {
             if (e.kind === 'banner') {
-              // Identity-card try lines: pad the two example inputs so their
-              // (benign) / (known exploit) annotations line up in one column.
-              const tryBenign = 'price'
-              const tryExploit =
-                "(SELECT password_hash FROM users WHERE username='admin')"
-              const annCol = Math.max(tryBenign.length, tryExploit.length) + 3
               return (
                 <section
                   key={e.id}
@@ -416,57 +410,83 @@ function Verify({
                   <h2 className="box-title" id="about-h">
                     about
                   </h2>
-                  {/* Gradient MÉLODIE wordmark — decorative, full width, first in
-                      the about section; hidden ≤640px (.splash-mark) so it can't
-                      force horizontal page scroll on phones. */}
-                  <div className="splash-mark">
-                    <AsciiArt piece={WORDMARK_BOLD} />
-                  </div>
-                  {/* Two columns: dotted canary mascot (fixed width) + identity
-                      card (flexes, wins the space if tight). Stacks ≤640px. */}
-                  <div className="about-cols">
-                    <div className="about-canary">
-                      <AsciiArt piece={CANARY} />
+                  {/* Splash row: LEFT group (canary + identity card) pinned far
+                      left, WORDMARK_BOLD parked top-right (space-between). The
+                      wordmark is top-aligned to the group; it is hidden ≤640px
+                      (.splash-mark) and the groups stack (canary above text).
+                      Still a transcript entry — it scrolls with the log. */}
+                  <div className="splash-row">
+                    <div className="splash-left">
+                      <div className="about-canary">
+                        <AsciiArt piece={CANARY} />
+                      </div>
+                      {/* Identity card — readable rows: dim label (~9ch) + --fg
+                          value, with --green / --mk-4 / verdict-colour keyword
+                          highlights. Plain flow text (not a <pre>) so it wraps. */}
+                      <div className="about-card">
+                        <p className="card-lead">
+                          Mélodie ·{' '}
+                          <span className="g">exploit-validation harness</span> ·
+                          v1.0 · ormar SQL cartridge
+                        </p>
+                        <p className="card-row">
+                          <span className="card-k">WHAT</span>
+                          <span className="card-v">
+                            detonates a{' '}
+                            <span className="g">proof-of-concept</span> in a
+                            sealed{' '}
+                            <span className="g">Nebius Token Factory</span>{' '}
+                            sandbox, canary-checked →{' '}
+                            <span className="g em">PROVEN</span> /{' '}
+                            <span className="r em">NOT PROVEN</span> with a full
+                            trace
+                          </span>
+                        </p>
+                        <p className="card-row">
+                          <span className="card-k">TARGET</span>
+                          <span className="card-v">
+                            ormar 0.22.0 · Product.objects.max() · SQL injection
+                            (CVE-2026-26198)
+                          </span>
+                        </p>
+                        <p className="card-row">
+                          <span className="card-k">STACK</span>
+                          <span className="card-v">
+                            <span className="mk4">
+                              Token Factory Sandboxes (ConTree)
+                            </span>{' '}
+                            · model-free replay
+                          </span>
+                        </p>
+                        <p className="card-row">
+                          <span className="card-k">BOUNDARY</span>
+                          <span className="card-v">
+                            confirms a <span className="g">KNOWN</span> finding —
+                            does not discover, scan, or cover arbitrary CVEs
+                          </span>
+                        </p>
+                        <div className="card-div" aria-hidden="true" />
+                        <p className="card-row">
+                          <span className="card-k">try</span>
+                          <span className="card-v">
+                            <span className="g">❯</span> price{' '}
+                            <span className="dim">(benign)</span>
+                          </span>
+                        </p>
+                        <p className="card-row">
+                          <span className="card-k" />
+                          <span className="card-v">
+                            <span className="g">❯</span>{' '}
+                            (SELECT password_hash FROM users WHERE
+                            username=&apos;admin&apos;){' '}
+                            <span className="dim">(known exploit)</span>
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                    {/* Identity card — dim labels, --fg values, green ❯. Rendered
-                        as literal strings (exact spacing) with spans only for the
-                        coloured bits, so the monospace columns stay aligned. */}
-                    <pre
-                      className="about-card"
-                      style={{
-                        margin: 0,
-                        font: 'inherit',
-                        whiteSpace: 'pre-wrap',
-                        overflowWrap: 'anywhere',
-                      }}
-                    >
-                      {'Mélodie · exploit-validation harness        v1.0 · ormar SQL cartridge\n'}
-                      {'\n'}
-                      {'  '}
-                      <span className="dim">WHAT</span>
-                      {'      detonates a proof-of-concept in a sealed Nebius Token Factory\n'}
-                      {'            sandbox, canary-checked → PROVEN / NOT PROVEN with a full trace\n'}
-                      {'  '}
-                      <span className="dim">TARGET</span>
-                      {'    ormar 0.22.0 · Product.objects.max() · SQL injection (CVE-2026-26198)\n'}
-                      {'  '}
-                      <span className="dim">STACK</span>
-                      {'     Nebius Token Factory Sandboxes (ConTree) · model-free replay\n'}
-                      {'  '}
-                      <span className="dim">BOUNDARY</span>
-                      {'  confirms a KNOWN finding — does not discover, scan, or cover arbitrary CVEs\n'}
-                      {'\n'}
-                      {'  '}
-                      <span className="dim">try</span>
-                      {'  '}
-                      <span className="g">❯</span>
-                      {' ' + tryBenign.padEnd(annCol) + '(benign)\n'}
-                      {'  '}
-                      <span className="dim">try</span>
-                      {'  '}
-                      <span className="g">❯</span>
-                      {' ' + tryExploit.padEnd(annCol) + '(known exploit)'}
-                    </pre>
+                    <div className="splash-mark">
+                      <AsciiArt piece={WORDMARK_BOLD} />
+                    </div>
                   </div>
                 </section>
               )
