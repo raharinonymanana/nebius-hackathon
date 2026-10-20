@@ -61,8 +61,8 @@ body { display: block; min-width: 0; min-height: 0; }
 .about { max-width: none; }                                  /* full-width rectangle — shares the log's edges, not a centred card */
 /* Splash v3 (#15): text hero (left, flexes), wordmark parked top-right. */
 .splash-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 3ch; width: 100%; }
-.splash-mark { flex: none; padding-right: 2.5ch; }           /* top-aligned; off the border, not flush; hidden ≤640px (rule 10) */
-.about-hero { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--row); }  /* blocks ~one row apart */
+.splash-mark { flex: none; padding-right: 16ch; }            /* nudged left off the right edge (closer to the text); hidden ≤640px (rule 10) */
+.about-hero { flex: 1; min-width: 0; padding-left: 16ch; display: flex; flex-direction: column; gap: var(--row); }  /* shifted right toward the wordmark; blocks ~one row apart */
 .hero-name { margin: 0; color: var(--fg); font-weight: 700; }
 .hero-lede { margin: 0; max-width: 64ch; white-space: normal; }  /* the only prose-wrapping element */
 .spec { display: grid; grid-template-columns: 9ch 1fr; row-gap: 9px; column-gap: 1ch; margin: 0; max-width: 72ch; }
@@ -71,8 +71,9 @@ body { display: block; min-width: 0; min-height: 0; }
 .em { font-weight: 700; }                                    /* verdict keywords (colour via .g / .r) — NOT .b (blue) */
 .mk4 { color: var(--mk-4); }                                 /* STACK highlight — light-green splash tone */
 .try-head { margin: 0; letter-spacing: 0.15em; }             /* dim "TRY IT" header */
-.try-grid { display: grid; grid-template-columns: auto 1fr auto; column-gap: 1.5ch; row-gap: 7px; align-items: baseline; }
+.try-grid { display: grid; grid-template-columns: auto 1fr 1fr; column-gap: 1.5ch; row-gap: 7px; align-items: baseline; }  /* two equal fr cols → annotation lands at the midpoint, ~50% closer to the command */
 .try-cmd { min-width: 0; overflow-wrap: anywhere; }          /* command col — wraps rather than overflowing */
+.try-grid .dim { justify-self: start; }                      /* annotation left-aligned at the start of its (midpoint) column */
 .brand { display: flex; gap: 2ch; margin: 0 0 var(--row); }
 .logo { flex: none; line-height: 18px; color: var(--green); } /* fixed 18px so half-blocks always tile */
 .logo div { white-space: pre; }
@@ -173,6 +174,7 @@ body { display: block; min-width: 0; min-height: 0; }
 @media (max-width: 640px) {
   .about { max-width: none; }
   .splash-mark { display: none; }                            /* ~61-col wordmark would force page scroll */
+  .about-hero { padding-left: 0; }                           /* no wordmark to meet — text goes full width */
   .spec { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }  /* label sits above value */
   .spec dt { margin-top: 9px; }                              /* keep blocks legible when stacked */
   .spec dt:first-child { margin-top: 0; }
