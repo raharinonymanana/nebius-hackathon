@@ -65,12 +65,14 @@ export function useGlint(length: number, enabled: boolean): number {
   return at
 }
 
-// Step-AGNOSTIC music phrases for the running state. None names or implies an
-// observable internal step, and none implies invention — a run really is in
-// flight, so "a run is happening" phrasing is honest; naming a phase is not.
+// Step-AGNOSTIC botanic / flower / music words for the running state. None names
+// or implies an observable internal step, and none implies invention — a run
+// really is in flight, so a decorative label is honest; naming a phase is not.
 const ROTATING_VERBS = [
-  'Keeping time', 'Holding the note', 'Letting it ring', 'Running the take',
-  'Minding the tempo', 'Counting the bars', 'Playing it through', 'Holding the line',
+  'Blooming', 'Flourishing', 'Budding', 'Blossoming', 'Unfurling', 'Greening',
+  'Crescendo', 'Harmonizing', 'Resonating', 'Humming', 'Lilting', 'Trilling',
+  'Petalfall', 'Tendril', 'Grace-note', 'Wildflower',
+  'Verdant', 'Florid', 'Cadence', 'Songbird',
 ]
 
 /** The running verb, rotated every 3s through step-agnostic phrases (route B,
