@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import type { ReactNode } from 'react'
-import type { Run, Contract } from './contract'
+import type { Run, Contract, Target } from './contract'
 import { normaliseRun } from './normalise'
 import { WIDE_CHARS, useBlockCursor, useRotatingVerb, Verb } from './terminal-hooks'
 import { AsciiArt } from './AsciiArt'
@@ -19,6 +19,10 @@ type Entry =
   | { id: number; kind: 'error'; message: string }
   | { id: number; kind: 'help' }
   | { id: number; kind: 'notice'; text: string }
+
+// One TRY IT gallery shot: a payload the user can fire. `live` shots POST
+// /api/verify; replay shots push a stored run with a [replay] note.
+type Shot = { payload: string; tag: string; live: boolean; run: () => void }
 
 
 // /help output. Lists ONLY what is actually built — the two commands and the two
@@ -205,6 +209,66 @@ function Verify({
     return () => clearInterval(id)
   }, [verifying])
 
+  // The live verify run, callable from the typed-input path AND the TRY IT
+  // gallery. Pushes the input echo, flips the spinner, POSTs /api/verify and
+  // appends the real verdict (or a RUN FAILED error). Identical behaviour to
+  // the old inline onSubmit tail — just extracted so a gallery shot can fire it.
+  async function runLive(text: string) {
+    scrollIntent.current = 'always'
+    setEntries((prev) => [...prev, { id: nextId(), kind: 'input', text }])
+    setVerifying(true)
+
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+    try {
+      const res = await fetch('/api/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: TARGET, input: text }),
+        signal: controller.signal,
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const raw: unknown = await res.json()
+      const run = normaliseRun(raw)
+      const note =
+        raw !== null &&
+        typeof raw === 'object' &&
+        typeof (raw as Record<string, unknown>).note === 'string'
+          ? ((raw as Record<string, unknown>).note as string)
+          : null
+      wasNearBottom.current = isNearBottom()
+      scrollIntent.current = 'if-near'
+      setEntries((prev) => [...prev, { id: nextId(), kind: 'verdict', run, note }])
+    } catch (err: unknown) {
+      const message =
+        err instanceof DOMException && err.name === 'AbortError'
+          ? `timed out after ${TIMEOUT_MS / 1000}s`
+          : err instanceof Error
+            ? err.message
+            : String(err)
+      wasNearBottom.current = isNearBottom()
+      scrollIntent.current = 'if-near'
+      setEntries((prev) => [...prev, { id: nextId(), kind: 'error', message }])
+    } finally {
+      clearTimeout(timer)
+      setVerifying(false)
+    }
+  }
+
+  // Replay a stored contract run instantly (no network): push its input echo
+  // then its verdict, tagged [replay · receipt YYYY-MM-DD] so it's never
+  // mistaken for a fresh live run.
+  function runReplay(run: Run | null) {
+    if (!run) return
+    const date = run.utc ? run.utc.slice(0, 10) : 'receipt'
+    scrollIntent.current = 'always'
+    setEntries((prev) => [
+      ...prev,
+      { id: nextId(), kind: 'input', text: run.input ?? '(replay)' },
+      { id: nextId(), kind: 'verdict', run, note: `[replay · receipt ${date}]` },
+    ])
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (verifying) return
@@ -248,48 +312,10 @@ function Verify({
       }
       return
     }
-    scrollIntent.current = 'always'
-    setEntries((prev) => [...prev, { id: nextId(), kind: 'input', text }])
     setInput('')
     setHistIdx(null) // leaving history mode: next ↑ starts from the newest entry
     draftRef.current = ''
-    setVerifying(true)
-
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
-    try {
-      const res = await fetch('/api/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target: TARGET, input: text }),
-        signal: controller.signal,
-      })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const raw: unknown = await res.json()
-      const run = normaliseRun(raw)
-      const note =
-        raw !== null &&
-        typeof raw === 'object' &&
-        typeof (raw as Record<string, unknown>).note === 'string'
-          ? ((raw as Record<string, unknown>).note as string)
-          : null
-      wasNearBottom.current = isNearBottom()
-      scrollIntent.current = 'if-near'
-      setEntries((prev) => [...prev, { id: nextId(), kind: 'verdict', run, note }])
-    } catch (err: unknown) {
-      const message =
-        err instanceof DOMException && err.name === 'AbortError'
-          ? `timed out after ${TIMEOUT_MS / 1000}s`
-          : err instanceof Error
-            ? err.message
-            : String(err)
-      wasNearBottom.current = isNearBottom()
-      scrollIntent.current = 'if-near'
-      setEntries((prev) => [...prev, { id: nextId(), kind: 'error', message }])
-    } finally {
-      clearTimeout(timer)
-      setVerifying(false)
-    }
+    await runLive(text)
   }
 
   // Submitted inputs, oldest→newest — derived from entries, not a second state array.
@@ -424,6 +450,36 @@ function Verify({
         <div className="log">
           {entries.map((e, idx) => {
             if (e.kind === 'banner') {
+              // TRY IT gallery shots, built from the loaded contract. Two LIVE
+              // shots POST /api/verify (ormar); three REPLAY shots push a stored
+              // contract run (starlette / gitpython). Empty until contract loads.
+              const ormar = contract?.targets.find((t: Target) =>
+                t.id.startsWith('ormar'),
+              )
+              const starlette = contract?.targets.find((t: Target) =>
+                t.id.startsWith('starlette'),
+              )
+              const gitpython = contract?.targets.find((t: Target) =>
+                t.id.startsWith('gitpython'),
+              )
+              const shots: Shot[] = []
+              if (ormar) {
+                const sql = ormar.runs.proven.input ?? ''
+                shots.push({ payload: sql, tag: 'SQL injection · expect PROVEN', live: true, run: () => runLive(sql) })
+                shots.push({ payload: 'price', tag: 'benign control · expect NOT PROVEN', live: true, run: () => runLive('price') })
+              }
+              if (starlette) {
+                const pr = starlette.runs.proven
+                shots.push({ payload: pr.input ?? '', tag: 'path traversal · PROVEN', live: false, run: () => runReplay(pr) })
+              }
+              if (gitpython) {
+                const pr = gitpython.runs.proven
+                shots.push({ payload: pr.input ?? '', tag: 'command injection · PROVEN (handed)', live: false, run: () => runReplay(pr) })
+              }
+              if (starlette) {
+                const fv = starlette.runs.fix_verified
+                shots.push({ payload: fv.input ?? '(patched target)', tag: 'same exploit, patched · FIX VERIFIED', live: false, run: () => runReplay(fv) })
+              }
               return (
                 <section
                   key={e.id}
@@ -502,19 +558,31 @@ function Verify({
                           discovery, scanning, or arbitrary CVEs
                         </dd>
                       </dl>
-                      {/* BLOCK 3 — try-it: dim header + prompt/command/annotation grid. */}
+                      {/* BLOCK 3 — try-it: interactive gallery. LIVE shots POST
+                          /api/verify; REPLAY shots push a stored receipt run. */}
                       <p className="try-head dim">TRY IT</p>
-                      <div className="try-grid">
-                        <span className="g">❯</span>
-                        <span className="try-cmd">price</span>
-                        <span className="dim">benign</span>
-                        <span className="g">❯</span>
-                        <span className="try-cmd">
-                          (SELECT password_hash FROM users WHERE
-                          username=&apos;admin&apos;)
-                        </span>
-                        <span className="dim">known exploit</span>
-                      </div>
+                      {shots.length > 0 ? (
+                        <ul className="shots">
+                          {shots.map((s, i) => (
+                            <li key={i}>
+                              <button
+                                type="button"
+                                className="shot"
+                                onClick={s.run}
+                                disabled={verifying}
+                              >
+                                <span className={s.live ? 'chip' : 'chip chip-outline'}>
+                                  {s.live ? 'LIVE' : 'REPLAY'}
+                                </span>
+                                <span className="shot-payload">{s.payload}</span>
+                                <span className="shot-tag dim">{s.tag}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span className="dim">loading…</span>
+                      )}
                     </div>
                     <div className="splash-mark">
                       <AsciiArt piece={WORDMARK_BOLD} />
