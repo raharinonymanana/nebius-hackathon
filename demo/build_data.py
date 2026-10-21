@@ -172,6 +172,34 @@ def build_human_trace(receipt):
     return steps
 
 
+def build_advisory(receipt):
+    """Trim the receipt's Tavily advisory for the UI. JSON only, no calls.
+
+    Surfaces what the harness ALREADY captured at run time: the CVE, the fixed
+    version, the single highest-scored cited advisory source, and how many
+    sources were discarded as non-advisory. Returns None when no advisory block
+    exists. Makes no model/API/Tavily call -- it only reshapes on-disk data, so
+    build_data.py stays deterministic and free.
+    """
+    adv = receipt.get("advisory") or {}
+    if not adv.get("cve"):
+        return None
+    # cited_sources arrive score-ranked; keep the top one with a real title +
+    # score (constructed nvd/cve.org entries carry neither).
+    top = None
+    for s in adv.get("cited_sources") or []:
+        if s.get("title") and s.get("score") is not None:
+            top = {"url": s.get("url"), "title": s.get("title"), "score": s.get("score")}
+            break
+    return {
+        "provider": adv.get("provider"),
+        "cve": adv.get("cve"),
+        "fixed_version": adv.get("fixed_version"),
+        "top_source": top,
+        "discarded_count": len(adv.get("discarded_sources") or []),
+    }
+
+
 def build_run(receipt, filename, slot):
     """Assemble one run dict for a target card from its representative receipt."""
     run = {
@@ -187,6 +215,9 @@ def build_run(receipt, filename, slot):
     }
     if slot == "proven":
         run["human_trace"] = build_human_trace(receipt)
+        advisory = build_advisory(receipt)
+        if advisory is not None:
+            run["advisory"] = advisory
     if slot == "fix_verified":
         run["exploit_closed"] = receipt.get("exploit_closed")
         run["still_works"] = receipt.get("still_works")

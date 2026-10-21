@@ -36,10 +36,29 @@ interface RunBase {
   steps?: Step[]
 }
 
+// One Tavily-cited advisory source: the top-scored one the harness kept.
+export interface AdvisorySource {
+  url: string
+  title: string
+  score: number
+}
+
+// Trimmed Tavily advisory surfaced on a proven run — CVE + fix version, the
+// single top cited source, and how many sources the harness discarded as
+// non-advisory. Optional: older receipts predate it (same additive rule as steps[]).
+export interface Advisory {
+  provider: string
+  cve: string
+  fixed_version: string | null
+  top_source: AdvisorySource | null
+  discarded_count: number
+}
+
 // verdict "PROVEN": the only variant that carries human_trace (required here).
 export interface ProvenRun extends RunBase {
   verdict: 'PROVEN'
   human_trace: string[]
+  advisory?: Advisory
 }
 
 // verdict "NOT PROVEN": no human_trace, no exploit_closed / still_works.
