@@ -91,6 +91,9 @@ body { display: block; min-width: 0; min-height: 0; }
 .shot:focus-visible { outline: 1px solid var(--green); outline-offset: 2px; }
 .shot .chip { flex: none; }
 .shot-payload { color: var(--fg); overflow-wrap: anywhere; min-width: 0; }
+/* Data slash-command output (/eval, /receipts, …) — keep wide tables aligned,
+   scroll inside the box rather than widening the page. */
+.cmd-out { white-space: pre; overflow-x: auto; max-width: 100%; }
 .brand { display: flex; gap: 2ch; margin: 0 0 var(--row); }
 .logo { flex: none; line-height: 18px; color: var(--green); } /* fixed 18px so half-blocks always tile */
 .logo div { white-space: pre; }
