@@ -75,9 +75,31 @@ function loadEntries(): Entry[] {
   }
 }
 
+// Headline eval rate for a target card, if the eval table carries one.
+// Self-labeling (the axis names itself), returns null when none applies
+// (e.g. a handed target with no unaided rate). Reads loaded data only.
+function evalRate(ev: Contract['eval'], targetId: string): string | null {
+  const short = targetId.split('-')[0]
+  for (const kw of ['weaponise', 'locate']) {
+    const r = ev.rows.find(
+      (row) =>
+        row.kind === 'rate' &&
+        row.target === short &&
+        row.axis.includes(kw) &&
+        row.ci_lo !== null,
+    )
+    if (r && r.kind === 'rate') {
+      const label = r.axis.split(' ')[0]
+      return `${label} ${r.rate_str} ${r.ci_str}`
+    }
+  }
+  return null
+}
+
 function Verify({
   ledger,
   statusSlot,
+  contract,
 }: {
   ledger: ReactNode
   statusSlot: HTMLElement | null
@@ -428,15 +450,45 @@ function Verify({
                         <span className="g em">PROVEN</span> /{' '}
                         <span className="r em">NOT PROVEN</span> with a full trace.
                       </p>
+                      {/* BLOCK 2a — SUPPORTED CLASSES: all three target cards
+                          from the loaded contract. LIVE is the target the live
+                          /api/verify POST hits (TARGET); the rest are REPLAY. */}
+                      {contract ? (
+                        <div className="supported">
+                          <span className="dim supported-label">
+                            SUPPORTED CLASSES
+                          </span>
+                          <ul className="classes">
+                            {contract.targets.map((t) => {
+                              const live = t.id.startsWith(TARGET)
+                              const rate = evalRate(contract.eval, t.id)
+                              return (
+                                <li key={t.id} className="class-row">
+                                  <span
+                                    className={live ? 'chip' : 'chip chip-outline'}
+                                  >
+                                    {live ? 'LIVE' : 'REPLAY'}
+                                  </span>
+                                  <span className="class-name">
+                                    {t.exploit_class}
+                                  </span>
+                                  <span className="class-cve">{t.cve}</span>
+                                  <span className="class-ver dim">
+                                    {t.vulnerable_version} → {t.fixed_version}
+                                  </span>
+                                  {rate ? (
+                                    <span className="class-rate dim">{rate}</span>
+                                  ) : null}
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        </div>
+                      ) : (
+                        <span className="dim">loading classes…</span>
+                      )}
                       {/* BLOCK 2 — spec grid (fixed label column, --fg values). */}
                       <dl className="spec">
-                        <dt className="dim">TARGET</dt>
-                        <dd>
-                          ormar 0.22.0 <span className="dim">·</span>{' '}
-                          Product.objects.max() <span className="dim">·</span> SQL
-                          injection{' '}
-                          <span className="dim">(CVE-2026-26198)</span>
-                        </dd>
                         <dt className="dim">STACK</dt>
                         <dd>
                           <span className="mk4">
