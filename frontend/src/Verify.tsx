@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import type { ReactNode } from 'react'
-import type { Run } from './contract'
+import type { Run, Contract } from './contract'
 import { normaliseRun } from './normalise'
 import { WIDE_CHARS, useBlockCursor, useRotatingVerb, Verb } from './terminal-hooks'
 import { AsciiArt } from './AsciiArt'
@@ -81,6 +81,7 @@ function Verify({
 }: {
   ledger: ReactNode
   statusSlot: HTMLElement | null
+  contract: Contract | null
 }) {
   const [input, setInput] = useState('')
   const [entries, setEntries] = useState<Entry[]>(loadEntries)

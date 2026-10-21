@@ -82,7 +82,7 @@ function App() {
         <span ref={setStatusSlot} style={{ display: 'contents' }} />
         <span className="rule end" aria-hidden="true" />
       </header>
-      <Verify ledger={ledger} statusSlot={statusSlot} />
+      <Verify ledger={ledger} statusSlot={statusSlot} contract={state.status === 'loaded' ? state.contract : null} />
     </div>
   )
 }
