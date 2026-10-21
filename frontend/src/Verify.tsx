@@ -669,6 +669,45 @@ function Verify({
                       ) : (
                         <span className="dim">loading classes…</span>
                       )}
+                      {/* BLOCK 2b — ADVISORY: the Tavily-retrieved context per
+                          CVE. Scored + filtered; the verdict never depends on it. */}
+                      {contract ? (
+                        <div className="advisory-note">
+                          <span className="dim supported-label">
+                            ADVISORY · via Tavily
+                          </span>
+                          <ul className="advisories">
+                            {contract.targets.map((t) => {
+                              const a = t.runs.proven.advisory
+                              if (!a || !a.top_source) return null
+                              const host = a.top_source.url
+                                .replace(/^https?:\/\//, '')
+                                .split('/')[0]
+                              return (
+                                <li key={t.id} className="advisory-row">
+                                  <span className="class-cve">{a.cve}</span>
+                                  <a
+                                    className="advisory-link"
+                                    href={a.top_source.url}
+                                    target="_blank"
+                                    rel="noreferrer noopener"
+                                  >
+                                    {host} ↗
+                                  </a>
+                                  <span className="dim">
+                                    score {a.top_source.score.toFixed(2)} ·{' '}
+                                    {a.discarded_count} discarded
+                                  </span>
+                                </li>
+                              )
+                            })}
+                          </ul>
+                          <span className="dim advisory-foot">
+                            Context only — the verdict comes from the replay
+                            harness, never the advisory.
+                          </span>
+                        </div>
+                      ) : null}
                       {/* BLOCK 2 — spec grid (fixed label column, --fg values). */}
                       <dl className="spec">
                         <dt className="dim">STACK</dt>

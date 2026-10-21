@@ -65,6 +65,9 @@ function App() {
         <li className="wide">
           tavily credits <span className="n">{meta.tavily_credits}</span>
         </li>
+        <li className="dim">
+          pass@k · Wilson 95% · <span className="g">/eval</span>
+        </li>
       </>
     )
   }
