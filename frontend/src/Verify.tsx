@@ -726,25 +726,68 @@ function Verify({
                       {/* BLOCK 3 — try-it: interactive gallery. LIVE shots POST
                           /api/verify; REPLAY shots push a stored receipt run. */}
                       <p className="try-head dim">TRY IT</p>
+                      <p className="try-lead">
+                        Type your own input in the prompt below and press{' '}
+                        <kbd>⏎</kbd> — it runs live against a sealed sandbox.{' '}
+                        <span className="dim">Live class: SQL injection. Try{' '}
+                        <span className="g">(SELECT password_hash FROM users WHERE username='admin')</span>,
+                        or any string.</span>
+                      </p>
                       {shots.length > 0 ? (
-                        <ul className="shots">
-                          {shots.map((s, i) => (
-                            <li key={i}>
-                              <button
-                                type="button"
-                                className="shot"
-                                onClick={s.run}
-                                disabled={verifying}
-                              >
-                                <span className={s.live ? 'chip' : 'chip chip-outline'}>
-                                  {s.live ? 'LIVE' : 'REPLAY'}
-                                </span>
-                                <span className="shot-payload">{s.payload}</span>
-                                <span className="shot-tag dim">{s.tag}</span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
+                        (() => {
+                          const liveShots = shots.filter((s) => s.live)
+                          const replayShots = shots.filter((s) => !s.live)
+                          return (
+                            <>
+                              {liveShots.length > 0 && (
+                                <>
+                                  <p className="shots-group dim">try it live</p>
+                                  <ul className="shots">
+                                    {liveShots.map((s, i) => (
+                                      <li key={i}>
+                                        <button
+                                          type="button"
+                                          className="shot"
+                                          onClick={s.run}
+                                          disabled={verifying}
+                                        >
+                                          <span className={s.live ? 'chip' : 'chip chip-outline'}>
+                                            {s.live ? 'LIVE' : 'REPLAY'}
+                                          </span>
+                                          <span className="shot-payload">{s.payload}</span>
+                                          <span className="shot-tag dim">{s.tag}</span>
+                                        </button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </>
+                              )}
+                              {replayShots.length > 0 && (
+                                <>
+                                  <p className="shots-group dim">recorded runs</p>
+                                  <ul className="shots">
+                                    {replayShots.map((s, i) => (
+                                      <li key={i}>
+                                        <button
+                                          type="button"
+                                          className="shot"
+                                          onClick={s.run}
+                                          disabled={verifying}
+                                        >
+                                          <span className={s.live ? 'chip' : 'chip chip-outline'}>
+                                            {s.live ? 'LIVE' : 'REPLAY'}
+                                          </span>
+                                          <span className="shot-payload">{s.payload}</span>
+                                          <span className="shot-tag dim">{s.tag}</span>
+                                        </button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </>
+                              )}
+                            </>
+                          )
+                        })()
                       ) : (
                         <span className="dim">loading…</span>
                       )}
