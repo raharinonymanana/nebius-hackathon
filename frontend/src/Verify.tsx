@@ -866,6 +866,7 @@ function Verify({
             }
             if (e.kind === 'verdict') {
               const v = VERDICT_META[e.run.verdict]
+              const isReplay = !!e.note && e.note.startsWith('[replay')
               // Prefer structured steps[] when the run carries them; else fall
               // back to the flat human_trace (PROVEN-only). Captured as consts so
               // any narrowing survives inside the .map callbacks below.
@@ -895,13 +896,19 @@ function Verify({
                         canary{' '}
                         <span className="canary-token">{e.run.canary}</span>
                       </p>
-                      {!e.note && (
+                      {!isReplay && e.run.verdict === 'PROVEN' && (
                         <p className="meta canary-proof">
                           This secret was generated for your run and found leaked inside the
                           sealed sandbox — run it again and the token changes.
                         </p>
                       )}
                     </>
+                  )}
+                  {!isReplay && e.run.verdict === 'NOT PROVEN' && (
+                    <p className="meta notproven-note">
+                      The harness ran and correctly did not prove this input — a NOT PROVEN is
+                      the harness working, not a failure.
+                    </p>
                   )}
                   {steps && steps.length > 0 ? (
                     <details
