@@ -982,6 +982,12 @@ function Verify({
                       </ol>
                     </details>
                   ) : null}
+                  {!isReplay && (
+                    <p className="meta eval-pointer">
+                      Want the measured evidence behind the harness? Type{' '}
+                      <span className="g">/eval</span> for pass@k rates across all classes.
+                    </p>
+                  )}
                 </div>
               )
             }

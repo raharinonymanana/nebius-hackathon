@@ -143,6 +143,7 @@ body { display: block; min-width: 0; min-height: 0; }
 .canary-token { margin-left: 1ch; color: var(--fg); font-variant-ligatures: none; }  /* evidence: read literally, never hidden */
 .canary-proof { max-width: 72ch; }
 .notproven-note { max-width: 72ch; }
+.eval-pointer { max-width: 72ch; }
 
 /* 6a. Trace — native <details> */
 .trace > summary { width: fit-content; list-style: none; cursor: pointer; color: var(--dim); }
