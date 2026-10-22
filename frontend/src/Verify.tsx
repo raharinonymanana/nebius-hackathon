@@ -890,10 +890,18 @@ function Verify({
                       Rendered on any verdict (PROVEN / NOT PROVEN); never on the
                       RUN FAILED branch, which is a separate return below. */}
                   {e.run.canary && (
-                    <p className="meta">
-                      canary{' '}
-                      <span className="canary-token">{e.run.canary}</span>
-                    </p>
+                    <>
+                      <p className="meta">
+                        canary{' '}
+                        <span className="canary-token">{e.run.canary}</span>
+                      </p>
+                      {!e.note && (
+                        <p className="meta canary-proof">
+                          This secret was generated for your run and found leaked inside the
+                          sealed sandbox — run it again and the token changes.
+                        </p>
+                      )}
+                    </>
                   )}
                   {steps && steps.length > 0 ? (
                     <details
