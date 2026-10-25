@@ -6,7 +6,7 @@ of the clean checkpoint. The model controls the input, never the code that runs.
 
 The target is a swappable "cartridge": a folder with vulnerable.py / fixed.py / spec.py.
 The engine loads one spec by file path (default: targets/seeded) and never hardcodes a
-target. Phase 2's Starlette target is another folder with its own spec.py; no engine edit.
+target. Each real target (targets/starlette, gitpython, ormar) is another folder with its own spec.py; no engine edit.
 """
 import importlib.util
 import json

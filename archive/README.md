@@ -11,5 +11,5 @@ provenance, **not** part of the shipped prover.
 - `mcp_smoke.py` — contree-mcp stdio smoke test (lists 19 tools)
 - `trace_test.py` — LangSmith tracing probe
 
-Shipped engine: `agent_v4*.py` at the repo root (tests: `agent_v4_verify.py`,
-`agent_v4_cheat.py`). Cost evidence: `usage_log.jsonl`.
+Shipped engine: `prover/agent_v4.py` (its integrity tests live in `tests/`:
+`agent_v4_verify.py`, `agent_v4_cheat.py`). Cost evidence: `usage_log.jsonl` at the repo root.

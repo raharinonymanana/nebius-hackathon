@@ -1,4 +1,4 @@
-"""AWS Lambda handler for the prove-it demo, served behind a Function URL.
+"""AWS Lambda handler for the Mélodie demo, served behind a Function URL.
 
 The STATIC router (GET /, /api/data, /assets/*) is pure Python standard library
 only -- NO third-party imports, NO model / API / network / priced call -- it
@@ -42,7 +42,7 @@ CONTENT_TYPES = {
 # Shown when the UI has not been built/deployed yet, so the router is testable
 # before the real demo shell exists.
 INDEX_FALLBACK = (
-    "<!doctype html><meta charset=utf-8><title>prove-it</title>"
+    "<!doctype html><meta charset=utf-8><title>Mélodie</title>"
     "<p>demo shell pending. API is live: <a href=/api/data>/api/data</a></p>"
 )
 

@@ -2,7 +2,7 @@
 
 Stores facts (tokens, seconds) per call in usage_log.jsonl.
 Cost is derived at report time from PRICES, so fixing a price later
-corrects every old line. Run `python costlog.py` for a summary.
+corrects every old line. Run `python -m prover.costlog` for a summary.
 """
 import json
 import sys

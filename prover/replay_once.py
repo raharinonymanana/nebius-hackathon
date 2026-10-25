@@ -3,8 +3,7 @@
 Runs ONLY the engine's replay path (build_checkpoint -> submit_proof ->
 proven_replays) and prints a single machine-readable JSON verdict line to
 stdout. No model calls, no Tavily calls, no exploration -- so, like
-eval_report.py, it does NOT touch costlog. It is the dependency for an MCP
-server built next.
+eval_report.py, it does NOT touch costlog. prover/mcp_server.py exposes it as the MCP tool verify_proof.
 
 Run from the repo root:
     TARGET_SPEC_PATH=targets/ormar/spec.py TARGET_VARIANT=vulnerable \

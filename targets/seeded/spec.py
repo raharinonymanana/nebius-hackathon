@@ -1,9 +1,10 @@
-"""Target spec: seeded mini-target (Phase 1).
+"""Target spec: seeded mini-target (the first, hand-built cartridge).
 
 A 'cartridge' the prover engine loads instead of a hardcoded target. It declares
 the two source branches, where the target lives in the sandbox, where the canary
-secret is planted, and the claim the agent tests. Phase 2's Starlette target will
-be another folder with its own spec.py — the engine does not change.
+secret is planted, and the claim the agent tests. Every real target
+(targets/starlette, gitpython, ormar) is another folder
+with its own spec.py — the engine does not change.
 
 Faithful to Starlette StaticFiles path traversal (CVE-2023-29159): the canary is a
 SIBLING of the base dir whose name shares 'static' as a string prefix, so it fools

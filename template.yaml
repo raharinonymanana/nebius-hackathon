@@ -1,8 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >-
-  prove-it demo - finding-validation agent. Serves the frozen data contract
-  and demo shell from a single Lambda behind a public Function URL.
+  Melodie demo - runtime proof harness. Serves the static UI, the frozen data
+  contract and the live /api/verify route from a single Lambda behind a public
+  Function URL.
 
 Resources:
   DemoFunction:
@@ -64,5 +65,5 @@ Resources:
 
 Outputs:
   DemoUrl:
-    Description: Public Function URL for the prove-it demo
+    Description: Public Function URL for the Melodie demo
     Value: !GetAtt DemoFunctionUrl.FunctionUrl
