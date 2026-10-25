@@ -83,3 +83,8 @@
 
 ## 2026-10-06 — Tavily: result URL shape varies for the same source
 With include_domains=["nvd.nist.gov", ...] + include_domains_mode="restrict", a CVE query sometimes returns NVD's /vuln/search?cpeName=... results-page URL rather than the canonical /vuln/detail/CVE-xxxx page. For tooling that wants to cite the canonical advisory record, the search-page URL is less useful and forces consumer-side normalization. A per-result "canonical_url" or a topic/filter that prefers record/detail pages over search pages would help agents cite authoritative sources cleanly. (SDK tavily-python 0.8.4; include_published_date also absent in this version.)
+
+## 2026-10-25 — Sandboxes (ConTree) SDK: no built-in run timeout (contree-sdk 0.3.6)
+- image.run(...).wait() blocks indefinitely with no client-side deadline. A slow in-sandbox step (e.g. a cold pip install during checkpoint baking) is indistinguishable from a hang -- the first run of our discrimination suite looked frozen and needed Ctrl+C. Suggest a timeout/deadline parameter on run() or wait() that raises on expiry.
+- Workaround: verify_service.py wraps each sandbox run in a daemon-thread wall-clock budget (_run_with_budget); the discrimination runner bakes each variant once (not per-case) and logs progress so a slow bake is visible, not silent.
+- Positive: once warm, ormar bakes (python:3.12-slim + ormar + aiosqlite) were fast and reproducible (~10-11s each), and disposable per-request replays ran ~3-5s. The commit(disposable=False) -> reuse-image model works well for a bake-once / replay-many pattern.

@@ -25,6 +25,7 @@ jobs:
           python -m tests.advisory_tool_verify
           python -m tests.app_router_verify
           python -m tests.sqlite_harden_verify
+          python -m tests.fuzz_input_verify
 
   frontend:
     runs-on: ubuntu-latest

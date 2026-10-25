@@ -185,3 +185,10 @@
 
 ## 2026-10-19 (Day 25)
 - Chose A1: fix the dev proxy at the root (disable Node Happy Eyeballs) rather than work around it, because the 503 blocked the local witness loop for this AND every future UI change. Considered + rejected: A2 (witness on a deploy preview), A3 (commit on verified logic alone). [not final]
+
+## Day 31 — 25 Oct 2026 (none final unless marked)
+- ormar discrimination backfill = A1: model-free matched replay (real exploit vs patched 0.23.0 -> NOT PROVEN), receipt model="none (model-free replay)", disclosed in eval notes. Rejected A2 (re-run the full Nemotron agent on fixed ormar) -- spends credits, agent model-path never exercised on ormar, no extra harness-credibility. [not final]
+- Test strategy = promote the __main__ self-tests into standard tests/ suites (app_router, verify_service_security, sqlite_harden) rather than leave adversarial coverage in hand-run __main__ blocks. Offline ones in CI; ConTree-dependent ones documented + run locally. [not final]
+- Frontend testing = A3: add Vitest + a CI frontend job; unit-test normalise.ts (the runtime honesty boundary). evalRate / Verify.tsx helpers left untested (would need extracting from a 1100-line component) -- deferred. [not final]
+- ormar card not_proven slot = now POPULATED from the new fixed receipt. This MEETS the Day 16 "null + pending note" decision (reversed now that a real fixed receipt exists). [not final]
+- TESTING.md committed: documents the defence, never the attack; no bypass recipe in-tree. [not final]
