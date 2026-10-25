@@ -1,0 +1,45 @@
+{
+  "query": "CVE-2023-29159 starlette StaticFiles path traversal",
+  "follow_up_questions": null,
+  "answer": null,
+  "images": [],
+  "results": [
+    {
+      "url": "https://github.com/advisories/GHSA-v5gw-mw7f-84px",
+      "title": "Starlette has Path Traversal vulnerability in StaticFiles \u00b7 CVE-2023-29159 \u00b7 GitHub Advisory Database \u00b7 GitHub",
+      "content": "Moderate severity   GitHub Reviewed   Published May 16, 2023 in  Kludex/starlette  \u2022 Updated Oct 28, 2024\n\n## Package\n\nstarlette  (pip)\n\n## Affected versions\n\n>= 0.13.5, < 0.27.0\n\n## Patched versions\n\n0.27.0\n\n## Description\n\n### Summary\n\nWhen using `StaticFiles`, if there's a file or directory that starts with the same name as the `StaticFiles` directory, that file or directory is also exposed via `StaticFiles` which is a path traversal vulnerability.\n\n### Details [...] The product uses external input to construct a pathname that is intended to identify a file or directory that is located underneath a restricted parent directory, but the product does not properly neutralize special elements within the pathname that can cause the pathname to resolve to a location that is outside of the restricted directory.  Learn more on MITRE.\n\n### CVE ID\n\nCVE-2023-29159\n\n### GHSA ID\n\n### Source code\n\n### Credits\n\n @aminalaee  aminalaee   Coordinator [...] Availability None\n\n##### Subsequent System Impact Metrics\n\nConfidentiality None\n\nIntegrity None\n\nAvailability None\n\nCVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N\n\n### EPSS score\n\n(81st percentile)\n\n### Weaknesses\n\n   Weakness CWE-22 \n\n#### Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')",
+      "score": 0.9294982,
+      "raw_content": null,
+      "id": "d67138-00"
+    },
+    {
+      "url": "https://osv.dev/vulnerability/GHSA-v5gw-mw7f-84px",
+      "title": "GHSA-v5gw-mw7f-84px - OSV",
+      "content": "CVE-2023-29159 PYSEC-2023-83. Starlette has Path Traversal vulnerability in StaticFiles Details \u2026 which is a path traversal vulnerability. Details The root",
+      "score": 0.90810597,
+      "raw_content": null,
+      "id": "5f57fc-01"
+    },
+    {
+      "url": "https://nvd.nist.gov/vuln/search?resultType=records&cpeFilterMode=cpe&cpeName=cpe%3A2.3%3Aa%3Aencode%3Astarlette%3A0.17.1%3A%2A%3A%2A%3A%2A%3A%2A%3Apython%3A%2A%3A%2A",
+      "title": "NVD - Search and Statistics",
+      "content": "| CVE-2023-29159 |  | Jun 01, 2023 | JPCERT/CC | Directory traversal vulnerability in Starlette versions 0.13.5 and later and prior to 0.27.0 allows a remote unauthenticated attacker to view files in a web service which was built using Starlette. | [...] | CVE-2026-48818 |  | Jun 17, 2026 | GitHub, Inc. | Starlette is a lightweight ASGI framework/toolkit. In versions 1.0.1 and earlier, StaticFiles on Windows is vulnerable to SSRF. An UNC path such as \\\\attacker.com\\share can cause os.path.realpath to initiate an outbound SMB connection before the path is rejected, exposing the service account\u2019s NTLMv ... | [...] | CVE-2023-30798 |  | Apr 21, 2023 | VulnCheck | There MultipartParser usage in Encode's Starlette python framework before versions 0.25.0 allows an unauthenticated and remote attacker to specify any number of form fields or files which can cause excessive memory usage resulting in denial of service of the HTTP service. |",
+      "score": 0.826278,
+      "raw_content": null,
+      "id": "751958-02"
+    },
+    {
+      "url": "https://github.com/NeaamHariri/devsec-benchmark/blob/main/BENCHMARK.md",
+      "title": "devsec-benchmark/BENCHMARK.md at main \u00b7 NeaamHariri/devsec-benchmark \u00b7 GitHub",
+      "content": "03 \u00b7 Path traversal \u2014 Starlette `CVE-2023-29159` (Python) [...] fix `1797de464124b090f10cf570441e8292936d63e3` \u00b7 vuln `24c1fac62a80bb153c6548145334fc643991e35a`\n sink `starlette/staticfiles.py` \u2192 `lookup_path` ~L172: `if os.path.commonprefix([full_path, directory]) != directory:` \u2014 character-wise prefix passes siblings like `/static_secret` against root `/static`.\n fix: `os.path.commonprefix` \u2192 `os.path.commonpath`. ~1-line diff.\n repo `github.com/Kludex/starlette` \u00b7 advisory `GHSA-v5gw-mw7f-84px` [...] | # | Bug class | CWE family | Status |\n ---  --- |\n| 1 | Memory safety (stack overflow) | CWE-121 / CWE-787 | PINNED \u2014 FreeBSD RPCSEC\\_GSS (\u00a71.3) |\n| 2 | SQL injection | CWE-89 | PINNED \u2014 KubeClarity CVE-2024-39909 (\u00a71.4) |\n| 3 | Path traversal | CWE-22 | PINNED \u2014 Starlette CVE-2023-29159 (\u00a71.4) |\n| 4 | Authentication / authorization bypass | CWE-287 / CWE-289 | PINNED \u2014 Soft Serve CVE-2026-24058 (\u00a71.4) |",
+      "score": 0.77199864,
+      "raw_content": null,
+      "id": "bcc9ed-03"
+    }
+  ],
+  "response_time": 2.01,
+  "usage": {
+    "credits": 1
+  },
+  "request_id": "aff116fc-76ff-4661-a66e-c9f3d60b58d7"
+}

@@ -1,12 +1,22 @@
+# secrets and local env
 .env
-__pycache__/
-.venv/
 .env.*
-*.pyc
+!.env.example
 
-# run outputs (one sample committed by hand as demo evidence)
-receipts/
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# local tooling
 .claude/
+
+# Run outputs. Top-level receipts/*.json ARE the eval dataset and are committed:
+# `python -m prover.eval_report` re-scores them offline, model-free.
+# Live-suite summaries (receipts/suites/) and any other run output stay local.
+receipts/*
+!receipts/*.json
+receipts/suites/
 
 # AWS SAM deploy artifacts
 .aws-sam/
@@ -14,4 +24,6 @@ samconfig.toml
 
 # compiled React UI copied from frontend/dist (sam ships it from the filesystem)
 demo/web/
+
+# private design workspace (handoff drafts), not part of the build
 design/

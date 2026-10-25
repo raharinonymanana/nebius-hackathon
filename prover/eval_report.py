@@ -1,8 +1,8 @@
 """Reproducible eval results table, read from receipts only.
 
 READ-ONLY. This script never modifies a receipt, never touches the sealed
-harness, and never makes a model/Tavily/network call. It parses the gitignored
-receipts/*.json (not receipts/samples/), classifies each run, and prints a
+harness, and never makes a model/Tavily/network call. It parses the committed
+receipts/*.json, classifies each run, and prints a
 plaintext results table plus a cost summary derived from usage_log.jsonl.
 
 Verdicts shown here are copied verbatim from the receipts; this script decides
@@ -16,7 +16,7 @@ import os
 # Reuse the existing pricing core (no re-pricing, no priced calls are made).
 from prover import costlog
 
-RECEIPTS_GLOB = "receipts/*.json"  # top level only; receipts/samples/ is excluded
+RECEIPTS_GLOB = "receipts/*.json"  # top level only; receipts/suites/ is excluded
 USAGE_LOG = costlog.LOG_FILE
 
 Z = 1.96  # 95% two-sided

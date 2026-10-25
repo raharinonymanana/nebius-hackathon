@@ -1,8 +1,8 @@
-# Product runtime deps — exact versions from the venv.
-# Excludes contree-cli (manual use only) and contree-mcp + mcp<2 (optional future layer).
+# Runtime dependencies for the prover, eval and tests (exact versions from the dev venv).
+# The deployed Lambda installs ONLY contree-sdk (see Makefile). The optional MCP
+# server (prover/mcp_server.py) also needs requirements-mcp.txt.
 contree-client==0.4.0
 contree-sdk==0.3.6
-langsmith==0.14.3
 openai==3.22.1
 python-dotenv==1.2.3
 tavily-python==0.8.4
