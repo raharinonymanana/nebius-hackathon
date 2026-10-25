@@ -31,7 +31,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 
 NAME = "gitpython-clone-ext-injection"
 CVE = "CVE-2022-24439"                   # advisory id (context only; never a verdict input)
-# TARGET_FUNCTION: the sink A2 'locate' mode asks the model to name. The honest answer is
+# TARGET_FUNCTION: the sink 'locate' mode asks the model to name. The honest answer is
 # clone_from: it is the public GitPython API that accepts the user-supplied repository URL
 # and forwards it (via the internal Repo._clone) to the `git clone` subprocess without
 # validating the protocol. The advisory names clone/clone_from as the affected functions,

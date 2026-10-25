@@ -1,4 +1,4 @@
-"""Offline unit test for A2 'locate' measurement + handed-mode stability.
+"""Offline unit test for the 'locate' measurement + handed-mode stability.
 Zero credits, zero model calls. Tests the located_unaided LOGIC directly with crafted
 inputs, and confirms the handed-mode prompt carries no locate instructions.
 

@@ -1,8 +1,8 @@
 // Types mirroring demo/demo_data.json EXACTLY.
 // Field names, nullability and the literal `verdict` / `kind` strings are copied
 // verbatim from the real file, not guessed. `verdict` and `kind` are the
-// discriminants, so human_trace is structurally proven-only (G1 honesty enforced
-// by the compiler).
+// discriminants, so human_trace is structurally proven-only (the compiler
+// rejects a human_trace on any run that is not PROVEN).
 
 export interface Meta {
   model_cost_usd: number

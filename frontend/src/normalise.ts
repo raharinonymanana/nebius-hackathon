@@ -27,7 +27,7 @@ export function normalise(raw: unknown): Contract {
 
 // The verify lane: POST /api/verify returns a single Run, NOT a Contract.
 // Same house style as normalise(): check the one discriminant that matters
-// (verdict — the G1 honesty field), then cast. Throws a named Error otherwise.
+// (verdict — the field every honesty guarantee hangs on), then cast. Throws a named Error otherwise.
 const VERDICTS = ['PROVEN', 'NOT PROVEN', 'FIX VERIFIED'] as const
 
 export function normaliseRun(raw: unknown): Run {

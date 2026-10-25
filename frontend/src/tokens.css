@@ -12,8 +12,8 @@
   --fg: #DCE3DD;
   --dim: #8A938C;     /* meta · honesty flags */
 
-  /* derived + layout (v3 terminal skin — moved here from reference-v3's :root
-     so palette tokens stay in this one file; melodie-tui.css defines no :root) */
+  /* derived + layout (terminal skin — kept here so every token lives in this one file;
+     melodie-tui.css defines no :root) */
   --line: #464C48;     /* derived: 45% --dim over --bg · box lines, scrollbar thumb, decorative only */
   --logo-dim: #318174; /* derived: 55% --green over --bg · shaded logo petals */
   --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;

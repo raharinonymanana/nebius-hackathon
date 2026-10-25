@@ -81,7 +81,7 @@ function App() {
         <span className="rule" aria-hidden="true" />
         {/* Title-bar status slot — portal host. display:contents so the tally +
             mode Verify portals in here become direct flex children of .top (the
-            1ch gap + the flexible .rule before them lay them out exactly as v3). */}
+            1ch gap + the flexible .rule before them lay them out as one continuous title bar). */}
         <span ref={setStatusSlot} style={{ display: 'contents' }} />
         <span className="rule end" aria-hidden="true" />
       </header>

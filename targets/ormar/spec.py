@@ -35,7 +35,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 
 NAME = "ormar-aggregate-sql-injection"
 CVE = "CVE-2026-26198"                   # advisory id (context only; never a verdict input)
-TARGET_FUNCTION = "max"                  # the function A2 'locate' mode asks the model to name
+TARGET_FUNCTION = "max"                  # the function 'locate' mode asks the model to name
 MODULE_FILENAME = "vuln.py"              # adapter written into the sandbox at /app/vuln.py
 ENTRY = "price_stat"                     # harness calls vuln.price_stat(input_string)
 

@@ -227,7 +227,7 @@ function Verify({
   // Seed past the max restored id so new entries never collide with persisted ones
   // (banner took 0 on a fresh load; nextId()'s increment logic is unchanged).
   const idRef = useRef(entries.reduce((m, e) => Math.max(m, e.id), 0) + 1)
-  // Block cursor (HANDOFF §9): owns the input ref + the sibling .cursor ref, and
+  // Block cursor: owns the input ref + the sibling .cursor ref, and
   // positions the block at caret index × 1ch. inputRef also serves the focus effect.
   const { inputRef, cursorRef, place } = useBlockCursor(input)
   // Running-state verb: rotates every 3s through step-agnostic phrases while a
@@ -486,7 +486,7 @@ function Verify({
   // Title-bar status — DERIVED each render from entries/verifying; nothing is
   // stored (no new counter state, no field on Entry). "runs" = completed verify
   // attempts (PROVEN + NOT PROVEN). A failed run is neither ✓ nor ✗, so it is
-  // NOT folded into "runs"; it gets its own "! n" bucket (D30). FIX VERIFIED is
+  // NOT folded into "runs"; it gets its own "! n" bucket (a crash is never counted as a verdict). FIX VERIFIED is
   // intentionally not a tally bucket.
   const proven = entries.filter(
     (e) => e.kind === 'verdict' && e.run.verdict === 'PROVEN',
@@ -1025,7 +1025,7 @@ function Verify({
             )
           })}
 
-          {/* Running — the verb (step-agnostic music flavour, route B) stays on
+          {/* Running — the verb (step-agnostic music flavour) stays on
               the spinner line, unchanged. Below it: a STATIC pipeline (the fixed
               six stages, all dimmed, no marks — a description of what the harness
               does, never a claim about which stage is live) and a rotating concept
@@ -1120,7 +1120,7 @@ function Verify({
             {verifying ? 'verifying…' : '⏎ verify'}
           </button>
         </form>
-        {/* Prompt hint (HANDOFF §5 p.hint). Both items are real behavior: ⏎ submits
+        {/* Prompt hint. Both items are real behavior: ⏎ submits
             the form (onSubmit); ↑/↓ walk submitted-input history (in-memory, this
             session). esc is still not built, so it stays omitted — the hint states
             only true behavior. */}

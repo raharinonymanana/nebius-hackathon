@@ -1,4 +1,4 @@
-"""Phase 3 remediation loop: prove -> patch -> re-prove -> still-works -> one receipt.
+"""Remediation loop: prove -> patch -> re-prove -> still-works -> one receipt.
 
 A NEW layer ON TOP of the engine. The engine (prover/agent_v4.py) keeps its single
 job; this module only orchestrates it: it sets agent_v4's module globals and calls its

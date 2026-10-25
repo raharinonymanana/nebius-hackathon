@@ -1,4 +1,4 @@
-"""Tavily advisory lookup (Brief 3a). CONTEXT ONLY.
+"""Tavily advisory lookup. CONTEXT ONLY.
 
 Given a CVE id and the spec's FIXED_VERSION, do ONE live Tavily search, keep only
 authoritative advisory URLs (domain pin + our own URL-path allowlist), string-check

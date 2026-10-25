@@ -30,7 +30,7 @@ describe('normalise (contract top-level shape guard)', () => {
   })
 })
 
-describe('normaliseRun (verdict discriminant guard -- the G1 honesty field)', () => {
+describe('normaliseRun (verdict discriminant guard -- the field every honesty guarantee hangs on)', () => {
   it('accepts each of the three contract verdicts', () => {
     for (const verdict of ['PROVEN', 'NOT PROVEN', 'FIX VERIFIED']) {
       expect(normaliseRun({ verdict })).toEqual({ verdict })

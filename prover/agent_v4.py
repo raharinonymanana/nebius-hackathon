@@ -61,7 +61,7 @@ REPLAYS = []        # replayed proofs (the only evidence), written by OUR code
 ADVISORY = None     # CONTEXT ONLY: mandatory Tavily advisory block; never a verdict input
 advisory_tool_calls = []  # CONTEXT ONLY: model-initiated search_advisory results (auditable)
 
-# A2 locate mode (orchestration + measurement only; never a verdict input).
+# Locate mode (orchestration + measurement only; never a verdict input).
 TASK_MODE = "handed"            # requested mode: "handed" (default) or "locate"
 TASK_MODE_EFFECTIVE = "handed"  # after fallback (locate needs CVE + TARGET_FUNCTION)
 TARGET_FUNCTION = getattr(SPEC, "TARGET_FUNCTION", None)

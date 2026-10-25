@@ -1,8 +1,8 @@
-// Terminal UI hooks — copied from design/melodie-HANDOFF-v3.md §9, as written.
-// Scope: presentation/behaviour only (block cursor, reduced-motion, verb glint).
-// useStepVerb is intentionally NOT ported: there is no live step data, so the
-// running verb never names a phase. The verb DOES rotate (useRotatingVerb,
-// route B / decorative) through step-agnostic phrases — it takes no step param.
+// Terminal UI hooks: block cursor, reduced motion, verb glint, running verb,
+// and the running-state pipeline + concept rail.
+// Honesty rule: a verify is ONE opaque sandbox call that returns only its final
+// output, so nothing here may name or imply a live step. The running verb
+// rotates through step-agnostic phrases and takes no step param by construction.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
@@ -75,8 +75,8 @@ const ROTATING_VERBS = [
   'Verdant', 'Florid', 'Cadence', 'Songbird',
 ]
 
-/** The running verb, rotated every 3s through step-agnostic phrases (route B,
- * decorative). Takes NO step param by construction — it cannot name a phase.
+/** The running verb, rotated every 3s through step-agnostic phrases (decorative
+ * flavour only). Takes NO step param by construction — it cannot name a phase.
  * Reduced-motion or not-running: a single stable phrase, no interval. */
 export function useRotatingVerb(running: boolean): string {
   const reduce = usePrefersReducedMotion()
@@ -101,7 +101,7 @@ export function useRotatingVerb(running: boolean): string {
 
 // The fixed six-stage shape of EVERY sealed run. Shown all-dimmed with NO marks
 // on the running rail — a static description of what the harness does, never a
-// claim about which stage is live (no live step data exists; D26). Mirrors
+// claim about which stage is live (the sandbox call is opaque, so no live step data exists). Mirrors
 // prover/verify_service.py _STEP_NAMES verbatim and in order; the real steps[]
 // (with ✓/✗ + the deciding step) replaces this the instant the run lands.
 export const PIPELINE_STEPS = [
@@ -116,7 +116,7 @@ export const PIPELINE_STEPS = [
 // Always-true facts about the HARNESS mechanism, shown on the running rail while
 // a verify is in flight. Each describes what the sealed harness does on every
 // run; none claims a target is "safe"/"secure"/"prevented" (hard rule), and none
-// names a live step (D26). Ordered so the single load-bearing line (per-run
+// names a live step (the sandbox call is opaque). Ordered so the single load-bearing line (per-run
 // canary = liveness) is line 0 — a warm ~3s run may show only that one.
 const CONCEPT_LINES = [
   'the canary is a fresh random token each run — a recording can’t reproduce it',
