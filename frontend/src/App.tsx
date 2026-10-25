@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { Contract } from './contract'
-import { normalise } from './normalise'
+import type { Contract } from './lib/contract'
+import { normalise } from './lib/normalise'
 import Verify from './Verify'
-import MelodieMark from './MelodieMark'
+import MelodieMark from './components/MelodieMark'
 
 type State =
   | { status: 'loading' }

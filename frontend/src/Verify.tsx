@@ -1,215 +1,20 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import type { ReactNode } from 'react'
-import type { Run, Contract, Target } from './contract'
-import { normaliseRun } from './normalise'
-import { WIDE_CHARS, useBlockCursor, useRotatingVerb, useRotatingConcept, PIPELINE_STEPS, Verb } from './terminal-hooks'
-import { AsciiArt } from './AsciiArt'
-import { WORDMARK_BOLD } from './melodie-art'
-
-const TARGET = 'ormar'
-// Backend budget is ~25s (cold start ~12s). Give the browser headroom above that
-// so the backend's own graceful NOT-PROVEN reply wins over a client-side abort.
-const TIMEOUT_MS = 30000
-
-type Entry =
-  | { id: number; kind: 'banner' }
-  | { id: number; kind: 'input'; text: string }
-  | { id: number; kind: 'verdict'; run: Run; note: string | null }
-  | { id: number; kind: 'error'; message: string }
-  | { id: number; kind: 'help' }
-  | { id: number; kind: 'notice'; text: string }
-  | { id: number; kind: 'output'; title: string; body: string }
-
-// One TRY IT gallery shot: a payload the user can fire. `live` shots POST
-// /api/verify; replay shots push a stored run with a [replay] note.
-type Shot = { payload: string; tag: string; live: boolean; run: () => void }
-
-
-// /help output. Lists ONLY what is actually built — no invented commands, no
-// unbuilt keys (e.g. esc). Kept in sync with onSubmit's slash dispatch below.
-const HELP = `commands
-  /help      show this help
-  /clear     clear the transcript
-  /eval      evaluation table (pass@k, Wilson 95%)
-  /classes   supported CVE classes + status
-  /receipts  replay receipts on disk
-  /scope     what Mélodie does and does not do
-  /version   build + data provenance
-keys
-  ⏎          verify the current input
-  ↑ / ↓      walk input history`
-
-// Verdict presentation, keyed on the exact contract literals (Run['verdict']).
-// Colour is never the sole signal: each chip carries a glyph + text label. The
-// class is the RESULT class (sets --rail); the chip itself is just .chip.
-// FIX VERIFIED is dead in the live verify flow (the backend returns only
-// PROVEN / NOT PROVEN); its entry stays only to satisfy the Record type.
-const VERDICT_META: Record<
-  Run['verdict'],
-  { label: string; glyph: string; cls: string }
-> = {
-  PROVEN: { label: 'PROVEN', glyph: '✓', cls: 'is-proven' },
-  'NOT PROVEN': { label: 'NOT PROVEN', glyph: '✗', cls: 'is-not-proven' },
-  'FIX VERIFIED': { label: 'FIX VERIFIED', glyph: '◆', cls: 'is-proven' },
-}
-
-// Transcript persistence (sessionStorage — per-tab, cleared when the tab closes).
-// Only `entries` is persisted; every other piece of state stays transient. The key
-// is versioned so a future shape change can invalidate old data cleanly.
-const TRANSCRIPT_KEY = 'melodie.transcript.v1'
-const DEFAULT_ENTRIES: Entry[] = [{ id: 0, kind: 'banner' }]
-
-// Lazy initializer for `entries`. Reads sessionStorage defensively: any parse error,
-// wrong shape, or empty array falls back to the banner-only default, and a corrupt
-// value is dropped so it can't wedge every future load. Never throws (storage access
-// itself can throw in private-mode / blocked-cookie contexts).
-function loadEntries(): Entry[] {
-  try {
-    const raw = sessionStorage.getItem(TRANSCRIPT_KEY)
-    if (!raw) return DEFAULT_ENTRIES
-    const parsed = JSON.parse(raw)
-    const ok =
-      Array.isArray(parsed) &&
-      parsed.length > 0 &&
-      parsed.every(
-        (e) => e && typeof e.id === 'number' && typeof e.kind === 'string',
-      )
-    if (!ok) {
-      sessionStorage.removeItem(TRANSCRIPT_KEY)
-      return DEFAULT_ENTRIES
-    }
-    return parsed as Entry[]
-  } catch {
-    return DEFAULT_ENTRIES
-  }
-}
-
-// Headline eval rate for a target card, if the eval table carries one.
-// Self-labeling (the axis names itself), returns null when none applies
-// (e.g. a handed target with no unaided rate). Reads loaded data only.
-function evalRate(ev: Contract['eval'], targetId: string): string | null {
-  const short = targetId.split('-')[0]
-  for (const kw of ['weaponise', 'locate']) {
-    const r = ev.rows.find(
-      (row) =>
-        row.kind === 'rate' &&
-        row.target === short &&
-        row.axis.includes(kw) &&
-        row.ci_lo !== null,
-    )
-    if (r && r.kind === 'rate') {
-      const label = r.axis.split(' ')[0]
-      return `${label} ${r.rate_str} ${r.ci_str}`
-    }
-  }
-  return null
-}
-
-// --- Data slash-commands. Each renders through the 'output' entry kind and reads
-// only the already-loaded Contract (no model / API / Tavily call). ---
-
-const SCOPE_BODY = `Mélodie confirms a KNOWN finding by replaying a proof-of-concept
-in a sealed, model-free sandbox and canary-checking the result.
-
-IT IS      exploit validation — PROVEN / NOT PROVEN / FIX VERIFIED,
-           decided only by the canary, never by a model.
-IT IS NOT  discovery, scanning, fuzzing, or arbitrary-CVE coverage.
-
-Supported classes: SQL injection, path traversal, command injection.`
-
-function evalBody(c: Contract): string {
-  const ev = c.eval
-  const tW = Math.max(8, ...ev.rows.map((r) => r.target.length))
-  const aW = Math.max(8, ...ev.rows.map((r) => r.axis.length))
-  const lines: string[] = []
-  const sections: string[] = []
-  for (const r of ev.rows) if (!sections.includes(r.section)) sections.push(r.section)
-  for (const sec of sections) {
-    lines.push(sec.toUpperCase())
-    for (const r of ev.rows.filter((x) => x.section === sec)) {
-      const val = r.ci_str ? `${r.rate_str}  ${r.ci_str}` : r.rate_str
-      lines.push(`  ${r.target.padEnd(tW)}  ${r.axis.padEnd(aW)}  ${val}`)
-    }
-    lines.push('')
-  }
-  if (ev.remediation.length) {
-    lines.push('REMEDIATION')
-    const rW = Math.max(8, ...ev.remediation.map((r) => r.target.length))
-    for (const rm of ev.remediation) {
-      const verdict = rm.verified ? 'FIX VERIFIED' : 'FIX NOT VERIFIED'
-      const attempt = `attempt ${rm.first_verified_attempt}/${rm.attempts}`
-      lines.push(
-        `  ${rm.target.padEnd(rW)}  ${verdict.padEnd(16)}  ${attempt}${rm.note ? '  — ' + rm.note : ''}`,
-      )
-    }
-    lines.push('')
-  }
-  if (ev.notes.length) {
-    lines.push('NOTES')
-    for (const n of ev.notes) lines.push(`  · ${n}`)
-  }
-  return lines.join('\n').trimEnd()
-}
-
-function classesBody(c: Contract): string {
-  return c.targets
-    .map((t) => {
-      const status = t.id.startsWith(TARGET) ? 'LIVE' : 'REPLAY'
-      const rate = evalRate(c.eval, t.id) ?? '—'
-      return [
-        `${t.cve}  [${status}]`,
-        `  class     ${t.exploit_class}`,
-        `  version   ${t.vulnerable_version} → ${t.fixed_version}`,
-        `  unaided   ${rate}`,
-      ].join('\n')
-    })
-    .join('\n\n')
-}
-
-function receiptsBody(c: Contract): string {
-  const m = c.meta
-  const lines: string[] = [
-    `${m.receipts_valid} valid receipts (${m.receipts_excluded} excluded) · model-free replay`,
-    '',
-  ]
-  for (const t of c.targets) {
-    lines.push(t.cve)
-    const rows: Array<[string, { verdict: string; source_receipt: string } | null]> = [
-      ['proven', t.runs.proven],
-      ['not_proven', t.runs.not_proven],
-      ['fix_verified', t.runs.fix_verified],
-    ]
-    for (const [label, run] of rows) {
-      if (run) lines.push(`  ${label.padEnd(12)} ${run.verdict.padEnd(13)} ${run.source_receipt}`)
-    }
-    lines.push('')
-  }
-  return lines.join('\n').trimEnd()
-}
-
-function versionBody(c: Contract): string {
-  const m = c.meta
-  return [
-    `schema        v${c.schema_version}`,
-    `data built    ${c.generated_utc}`,
-    `receipts      ${m.receipts_valid} valid, ${m.receipts_excluded} excluded`,
-    `model calls   ${m.model_calls}`,
-    `model cost    $${m.model_cost_usd.toFixed(2)}`,
-    `tavily        ${m.tavily_credits} credits`,
-  ].join('\n')
-}
-
-function buildCommand(name: string, c: Contract): { title: string; body: string } {
-  switch (name) {
-    case 'eval': return { title: 'eval', body: evalBody(c) }
-    case 'classes': return { title: 'classes', body: classesBody(c) }
-    case 'receipts': return { title: 'receipts', body: receiptsBody(c) }
-    case 'scope': return { title: 'scope', body: SCOPE_BODY }
-    case 'version': return { title: 'version', body: versionBody(c) }
-    default: return { title: name, body: '' }
-  }
-}
+import type { Run, Contract } from './lib/contract'
+import { normaliseRun } from './lib/normalise'
+import { TARGET, TIMEOUT_MS } from './lib/config'
+import type { Entry } from './lib/transcript'
+import { TRANSCRIPT_KEY, loadEntries } from './lib/transcript'
+import { buildCommand, DATA_COMMANDS } from './lib/commands'
+import { useBlockCursor, useRotatingVerb, useRotatingConcept } from './hooks/terminal-hooks'
+import { TitleStatus } from './components/TitleStatus'
+import { AboutBox } from './components/AboutBox'
+import { EchoRow } from './components/EchoRow'
+import { HelpBox, OutputBox } from './components/CommandBox'
+import { RunResult, RunFailed } from './components/RunResult'
+import { RunningBlock } from './components/RunningBlock'
+import { PromptRow } from './components/PromptRow'
 
 function Verify({
   ledger,
@@ -414,7 +219,7 @@ function Verify({
           { id: nextId(), kind: 'input', text: trimmed },
           { id: nextId(), kind: 'help' },
         ])
-      } else if (['eval', 'classes', 'receipts', 'scope', 'version'].includes(name)) {
+      } else if ((DATA_COMMANDS as readonly string[]).includes(name)) {
         if (!contract) {
           setEntries((prev) => [
             ...prev,
@@ -521,51 +326,14 @@ function Verify({
           Derived above; appears only once App has lent us the slot. */}
       {statusSlot &&
         createPortal(
-          <>
-            <p className="tally" aria-label="Session tally">
-              {runs === 0 && failed === 0 ? (
-                <span className="dim">no runs yet</span>
-              ) : (
-                <>
-                  {runs > 0 && (
-                    <span className="wide">
-                      {runs} run{runs === 1 ? '' : 's'}
-                    </span>
-                  )}
-                  {proven > 0 && (
-                    <span>
-                      <span className="g" aria-hidden="true">
-                        ✓
-                      </span>{' '}
-                      {proven}
-                      <span className="sr-only"> proven</span>
-                    </span>
-                  )}
-                  {notProven > 0 && (
-                    <span>
-                      <span className="r" aria-hidden="true">
-                        ✗
-                      </span>{' '}
-                      {notProven}
-                      <span className="sr-only"> not proven</span>
-                    </span>
-                  )}
-                  {failed > 0 && (
-                    <span>
-                      <span aria-hidden="true">!</span> {failed}
-                      <span className="sr-only"> run failed</span>
-                    </span>
-                  )}
-                </>
-              )}
-            </p>
-            <span
-              className={`mode${verifying ? ' is-busy' : ''}`}
-              role="status"
-            >
-              {verifying ? <>RUNNING #{inFlightId}</> : 'READY'}
-            </span>
-          </>,
+          <TitleStatus
+            runs={runs}
+            proven={proven}
+            notProven={notProven}
+            failed={failed}
+            verifying={verifying}
+            inFlightId={inFlightId}
+          />,
           statusSlot,
         )}
 
@@ -580,285 +348,21 @@ function Verify({
         <div className="log">
           {entries.map((e, idx) => {
             if (e.kind === 'banner') {
-              // TRY IT gallery shots, built from the loaded contract. Two LIVE
-              // shots POST /api/verify (ormar); three REPLAY shots push a stored
-              // contract run (starlette / gitpython). Empty until contract loads.
-              const ormar = contract?.targets.find((t: Target) =>
-                t.id.startsWith('ormar'),
-              )
-              const starlette = contract?.targets.find((t: Target) =>
-                t.id.startsWith('starlette'),
-              )
-              const gitpython = contract?.targets.find((t: Target) =>
-                t.id.startsWith('gitpython'),
-              )
-              const shots: Shot[] = []
-              if (ormar) {
-                const sql = ormar.runs.proven.input ?? ''
-                shots.push({ payload: sql, tag: 'SQL injection · expect PROVEN', live: true, run: () => runLive(sql) })
-                shots.push({ payload: 'price', tag: 'benign control · expect NOT PROVEN', live: true, run: () => runLive('price') })
-              }
-              if (starlette) {
-                const pr = starlette.runs.proven
-                shots.push({ payload: pr.input ?? '', tag: 'path traversal · PROVEN', live: false, run: () => runReplay(pr) })
-              }
-              if (gitpython) {
-                const pr = gitpython.runs.proven
-                shots.push({ payload: pr.input ?? '', tag: 'command injection · PROVEN (handed)', live: false, run: () => runReplay(pr) })
-              }
-              if (starlette) {
-                const fv = starlette.runs.fix_verified
-                shots.push({ payload: fv.input ?? '(patched target)', tag: 'same exploit, patched · FIX VERIFIED', live: false, run: () => runReplay(fv) })
-              }
               return (
-                <section
+                <AboutBox
                   key={e.id}
-                  className="box about"
-                  aria-labelledby="about-h"
-                >
-                  <h2 className="box-title" id="about-h">
-                    about
-                  </h2>
-                  {/* Splash row: the text column is the hero (left, flexes),
-                      WORDMARK_BOLD parked top-right (space-between, top-aligned,
-                      nudged off the border by .splash-mark padding). Wordmark is
-                      hidden ≤640px; the text column then goes full width. Still a
-                      transcript entry — it scrolls with the log. */}
-                  <div className="splash-row">
-                    <div className="about-hero">
-                      {/* BLOCK 1 — name + lede (prose: the only wrapping text). */}
-                      <p className="hero-name">Mélodie</p>
-                      <p className="hero-lede">
-                        Replays a{' '}
-                        <span className="g">proof-of-concept</span> in a sealed{' '}
-                        <span className="g">Nebius Token Factory</span> sandbox,
-                        <br />
-                        canary-checked, and returns{' '}
-                        <span className="g em">PROVEN</span> /{' '}
-                        <span className="r em">NOT PROVEN</span> with a full trace.
-                      </p>
-                      {/* BLOCK 3 — try-it: interactive gallery. LIVE shots POST
-                          /api/verify; REPLAY shots push a stored receipt run. */}
-                      <p className="try-head dim">TRY IT</p>
-                      <p className="try-lead">
-                        Type your own input in the prompt below and press{' '}
-                        <kbd>⏎</kbd> — it runs live against a sealed sandbox.{' '}
-                        <span className="dim">Live class: SQL injection. Try{' '}
-                        <span className="g">(SELECT password_hash FROM users WHERE username='admin')</span>,
-                        or <span className="r">any string</span>.</span>
-                      </p>
-                      {shots.length > 0 ? (
-                        (() => {
-                          const liveShots = shots.filter((s) => s.live)
-                          const replayShots = shots.filter((s) => !s.live)
-                          return (
-                            <>
-                              {liveShots.length > 0 && (
-                                <>
-                                  <p className="shots-group dim">try it live</p>
-                                  <ul className="shots">
-                                    {liveShots.map((s, i) => (
-                                      <li key={i}>
-                                        <button
-                                          type="button"
-                                          className="shot"
-                                          onClick={s.run}
-                                          disabled={verifying}
-                                        >
-                                          <span className={s.live ? 'chip' : 'chip chip-outline'}>
-                                            {s.live ? 'LIVE' : 'REPLAY'}
-                                          </span>
-                                          <span className="shot-payload">{s.payload}</span>
-                                          <span className="shot-tag dim">
-                                            {i === 0 ? (
-                                              <>
-                                                SQL injection or{' '}
-                                                <span className="fg">
-                                                  any other string
-                                                </span>
-                                                .{s.tag.slice('SQL injection'.length)}
-                                              </>
-                                            ) : (
-                                              s.tag
-                                            )}
-                                          </span>
-                                        </button>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </>
-                              )}
-                              {replayShots.length > 0 && (
-                                <>
-                                  <p className="shots-group dim">recorded runs</p>
-                                  <ul className="shots">
-                                    {replayShots.map((s, i) => (
-                                      <li key={i}>
-                                        <button
-                                          type="button"
-                                          className="shot"
-                                          onClick={s.run}
-                                          disabled={verifying}
-                                        >
-                                          <span className={s.live ? 'chip' : 'chip chip-outline'}>
-                                            {s.live ? 'LIVE' : 'REPLAY'}
-                                          </span>
-                                          <span className="shot-payload">{s.payload}</span>
-                                          <span className="shot-tag dim">{s.tag}</span>
-                                        </button>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </>
-                              )}
-                            </>
-                          )
-                        })()
-                      ) : (
-                        <span className="dim">loading…</span>
-                      )}
-                      {/* BLOCK 2a — SUPPORTED CLASSES: all three target cards
-                          from the loaded contract. LIVE is the target the live
-                          /api/verify POST hits (TARGET); the rest are REPLAY. */}
-                      {contract ? (
-                        <div className="supported">
-                          <span className="dim supported-label">
-                            SUPPORTED CLASSES
-                          </span>
-                          <ul className="classes">
-                            {contract.targets.map((t) => {
-                              const live = t.id.startsWith(TARGET)
-                              const rate = evalRate(contract.eval, t.id)
-                              return (
-                                <li key={t.id} className="class-row">
-                                  <span
-                                    className={live ? 'chip' : 'chip chip-outline'}
-                                  >
-                                    {live ? 'LIVE' : 'REPLAY'}
-                                  </span>
-                                  <span className="class-name">
-                                    {t.exploit_class}
-                                  </span>
-                                  <span className="class-cve">{t.cve}</span>
-                                  <span className="class-ver dim">
-                                    {t.vulnerable_version} → {t.fixed_version}
-                                  </span>
-                                  {rate ? (
-                                    <span className="class-rate dim">{rate}</span>
-                                  ) : null}
-                                </li>
-                              )
-                            })}
-                          </ul>
-                        </div>
-                      ) : (
-                        <span className="dim">loading classes…</span>
-                      )}
-                      {/* BLOCK 2 — spec grid (fixed label column, --fg values). */}
-                      <dl className="spec">
-                        <dt className="dim">STACK</dt>
-                        <dd>
-                          <span className="mk4">
-                            Nebius Token Factory Sandboxes (ConTree)
-                          </span>{' '}
-                          <span className="dim">·</span> model-free replay
-                        </dd>
-                        <dt className="dim">SCOPE</dt>
-                        <dd>
-                          confirms a <span className="g">KNOWN</span> finding — not
-                          discovery, scanning, or arbitrary CVEs
-                        </dd>
-                      </dl>
-                      {/* BLOCK 2b — ADVISORY: Tavily-retrieved context per CVE.
-                          Scored + filtered; the verdict never depends on it. Folded
-                          (click-to-expand, like a trace) and placed last — least
-                          load-bearing, tucked out of the 2-second read. */}
-                      {contract ? (
-                        <details className="trace advisory-fold">
-                          <summary>ADVISORY · via Tavily</summary>
-                          <div className="advisory-note">
-                            <ul className="advisories">
-                              {contract.targets.map((t) => {
-                                const a = t.runs.proven.advisory
-                                if (!a || !a.top_source) return null
-                                const host = a.top_source.url
-                                  .replace(/^https?:\/\//, '')
-                                  .split('/')[0]
-                                return (
-                                  <li key={t.id} className="advisory-row">
-                                    <span className="class-cve">{a.cve}</span>
-                                    <a
-                                      className="advisory-link"
-                                      href={a.top_source.url}
-                                      target="_blank"
-                                      rel="noreferrer noopener"
-                                    >
-                                      {host} ↗
-                                    </a>
-                                    <span className="dim">
-                                      score {a.top_source.score.toFixed(2)} ·{' '}
-                                      {a.discarded_count} discarded
-                                    </span>
-                                  </li>
-                                )
-                              })}
-                            </ul>
-                            <span className="dim advisory-foot">
-                              Context only — the verdict comes from the replay
-                              harness, never the advisory.
-                            </span>
-                          </div>
-                        </details>
-                      ) : null}
-                    </div>
-                    <div className="splash-mark">
-                      <AsciiArt piece={WORDMARK_BOLD} />
-                    </div>
-                  </div>
-                </section>
+                  contract={contract}
+                  verifying={verifying}
+                  runLive={runLive}
+                  runReplay={runReplay}
+                />
               )
             }
             if (e.kind === 'help') {
-              return (
-                <section
-                  key={e.id}
-                  className="box about"
-                  aria-labelledby={`help-h-${e.id}`}
-                >
-                  <h2 className="box-title" id={`help-h-${e.id}`}>
-                    help
-                  </h2>
-                  {/* HELP rendered verbatim — dim, whitespace preserved, same
-                      monospace block treatment as the banner above. */}
-                  <pre
-                    className="dim"
-                    style={{
-                      margin: 0,
-                      font: 'inherit',
-                      whiteSpace: 'pre-wrap',
-                      overflowWrap: 'anywhere',
-                    }}
-                  >
-                    {HELP}
-                  </pre>
-                </section>
-              )
+              return <HelpBox key={e.id} id={e.id} />
             }
             if (e.kind === 'output') {
-              return (
-                <section
-                  key={e.id}
-                  className="box about"
-                  aria-labelledby={`out-h-${e.id}`}
-                >
-                  <h2 className="box-title" id={`out-h-${e.id}`}>
-                    {e.title}
-                  </h2>
-                  <pre className="cmd-out dim" style={{ margin: 0, font: 'inherit' }}>
-                    {e.body}
-                  </pre>
-                </section>
-              )
+              return <OutputBox key={e.id} id={e.id} title={e.title} body={e.body} />
             }
             if (e.kind === 'notice') {
               // Neutral client-side notice (e.g. a mistyped command). Nothing ran,
@@ -871,158 +375,21 @@ function Verify({
               )
             }
             if (e.kind === 'input') {
-              return (
-                <div key={e.id} className="echo">
-                  <p className="cmd">
-                    <span className="p" aria-hidden="true">
-                      ❯
-                    </span>
-                    {e.text}
-                  </p>
-                  <span className="stamp">#{e.id}</span>
-                </div>
-              )
+              return <EchoRow key={e.id} id={e.id} text={e.text} />
             }
             if (e.kind === 'verdict') {
-              const v = VERDICT_META[e.run.verdict]
-              const isReplay = !!e.note && e.note.startsWith('[replay')
-              // Prefer structured steps[] when the run carries them; else fall
-              // back to the flat human_trace (PROVEN-only). Captured as consts so
-              // any narrowing survives inside the .map callbacks below.
-              const steps = e.run.steps ?? null
-              const trace =
-                e.run.verdict === 'PROVEN' ? e.run.human_trace : null
-              // Structured-trace summary bits (only consumed when steps render).
-              const decidedIdx = steps ? steps.findIndex((s) => s.decided) : -1
-              const stopped = steps
-                ? steps.some((s) => s.status === 'skipped')
-                : false
               return (
-                <div key={e.id} className={`result ${v.cls}`}>
-                  <p className="verdict">
-                    <span className="chip">
-                      <span aria-hidden="true">{v.glyph} </span>
-                      {v.label}
-                    </span>
-                    {e.note && <span>{e.note}</span>}
-                  </p>
-                  {/* Canary token — surfaced verbatim as the run's evidence.
-                      Rendered on any verdict (PROVEN / NOT PROVEN); never on the
-                      RUN FAILED branch, which is a separate return below. */}
-                  {e.run.canary && (
-                    <>
-                      <p className="meta">
-                        canary{' '}
-                        <span className="canary-token">{e.run.canary}</span>
-                      </p>
-                      {!isReplay && e.run.verdict === 'PROVEN' && (
-                        <p className="meta canary-proof">
-                          This secret was generated for your run and found leaked inside the
-                          sealed sandbox — run it again and the token changes.
-                        </p>
-                      )}
-                    </>
-                  )}
-                  {!isReplay && e.run.verdict === 'NOT PROVEN' && (
-                    <p className="meta notproven-note">
-                      The harness ran and correctly did not prove this input — a NOT PROVEN is
-                      the harness working, not a failure.
-                    </p>
-                  )}
-                  {steps && steps.length > 0 ? (
-                    <details
-                      className="trace"
-                      {...(idx === entries.length - 1 ? { open: true } : {})}
-                    >
-                      <summary>
-                        trace · {steps.length} step
-                        {steps.length === 1 ? '' : 's'}
-                        {decidedIdx >= 0
-                          ? ` · ${stopped ? 'stopped' : 'decided'} at step ${decidedIdx + 1}`
-                          : ''}
-                      </summary>
-                      <ol className={idx === entries.length - 1 ? 'steps reveal' : 'steps'}>
-                        {steps.map((s, i) => {
-                          const last = i === steps.length - 1
-                          const glyph =
-                            s.status === 'ok'
-                              ? '✓'
-                              : s.status === 'fail'
-                                ? '✗'
-                                : '·'
-                          return (
-                            <li
-                              key={i}
-                              className={s.decided ? 'key' : undefined}
-                              style={{ ['--i']: i } as React.CSSProperties}
-                            >
-                              <span aria-hidden="true">
-                                {last ? '└─' : '├─'}
-                              </span>
-                              <span className="s">{glyph}</span>
-                              <span>
-                                {s.name}
-                                {s.decided ? (
-                                  <span className="why">← decided</span>
-                                ) : null}
-                              </span>
-                              <span className="dur">
-                                {s.seconds != null
-                                  ? `${s.seconds.toFixed(1)}s`
-                                  : ''}
-                              </span>
-                            </li>
-                          )
-                        })}
-                      </ol>
-                    </details>
-                  ) : trace ? (
-                    <details
-                      className="trace"
-                      {...(idx === entries.length - 1 ? { open: true } : {})}
-                    >
-                      <summary>
-                        trace · {trace.length} step
-                        {trace.length === 1 ? '' : 's'}
-                      </summary>
-                      <ol className="steps">
-                        {trace.map((step, i) => {
-                          const last = i === trace.length - 1
-                          return (
-                            <li key={i}>
-                              <span aria-hidden="true">
-                                {last ? '└─' : '├─'}
-                              </span>
-                              <span className="s" />
-                              <span>{step}</span>
-                              <span className="dur" />
-                            </li>
-                          )
-                        })}
-                      </ol>
-                    </details>
-                  ) : null}
-                  {!isReplay && (
-                    <p className="meta eval-pointer">
-                      Want the measured evidence behind the harness? Type{' '}
-                      <span className="g">/eval</span> for pass@k rates across all classes.
-                    </p>
-                  )}
-                </div>
+                <RunResult
+                  key={e.id}
+                  run={e.run}
+                  note={e.note}
+                  isLatest={idx === entries.length - 1}
+                />
               )
             }
             // kind === 'error' — a RUN FAILED is NOT a verdict: dashed rail +
             // outlined chip set it apart from PROVEN / NOT PROVEN.
-            return (
-              <div key={e.id} className="result is-fail">
-                <p className="verdict">
-                  <span className="chip chip-outline">
-                    <span aria-hidden="true">! </span>RUN FAILED
-                  </span>
-                  <span>{e.message} — not a verdict</span>
-                </p>
-              </div>
-            )
+            return <RunFailed key={e.id} message={e.message} />
           })}
 
           {/* Running — the verb (step-agnostic music flavour) stays on
@@ -1033,40 +400,12 @@ function Verify({
               steps[] reveal replaces the pipeline the instant the run lands. All
               enrichment is aria-hidden; the sr-only line stays the SR truth. */}
           {verifying && (
-            <div className="result" aria-busy="true">
-              <p className="verdict">
-                <span aria-hidden="true">
-                  <span className="spin-clover" aria-hidden="true">
-                    <i className="cd cd1" />
-                    <i className="cd cd2" />
-                    <i className="cd cd3" />
-                    <i className="cd cd4" />
-                  </span>
-                  <Verb text={runVerb} />
-                </span>
-                <span className="dim stats">
-                  {elapsedLabel}
-                  {isFirstRun ? ' · cold start ~12s' : ''}
-                </span>
-                <span className="sr-only">Verifying — {elapsedLabel} elapsed</span>
-              </p>
-              <ol className="steps pipeline" aria-hidden="true">
-                {PIPELINE_STEPS.map((name, i) => {
-                  const last = i === PIPELINE_STEPS.length - 1
-                  return (
-                    <li key={i}>
-                      <span aria-hidden="true">{last ? '└─' : '├─'}</span>
-                      <span className="s">·</span>
-                      <span>{name}</span>
-                      <span className="dur" />
-                    </li>
-                  )
-                })}
-              </ol>
-              <p className="meta concept" key={runConcept} aria-hidden="true">
-                {runConcept}
-              </p>
-            </div>
+            <RunningBlock
+              verb={runVerb}
+              concept={runConcept}
+              elapsedLabel={elapsedLabel}
+              isFirstRun={isFirstRun}
+            />
           )}
 
           <div ref={bottomRef} />
@@ -1074,60 +413,19 @@ function Verify({
       </section>
 
       {/* ROW 3 — prompt: pinned under the transcript, full width */}
-      <div className="prompt">
-        <label className="sr-only" htmlFor="q">
-          Input to verify
-        </label>
-        <form className="prompt-box" onSubmit={onSubmit}>
-          <span className="p" aria-hidden="true">
-            ❯
-          </span>
-          {/* native-caret only for wide chars (emoji/CJK), where a per-cell block
-              can't track the caret — then the native green caret shows and .cursor
-              hides (CSS). For normal ASCII the block cursor shows, native hidden. */}
-          <div
-            className={`field${WIDE_CHARS.test(input) ? ' native-caret' : ''}`}
-          >
-            <input
-              id="q"
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(ev) => {
-                setInput(ev.target.value)
-                setHistIdx(null) // typing exits history mode, back to a live draft
-              }}
-              onKeyDown={onKeyDown}
-              onKeyUp={place}
-              onClick={place}
-              onScroll={place}
-              onSelect={place}
-              maxLength={2000}
-              disabled={verifying}
-              autoComplete="off"
-              autoCapitalize="off"
-              spellCheck={false}
-              enterKeyHint="go"
-              placeholder="paste an input to verify"
-            />
-            <span className="cursor" ref={cursorRef} aria-hidden="true" />
-          </div>
-          <button
-            type="submit"
-            className={`go${input.trim() !== '' && !verifying ? ' is-ready' : ''}`}
-            disabled={verifying || input.trim() === ''}
-          >
-            {verifying ? 'verifying…' : '⏎ verify'}
-          </button>
-        </form>
-        {/* Prompt hint. Both items are real behavior: ⏎ submits
-            the form (onSubmit); ↑/↓ walk submitted-input history (in-memory, this
-            session). esc is still not built, so it stays omitted — the hint states
-            only true behavior. */}
-        <p className="hint">
-          <kbd>⏎</kbd> verify · <kbd>↑</kbd> history · /help
-        </p>
-      </div>
+      <PromptRow
+        input={input}
+        verifying={verifying}
+        onChange={(ev) => {
+          setInput(ev.target.value)
+          setHistIdx(null) // typing exits history mode, back to a live draft
+        }}
+        onKeyDown={onKeyDown}
+        onSubmit={onSubmit}
+        inputRef={inputRef}
+        cursorRef={cursorRef}
+        place={place}
+      />
 
       {/* ROW 4 — eval-ledger footer */}
       <footer className="status">

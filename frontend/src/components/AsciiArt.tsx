@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { AsciiPiece } from './melodie-art'
+import type { AsciiPiece } from '../lib/melodie-art'
 
 // Decorative monospace art renderer. Walks art/fg/bg together, one cell at a
 // time, and emits a styled <span> wherever a tone is present — fg tone → glyph
