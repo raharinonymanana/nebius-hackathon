@@ -188,7 +188,9 @@
 
 ## Day 31 — 25 Oct 2026 (none final unless marked)
 - ormar discrimination backfill = A1: model-free matched replay (real exploit vs patched 0.23.0 -> NOT PROVEN), receipt model="none (model-free replay)", disclosed in eval notes. Rejected A2 (re-run the full Nemotron agent on fixed ormar) -- spends credits, agent model-path never exercised on ormar, no extra harness-credibility. [not final]
-- Test strategy = promote the __main__ self-tests into standard tests/ suites (app_router, verify_service_security, sqlite_harden) rather than leave adversarial coverage in hand-run __main__ blocks. Offline ones in CI; ConTree-dependent ones documented + run locally. [not final]
+- Test strategy = promote the __main__ self-tests into standard tests/ suites (app_router, verify_service_security, sqlite_harden) + add an offline input fuzzer (fuzz_input_verify); offline ones in CI, ConTree-dependent ones documented + run locally. [not final]
 - Frontend testing = A3: add Vitest + a CI frontend job; unit-test normalise.ts (the runtime honesty boundary). evalRate / Verify.tsx helpers left untested (would need extracting from a 1100-line component) -- deferred. [not final]
-- ormar card not_proven slot = now POPULATED from the new fixed receipt. This MEETS the Day 16 "null + pending note" decision (reversed now that a real fixed receipt exists). [not final]
+- ormar card not_proven slot = now POPULATED from the new fixed receipt. This MEETS/reverses the Day 16 "null + pending note" decision. [not final]
 - TESTING.md committed: documents the defence, never the attack; no bypass recipe in-tree. [not final]
+- Mobile (E2E item 8) = verified via CSS source (page html,body overflow:hidden; wordmark display:none on mobile; 640px breakpoint stacks + 44px targets + 16px field). A live pixel-render eyeball is optional, NOT a gate. [not final]
+- ATTRIBUTION: the 2 Day-31 commits (498374e, 7dc3751) carry Co-Authored-By + Claude-Session trailers, against the FINAL trailer-free rule (added per a session reminder; the standing user rule takes precedence). FIX = add them to the P4 history-strip target (e054fb3...7fc3547 + 498374e + 7dc3751), NOT a force-push. [the trailer-free direction stays FINAL; the fix routes through the P4 strip]
