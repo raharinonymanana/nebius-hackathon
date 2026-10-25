@@ -72,15 +72,18 @@ REPRESENTATIVE = {
     },
     "ormar-aggregate-sql-injection": {
         "proven": "ormar-aggregate-sql-injection_vulnerable_20261009T173733161906+0000.json",
-        "not_proven": None,  # no standalone fixed/NOT PROVEN receipt on disk
+        "not_proven": "ormar-aggregate-sql-injection_fixed_20261025T144443799618+0000.json",  # model-free matched control
         "fix_verified": "ormar-aggregate-sql-injection_remediation_20261009T175028463864+0000.json",
     },
 }
 
 ORMAR_NOTE = (
-    "ormar has no standalone fixed/NOT-PROVEN receipt on disk; its negative "
-    "control is implicit in the FIX VERIFIED remediation run (exploit_closed=true "
-    "against 0.23.0). A dedicated ormar fixed NOT-PROVEN receipt is pending."
+    "ormar's negative control is an explicit model-free matched replay: the real "
+    "exploit input is submitted against the patched 0.23.0 build and the sealed "
+    "harness returns NOT PROVEN (receipt model='none (model-free replay)'). This "
+    "is a harness-only control -- distinct from, and stronger than, the "
+    "model-driven fixed runs of the other targets, since it forces the known "
+    "exploit rather than relying on the model not finding one."
 )
 
 

@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-10-21T13:31:58.547701+00:00",
+  "generated_utc": "2026-10-25T14:48:58.514608+00:00",
   "meta": {
     "model_cost_usd": 0.20615587999999996,
     "model_calls": 217,
     "tavily_credits": 28,
-    "receipts_valid": 28,
+    "receipts_valid": 29,
     "receipts_excluded": 2
   },
   "targets": [
@@ -168,7 +168,16 @@
             "discarded_count": 3
           }
         },
-        "not_proven": null,
+        "not_proven": {
+          "verdict": "NOT PROVEN",
+          "mode": "handed",
+          "input": "(SELECT password_hash FROM users WHERE username='admin')",
+          "canary": "FAKE-9fbbda681ab056fd",
+          "model": "none (model-free replay)",
+          "verification_is_model_free": true,
+          "utc": "2026-10-25T14:44:43.799618+00:00",
+          "source_receipt": "ormar-aggregate-sql-injection_fixed_20261025T144443799618+0000.json"
+        },
         "fix_verified": {
           "verdict": "FIX VERIFIED",
           "mode": "handed",
@@ -327,12 +336,12 @@
         "target": "ormar",
         "axis": "harness discrimination (fixed->NOT PROVEN)",
         "kind": "rate",
-        "x": 0,
-        "n": 0,
-        "ci_lo": null,
-        "ci_hi": null,
-        "rate_str": "0/0",
-        "ci_str": "n/a"
+        "x": 1,
+        "n": 1,
+        "ci_lo": 0.20654329147389294,
+        "ci_hi": 1.0,
+        "rate_str": "1/1 = 100.0%",
+        "ci_str": "[ 20.7%, 100.0%]"
       }
     ],
     "remediation": [
@@ -362,8 +371,8 @@
       }
     ],
     "notes": [
-      "Note: fixed-variant runs that submitted a payload and returned NOT PROVEN (correct negative control, not a gap): 1  [gitpython=1]",
-      "ormar has no standalone fixed/NOT-PROVEN receipt on disk; its negative control is implicit in the FIX VERIFIED remediation run (exploit_closed=true against 0.23.0). A dedicated ormar fixed NOT-PROVEN receipt is pending."
+      "Note: fixed-variant runs that submitted a payload and returned NOT PROVEN (correct negative control, not a gap): 2  [gitpython=1, ormar=1]",
+      "ormar's negative control is an explicit model-free matched replay: the real exploit input is submitted against the patched 0.23.0 build and the sealed harness returns NOT PROVEN (receipt model='none (model-free replay)'). This is a harness-only control -- distinct from, and stronger than, the model-driven fixed runs of the other targets, since it forces the known exploit rather than relying on the model not finding one."
     ]
   }
 }
