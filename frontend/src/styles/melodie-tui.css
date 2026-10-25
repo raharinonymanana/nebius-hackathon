@@ -37,7 +37,7 @@ body { display: block; min-width: 0; min-height: 0; }
 .tally { display: flex; gap: 2ch; margin: 0; }
 .mode { flex: none; padding: 0 1ch; background: var(--green); color: var(--bg); font-weight: 700; }   /* READY */
 .mode.is-busy { background: var(--blue); }                                                         /* RUNNING #04 */
-.g { color: var(--green); } .r { color: var(--red); } .b { color: var(--blue); } .dim { color: var(--dim); }
+.g { color: var(--green); } .r { color: var(--red); } .b { color: var(--blue); } .dim { color: var(--dim); } .fg { color: var(--fg); }
 
 /* 4b. Transcript — the ONLY scrolling element. Normal direction: scrollTop 0 = top (your autoscroll measures this). */
 .transcript { grid-area: transcript; position: relative; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
@@ -64,8 +64,8 @@ body { display: block; min-width: 0; min-height: 0; }
 .splash-mark { flex: none; padding-right: 16ch; }            /* nudged left off the right edge (closer to the text); hidden ≤640px (rule 10) */
 .about-hero { flex: 1; min-width: 0; padding-left: 16ch; display: flex; flex-direction: column; gap: var(--row); }  /* shifted right toward the wordmark; blocks ~one row apart */
 .hero-name { margin: 0; color: var(--fg); font-weight: 700; }
-.hero-lede { margin: 0; max-width: 64ch; white-space: normal; }  /* the only prose-wrapping element */
-.spec { display: grid; grid-template-columns: 9ch 1fr; row-gap: 9px; column-gap: 1ch; margin: 0; max-width: 72ch; }
+.hero-lede { margin: 0; max-width: 72ch; white-space: normal; }  /* two forced lines (<br/> after "sandbox,"); 72ch fits the longer 68ch half */
+.spec { display: grid; grid-template-columns: 9ch 1fr; row-gap: 9px; column-gap: 1ch; margin: 0; max-width: 80ch; }  /* 80ch so the 69ch SCOPE value stays one line (9ch label + 1ch gap + 70ch value) */
 .spec dt { margin: 0; }                                      /* label col — .dim set inline */
 .spec dd { margin: 0; color: var(--fg); min-width: 0; }      /* value col */
 /* SUPPORTED CLASSES — all three target cards; reuses .chip / .chip-outline */
@@ -102,6 +102,8 @@ body { display: block; min-width: 0; min-height: 0; }
 .advisory-row { display: flex; align-items: baseline; flex-wrap: wrap; column-gap: 1.5ch; row-gap: 0.2ch; min-width: 0; }
 .advisory-link { color: var(--green); text-decoration: underline; text-decoration-color: var(--dim); text-underline-offset: 3px; overflow-wrap: anywhere; min-width: 0; }
 .advisory-link:hover { text-decoration-color: var(--green); }
+.advisory-fold { margin-top: var(--row); }
+.advisory-fold .advisory-note { margin-top: calc(var(--row) / 2); }
 .brand { display: flex; gap: 2ch; margin: 0 0 var(--row); }
 .logo { flex: none; line-height: 18px; color: var(--green); } /* fixed 18px so half-blocks always tile */
 .logo div { white-space: pre; }

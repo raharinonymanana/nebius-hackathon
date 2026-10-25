@@ -632,10 +632,91 @@ function Verify({
                         Replays a{' '}
                         <span className="g">proof-of-concept</span> in a sealed{' '}
                         <span className="g">Nebius Token Factory</span> sandbox,
+                        <br />
                         canary-checked, and returns{' '}
                         <span className="g em">PROVEN</span> /{' '}
                         <span className="r em">NOT PROVEN</span> with a full trace.
                       </p>
+                      {/* BLOCK 3 — try-it: interactive gallery. LIVE shots POST
+                          /api/verify; REPLAY shots push a stored receipt run. */}
+                      <p className="try-head dim">TRY IT</p>
+                      <p className="try-lead">
+                        Type your own input in the prompt below and press{' '}
+                        <kbd>⏎</kbd> — it runs live against a sealed sandbox.{' '}
+                        <span className="dim">Live class: SQL injection. Try{' '}
+                        <span className="g">(SELECT password_hash FROM users WHERE username='admin')</span>,
+                        or <span className="r">any string</span>.</span>
+                      </p>
+                      {shots.length > 0 ? (
+                        (() => {
+                          const liveShots = shots.filter((s) => s.live)
+                          const replayShots = shots.filter((s) => !s.live)
+                          return (
+                            <>
+                              {liveShots.length > 0 && (
+                                <>
+                                  <p className="shots-group dim">try it live</p>
+                                  <ul className="shots">
+                                    {liveShots.map((s, i) => (
+                                      <li key={i}>
+                                        <button
+                                          type="button"
+                                          className="shot"
+                                          onClick={s.run}
+                                          disabled={verifying}
+                                        >
+                                          <span className={s.live ? 'chip' : 'chip chip-outline'}>
+                                            {s.live ? 'LIVE' : 'REPLAY'}
+                                          </span>
+                                          <span className="shot-payload">{s.payload}</span>
+                                          <span className="shot-tag dim">
+                                            {i === 0 ? (
+                                              <>
+                                                SQL injection or{' '}
+                                                <span className="fg">
+                                                  any other string
+                                                </span>
+                                                .{s.tag.slice('SQL injection'.length)}
+                                              </>
+                                            ) : (
+                                              s.tag
+                                            )}
+                                          </span>
+                                        </button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </>
+                              )}
+                              {replayShots.length > 0 && (
+                                <>
+                                  <p className="shots-group dim">recorded runs</p>
+                                  <ul className="shots">
+                                    {replayShots.map((s, i) => (
+                                      <li key={i}>
+                                        <button
+                                          type="button"
+                                          className="shot"
+                                          onClick={s.run}
+                                          disabled={verifying}
+                                        >
+                                          <span className={s.live ? 'chip' : 'chip chip-outline'}>
+                                            {s.live ? 'LIVE' : 'REPLAY'}
+                                          </span>
+                                          <span className="shot-payload">{s.payload}</span>
+                                          <span className="shot-tag dim">{s.tag}</span>
+                                        </button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </>
+                              )}
+                            </>
+                          )
+                        })()
+                      ) : (
+                        <span className="dim">loading…</span>
+                      )}
                       {/* BLOCK 2a — SUPPORTED CLASSES: all three target cards
                           from the loaded contract. LIVE is the target the live
                           /api/verify POST hits (TARGET); the rest are REPLAY. */}
@@ -673,45 +754,6 @@ function Verify({
                       ) : (
                         <span className="dim">loading classes…</span>
                       )}
-                      {/* BLOCK 2b — ADVISORY: the Tavily-retrieved context per
-                          CVE. Scored + filtered; the verdict never depends on it. */}
-                      {contract ? (
-                        <div className="advisory-note">
-                          <span className="dim supported-label">
-                            ADVISORY · via Tavily
-                          </span>
-                          <ul className="advisories">
-                            {contract.targets.map((t) => {
-                              const a = t.runs.proven.advisory
-                              if (!a || !a.top_source) return null
-                              const host = a.top_source.url
-                                .replace(/^https?:\/\//, '')
-                                .split('/')[0]
-                              return (
-                                <li key={t.id} className="advisory-row">
-                                  <span className="class-cve">{a.cve}</span>
-                                  <a
-                                    className="advisory-link"
-                                    href={a.top_source.url}
-                                    target="_blank"
-                                    rel="noreferrer noopener"
-                                  >
-                                    {host} ↗
-                                  </a>
-                                  <span className="dim">
-                                    score {a.top_source.score.toFixed(2)} ·{' '}
-                                    {a.discarded_count} discarded
-                                  </span>
-                                </li>
-                              )
-                            })}
-                          </ul>
-                          <span className="dim advisory-foot">
-                            Context only — the verdict comes from the replay
-                            harness, never the advisory.
-                          </span>
-                        </div>
-                      ) : null}
                       {/* BLOCK 2 — spec grid (fixed label column, --fg values). */}
                       <dl className="spec">
                         <dt className="dim">STACK</dt>
@@ -727,74 +769,47 @@ function Verify({
                           discovery, scanning, or arbitrary CVEs
                         </dd>
                       </dl>
-                      {/* BLOCK 3 — try-it: interactive gallery. LIVE shots POST
-                          /api/verify; REPLAY shots push a stored receipt run. */}
-                      <p className="try-head dim">TRY IT</p>
-                      <p className="try-lead">
-                        Type your own input in the prompt below and press{' '}
-                        <kbd>⏎</kbd> — it runs live against a sealed sandbox.{' '}
-                        <span className="dim">Live class: SQL injection. Try{' '}
-                        <span className="g">(SELECT password_hash FROM users WHERE username='admin')</span>,
-                        or any string.</span>
-                      </p>
-                      {shots.length > 0 ? (
-                        (() => {
-                          const liveShots = shots.filter((s) => s.live)
-                          const replayShots = shots.filter((s) => !s.live)
-                          return (
-                            <>
-                              {liveShots.length > 0 && (
-                                <>
-                                  <p className="shots-group dim">try it live</p>
-                                  <ul className="shots">
-                                    {liveShots.map((s, i) => (
-                                      <li key={i}>
-                                        <button
-                                          type="button"
-                                          className="shot"
-                                          onClick={s.run}
-                                          disabled={verifying}
-                                        >
-                                          <span className={s.live ? 'chip' : 'chip chip-outline'}>
-                                            {s.live ? 'LIVE' : 'REPLAY'}
-                                          </span>
-                                          <span className="shot-payload">{s.payload}</span>
-                                          <span className="shot-tag dim">{s.tag}</span>
-                                        </button>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </>
-                              )}
-                              {replayShots.length > 0 && (
-                                <>
-                                  <p className="shots-group dim">recorded runs</p>
-                                  <ul className="shots">
-                                    {replayShots.map((s, i) => (
-                                      <li key={i}>
-                                        <button
-                                          type="button"
-                                          className="shot"
-                                          onClick={s.run}
-                                          disabled={verifying}
-                                        >
-                                          <span className={s.live ? 'chip' : 'chip chip-outline'}>
-                                            {s.live ? 'LIVE' : 'REPLAY'}
-                                          </span>
-                                          <span className="shot-payload">{s.payload}</span>
-                                          <span className="shot-tag dim">{s.tag}</span>
-                                        </button>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </>
-                              )}
-                            </>
-                          )
-                        })()
-                      ) : (
-                        <span className="dim">loading…</span>
-                      )}
+                      {/* BLOCK 2b — ADVISORY: Tavily-retrieved context per CVE.
+                          Scored + filtered; the verdict never depends on it. Folded
+                          (click-to-expand, like a trace) and placed last — least
+                          load-bearing, tucked out of the 2-second read. */}
+                      {contract ? (
+                        <details className="trace advisory-fold">
+                          <summary>ADVISORY · via Tavily</summary>
+                          <div className="advisory-note">
+                            <ul className="advisories">
+                              {contract.targets.map((t) => {
+                                const a = t.runs.proven.advisory
+                                if (!a || !a.top_source) return null
+                                const host = a.top_source.url
+                                  .replace(/^https?:\/\//, '')
+                                  .split('/')[0]
+                                return (
+                                  <li key={t.id} className="advisory-row">
+                                    <span className="class-cve">{a.cve}</span>
+                                    <a
+                                      className="advisory-link"
+                                      href={a.top_source.url}
+                                      target="_blank"
+                                      rel="noreferrer noopener"
+                                    >
+                                      {host} ↗
+                                    </a>
+                                    <span className="dim">
+                                      score {a.top_source.score.toFixed(2)} ·{' '}
+                                      {a.discarded_count} discarded
+                                    </span>
+                                  </li>
+                                )
+                              })}
+                            </ul>
+                            <span className="dim advisory-foot">
+                              Context only — the verdict comes from the replay
+                              harness, never the advisory.
+                            </span>
+                          </div>
+                        </details>
+                      ) : null}
                     </div>
                     <div className="splash-mark">
                       <AsciiArt piece={WORDMARK_BOLD} />
