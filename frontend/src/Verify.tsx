@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import type { ReactNode } from 'react'
 import type { Run, Contract, Target } from './contract'
 import { normaliseRun } from './normalise'
-import { WIDE_CHARS, useBlockCursor, useRotatingVerb, Verb } from './terminal-hooks'
+import { WIDE_CHARS, useBlockCursor, useRotatingVerb, useRotatingConcept, PIPELINE_STEPS, Verb } from './terminal-hooks'
 import { AsciiArt } from './AsciiArt'
 import { WORDMARK_BOLD } from './melodie-art'
 
@@ -234,6 +234,10 @@ function Verify({
   // verify is in flight (honours reduced-motion internally). Keyed on the real
   // in-flight boolean; the hook takes no step param, so it can't name a phase.
   const runVerb = useRotatingVerb(verifying)
+  // Running-state concept rail: one true mechanism fact, cycled in order every
+  // 4.5s while in flight (offset from the verb). Same honesty basis as the verb
+  // — describes the harness, never a live step; honours reduced-motion inside.
+  const runConcept = useRotatingConcept(verifying)
   // ↑/↓ input history (in-memory, this session only — no storage). histIdx === null
   // means the live draft is showing; otherwise it indexes `history` (derived below).
   // draftRef stashes the live draft while walking history, so stepping ↓ past the
@@ -922,7 +926,7 @@ function Verify({
                           ? ` · ${stopped ? 'stopped' : 'decided'} at step ${decidedIdx + 1}`
                           : ''}
                       </summary>
-                      <ol className="steps">
+                      <ol className={idx === entries.length - 1 ? 'steps reveal' : 'steps'}>
                         {steps.map((s, i) => {
                           const last = i === steps.length - 1
                           const glyph =
@@ -935,6 +939,7 @@ function Verify({
                             <li
                               key={i}
                               className={s.decided ? 'key' : undefined}
+                              style={{ ['--i']: i } as React.CSSProperties}
                             >
                               <span aria-hidden="true">
                                 {last ? '└─' : '├─'}
@@ -1005,9 +1010,13 @@ function Verify({
             )
           })}
 
-          {/* Running — honest subset: CSS quadrant spinner + a rotating music
-              verb (step-agnostic, route B) + live elapsed. No step counter / no
-              fake steps (no live step data). Dim rail (no is-* class). */}
+          {/* Running — the verb (step-agnostic music flavour, route B) stays on
+              the spinner line, unchanged. Below it: a STATIC pipeline (the fixed
+              six stages, all dimmed, no marks — a description of what the harness
+              does, never a claim about which stage is live) and a rotating concept
+              rail (one true mechanism fact). Dim rail (no is-* class). The real
+              steps[] reveal replaces the pipeline the instant the run lands. All
+              enrichment is aria-hidden; the sr-only line stays the SR truth. */}
           {verifying && (
             <div className="result" aria-busy="true">
               <p className="verdict">
@@ -1025,6 +1034,22 @@ function Verify({
                   {isFirstRun ? ' · cold start ~12s' : ''}
                 </span>
                 <span className="sr-only">Verifying — {elapsedLabel} elapsed</span>
+              </p>
+              <ol className="steps pipeline" aria-hidden="true">
+                {PIPELINE_STEPS.map((name, i) => {
+                  const last = i === PIPELINE_STEPS.length - 1
+                  return (
+                    <li key={i}>
+                      <span aria-hidden="true">{last ? '└─' : '├─'}</span>
+                      <span className="s">·</span>
+                      <span>{name}</span>
+                      <span className="dur" />
+                    </li>
+                  )
+                })}
+              </ol>
+              <p className="meta concept" key={runConcept} aria-hidden="true">
+                {runConcept}
               </p>
             </div>
           )}

@@ -99,6 +99,53 @@ export function useRotatingVerb(running: boolean): string {
   return verb
 }
 
+// The fixed six-stage shape of EVERY sealed run. Shown all-dimmed with NO marks
+// on the running rail — a static description of what the harness does, never a
+// claim about which stage is live (no live step data exists; D26). Mirrors
+// prover/verify_service.py _STEP_NAMES verbatim and in order; the real steps[]
+// (with ✓/✗ + the deciding step) replaces this the instant the run lands.
+export const PIPELINE_STEPS = [
+  'pre-flight gates',
+  'boot sandbox + fresh DB',
+  'harden SQLite',
+  'plant canary + deliver input as file',
+  'replay in sealed sandbox',
+  'observe canary in stdout',
+] as const
+
+// Always-true facts about the HARNESS mechanism, shown on the running rail while
+// a verify is in flight. Each describes what the sealed harness does on every
+// run; none claims a target is "safe"/"secure"/"prevented" (hard rule), and none
+// names a live step (D26). Ordered so the single load-bearing line (per-run
+// canary = liveness) is line 0 — a warm ~3s run may show only that one.
+const CONCEPT_LINES = [
+  'the canary is a fresh random token each run — a recording can’t reproduce it',
+  'each run gets a fresh disposable sandbox — no state carries over',
+  'your input is delivered as a data file, never interpolated into a shell',
+  'SQLite extension-loading and ATTACH/DETACH are disabled inside the sandbox',
+  'the verdict turns on one signal — did the planted canary leak into stdout?',
+]
+
+/** The running "concept rail": one true mechanism fact, cycled IN ORDER every
+ * 4.5s while a verify is in flight (offset from the 3s verb so the two never
+ * move in lockstep). Sequential, not random — the lines tell a coherent story
+ * and line 0 always shows first. Reduced-motion or not-running: line 0 only,
+ * no interval. Mirrors useRotatingVerb's shape. */
+export function useRotatingConcept(running: boolean): string {
+  const reduce = usePrefersReducedMotion()
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    if (!running || reduce) return
+    setI(0) // restart the story at line 0 on each fresh run
+    const id = window.setInterval(
+      () => setI((prev) => (prev + 1) % CONCEPT_LINES.length),
+      4500,
+    )
+    return () => window.clearInterval(id)
+  }, [running, reduce])
+  return CONCEPT_LINES[i]
+}
+
 export function Verb({ text }: { text: string }) {
   const reduce = usePrefersReducedMotion()
   const chars = Array.from(text + '…')

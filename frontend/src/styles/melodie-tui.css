@@ -179,6 +179,20 @@ body { display: block; min-width: 0; min-height: 0; }
 .verb .hi { color: var(--fg); }
 .stats { margin-left: 1ch; }                                  /* 2 cells between verb and timer */
 
+/* 6c. Running pipeline + concept rail + trace reveal (enhancement).
+   Pipeline = the fixed six stages shown dimmed while a verify is in flight: a
+   description of the harness, never a live-step claim — no ✓/✗, no .now. The
+   marker pulse is UNIFORM (all rows together) so it signals "pending", never
+   which stage is live. The concept rail fades in on each keyed line change. The
+   reveal staggers the REAL steps[] in once a run lands. Motion off under rule 9. */
+.pipeline { color: var(--dim); opacity: 0.85; }
+.pipeline .s { animation: pipelinePulse 1.8s ease-in-out infinite; }
+@keyframes pipelinePulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.9; } }
+.concept { margin-top: calc(var(--row) / 2); max-width: 72ch; animation: conceptIn 0.5s ease both; }
+@keyframes conceptIn { from { opacity: 0; transform: translateY(0.3ch); } to { opacity: 1; transform: none; } }
+.steps.reveal li { animation: stepIn 0.32s ease both; animation-delay: calc(var(--i) * 0.12s); }
+@keyframes stepIn { from { opacity: 0; transform: translateX(-0.5ch); } to { opacity: 1; transform: none; } }
+
 /* 7. Prompt box — full width, block cursor, native caret hidden */
 .prompt-box { display: flex; align-items: center; gap: 1ch; margin: calc(var(--row) / 2) 0.5ch; padding: calc(var(--row) / 2 - 1px) calc(1.5ch - 1px); border: 1px solid var(--dim); border-radius: 4px; }
 .prompt-box:focus-within { border-color: var(--green); }
@@ -212,6 +226,9 @@ body { display: block; min-width: 0; min-height: 0; }
   .spin-clover .cd { animation: none; opacity: .8; transform: translate(calc(var(--x) * 3px), calc(var(--y) * 3px)); }  /* static resting 4-dot clover */
   .cursor { animation: none; }
   .verb .hi { color: inherit; }                                /* JS also stops the glint + rotation */
+  .pipeline .s { animation: none; opacity: 0.7; }
+  .concept { animation: none; }
+  .steps.reveal li { animation: none; }
 }
 
 /* 10. Phone (≤640px) — same grid and rows, bigger touch targets, fewer extras */
