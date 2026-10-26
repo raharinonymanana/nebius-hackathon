@@ -1,0 +1,111 @@
+name: demo-check
+
+# Black-box probe of the LIVE demo, the way a judge would exercise it: no repo
+# code, no checkout, no Python/Node — just HTTPS + curl + jq against the public
+# Function URL. It proves the deployed thing still works end to end.
+on:
+  schedule:
+    - cron: "17 6 * * *"   # daily 06:17 UTC
+  workflow_dispatch: {}      # manual trigger
+
+# Least privilege: this workflow only reads.
+permissions:
+  contents: read
+
+# A newer run supersedes an in-flight one.
+concurrency:
+  group: demo-check
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    env:
+      # Defined once; curl + jq are preinstalled on ubuntu-24.04.
+      DEMO_URL: https://h5cgebthqaawxpwe4tcutkzl540fshgj.lambda-url.us-east-1.on.aws
+    steps:
+      - name: Probe the live demo
+        run: |
+          set -euo pipefail
+
+          # Payloads. The hero input is a real SQL-injection exploit; the benign
+          # control is a plain lookup. Double-quoted so the literal 'admin'
+          # single quotes survive; nothing here expands.
+          HERO="{\"target\":\"ormar\",\"input\":\"(SELECT password_hash FROM users WHERE username='admin')\"}"
+          BENIGN="{\"target\":\"ormar\",\"input\":\"price\"}"
+
+          post() {
+            curl -fsS --max-time 40 -X POST "$DEMO_URL/api/verify" \
+              -H 'Content-Type: application/json' -d "$1"
+          }
+
+          # --- ASSERTION 1: hero payload PROVEN (retry up to 3×, 15s apart) ----
+          # A cold Lambda / ConTree hiccup can degrade one attempt to NOT PROVEN;
+          # retry absorbs that without ever weakening the PROVEN bar.
+          canary1=""
+          for attempt in 1 2 3; do
+            if resp=$(post "$HERO"); then
+              verdict=$(printf '%s' "$resp" | jq -r '.verdict')
+              canary=$(printf '%s' "$resp" | jq -r '.canary')
+              if [ "$verdict" = "PROVEN" ] && [ -n "$canary" ] && [ "$canary" != "null" ]; then
+                canary1="$canary"
+                echo "PASS: hero payload PROVEN (attempt $attempt)"
+                break
+              fi
+              echo "attempt $attempt: verdict='$verdict' (not PROVEN yet)"
+            else
+              echo "attempt $attempt: request to /api/verify failed"
+            fi
+            [ "$attempt" -lt 3 ] && sleep 15
+          done
+          if [ -z "$canary1" ]; then
+            echo "FAIL: hero payload not PROVEN after 3 attempts"
+            exit 1
+          fi
+
+          # --- ASSERTION 2: benign control NOT PROVEN (no retry) ---------------
+          # Matched negative control: the same harness must clear a benign input.
+          if ! resp=$(post "$BENIGN"); then
+            echo "FAIL: benign control request to /api/verify failed"
+            exit 1
+          fi
+          verdict=$(printf '%s' "$resp" | jq -r '.verdict')
+          if [ "$verdict" != "NOT PROVEN" ]; then
+            echo "FAIL: benign control expected NOT PROVEN, got: '$verdict'"
+            exit 1
+          fi
+          echo "PASS: benign control NOT PROVEN"
+
+          # --- ASSERTION 3: the two canaries differ (freshness) ----------------
+          # A per-run canary that changes proves the run is live, not a replay.
+          if ! resp=$(post "$HERO"); then
+            echo "FAIL: freshness re-run request to /api/verify failed"
+            exit 1
+          fi
+          verdict=$(printf '%s' "$resp" | jq -r '.verdict')
+          canary2=$(printf '%s' "$resp" | jq -r '.canary')
+          if [ "$verdict" != "PROVEN" ]; then
+            echo "FAIL: freshness re-run expected PROVEN, got: '$verdict'"
+            exit 1
+          fi
+          if [ -z "$canary2" ] || [ "$canary2" = "null" ] || [ "$canary2" = "$canary1" ]; then
+            echo "FAIL: canary not fresh"
+            echo "  run 1 canary: $canary1"
+            echo "  run 2 canary: $canary2"
+            exit 1
+          fi
+          echo "PASS: per-run canary changed (live, not a replay)"
+
+          # --- ASSERTION 4: build identity is real -----------------------------
+          if ! raw=$(curl -fsS --max-time 20 "$DEMO_URL/api/version"); then
+            echo "FAIL: /api/version request failed"
+            exit 1
+          fi
+          ver=$(printf '%s' "$raw" | jq -r '.version')
+          if [ -z "$ver" ] || [ "$ver" = "null" ] || [ "$ver" = "unknown" ]; then
+            echo "FAIL: build identity missing/unknown: '$ver'"
+            exit 1
+          fi
+          echo "PASS: build identity present ($ver)"
+
+          echo "all demo checks passed"

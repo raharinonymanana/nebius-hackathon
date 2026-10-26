@@ -1,6 +1,7 @@
 # Mélodie — a runtime proof harness for dependency vulnerabilities
 
 [![CI](https://github.com/raharinonymanana/nebius-hackathon/actions/workflows/ci.yml/badge.svg)](https://github.com/raharinonymanana/nebius-hackathon/actions/workflows/ci.yml)
+[![demo check](https://github.com/raharinonymanana/nebius-hackathon/actions/workflows/demo-check.yml/badge.svg)](https://github.com/raharinonymanana/nebius-hackathon/actions/workflows/demo-check.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Live demo](https://img.shields.io/badge/demo-live-4DDBC5.svg)](https://h5cgebthqaawxpwe4tcutkzl540fshgj.lambda-url.us-east-1.on.aws/)
 
