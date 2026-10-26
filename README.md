@@ -56,20 +56,19 @@ Mélodie attacks the step after discovery: **proof-based prioritization**. In CT
 ## How it works
 
 ```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
 flowchart TD
-  U[Security engineer<br/>submits one input] --> FE[React terminal UI]
-  FE -->|POST /api/verify| LMB[AWS Lambda<br/>Function URL]
-  LMB -->|fresh disposable sandbox| CT[Nebius Token Factory<br/>ConTree]
-  CT --> V{Planted canary<br/>leaked in stdout?}
-  V -->|yes| P[✓ PROVEN]
-  V -->|no| N[✗ NOT PROVEN]
-  P --> R[Receipt:<br/>verdict · canary · 6-step trace]
-  N --> R
+  U["Your input string"] --> FE["Terminal UI"]
+  FE -->|"POST /api/verify"| L["AWS Lambda"]
+  L -->|"fresh sandbox"| CT["ConTree sandbox"]
+  CT --> V{"Canary in stdout?"}
+  V -->|"yes"| P["PROVEN"]
+  V -->|"no"| N["NOT PROVEN"]
 
-  subgraph eval[Offline eval harness — not the live path]
-    AG[Nemotron Super agent] -.tries to weaponise.-> CT
-    TA[Tavily advisory<br/>context only] -.-> AG
+  subgraph EVAL ["Offline eval, not the live path"]
+    TA["Tavily advisory"] -.->|"context"| AG["Nemotron Super agent"]
   end
+  AG -.->|"payload only"| CT
 ```
 
 **The live verdict is model-free.** Each run builds a fresh database and plants a random canary (`FAKE-…`) in the admin's `password_hash` cell *after* setup, so nothing in the build can know it in advance. Your input runs as a field name through the real ormar `max()` aggregate; if the injected subquery reads that cell and the canary appears in stdout, the verdict is PROVEN. No model opinion is anywhere on this path — the model is only used *offline*, to measure how well an agent can weaponise a flaw it's handed.
