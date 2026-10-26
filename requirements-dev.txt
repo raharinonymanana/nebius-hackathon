@@ -1,2 +1,5 @@
-# Dev/CI tooling only (not needed to run Mélodie).
+# Dev/CI tooling only (not needed to run Mélodie locally).
+# boto3 is provided by the AWS Lambda runtime in production; it is pinned here so
+# editors and type-checkers resolve prover/verify_service.py's SSM import.
 ruff==0.17.2
+boto3==1.43.118
