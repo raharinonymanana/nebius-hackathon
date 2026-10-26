@@ -9,7 +9,10 @@ Run from the repo root: python -m tests.app_router_verify
 """
 import json
 import sys
+import tempfile
+from pathlib import Path
 
+import demo.app as app
 from demo.app import handler, _fake_event, MAX_INPUT_LEN
 
 
@@ -68,6 +71,38 @@ over = resp_of("POST", "/api/verify",
 results.append(check(
     "13. oversize -> clean 'input_too_large' error body",
     json.loads(over["body"]).get("error") == "input_too_large"))
+
+# --- /api/version: build identity, allowlisted keys only ---------------------
+# Repoint BUILD_INFO_PATH (module-level for exactly this) and restore it after.
+_orig_build_path = app.BUILD_INFO_PATH
+try:
+    # 14. No file (what CI sees) -> 200 JSON, version "unknown", never a 500.
+    app.BUILD_INFO_PATH = Path(tempfile.gettempdir()) / "melodie-no-such-build-info.json"
+    ver = resp_of("GET", "/api/version")
+    results.append(check(
+        "14. GET /api/version with no file -> 200 JSON, version 'unknown'",
+        ver["statusCode"] == 200
+        and ver["headers"]["Content-Type"] == "application/json"
+        and json.loads(ver["body"])["version"] == "unknown"))
+
+    # 15./16. A real file with an EXTRA 'secret' key: the response must carry the
+    # file's commit but never echo arbitrary keys (defence in depth).
+    with tempfile.TemporaryDirectory() as tmp:
+        p = Path(tmp) / "build_info.json"
+        p.write_text(json.dumps({
+            "name": "melodie", "version": "v9.9.9", "commit": "deadbeefcafe",
+            "built_utc": "2026-10-26T00:00:00+00:00", "secret": "leak-me",
+        }), encoding="utf-8")
+        app.BUILD_INFO_PATH = p
+        body = resp_of("GET", "/api/version")["body"]
+        results.append(check(
+            "15. /api/version echoes the file's commit",
+            json.loads(body)["commit"] == "deadbeefcafe"))
+        results.append(check(
+            "16. /api/version never leaks a non-allowlisted key ('secret')",
+            "secret" not in json.loads(body) and "leak-me" not in body))
+finally:
+    app.BUILD_INFO_PATH = _orig_build_path
 
 passed = sum(results)
 print(f"\n{passed}/{len(results)} checks passed")

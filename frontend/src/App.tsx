@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Contract } from './lib/contract'
 import { normalise } from './lib/normalise'
+import { formatBuild } from './lib/build'
 import Verify from './Verify'
 import MelodieMark from './components/MelodieMark'
 
@@ -43,11 +44,45 @@ function App() {
   // replay path. Rendered as <li> items (Verify wraps them in <footer.status><ul>).
   // Numbers in --fg via .n; money fixed to 2dp (no raw float). Lower-priority
   // items carry .wide so the ≤640px rule can drop them.
+  // Build stamp — git identity baked in at deploy (see lib/build + /api/version).
+  // One <li>, shown in every ledger state. The 7-char sha links to the commit;
+  // .wide drops " · <sha>" on phones, leaving just the version.
+  const build = formatBuild(__BUILD_INFO__)
+  const buildLi = (
+    <li>
+      <span className="n">{build.label}</span>
+      {build.href && build.shortSha && (
+        <span className="wide">
+          {' · '}
+          <a
+            className="src"
+            href={build.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`source commit ${build.shortSha} on GitHub`}
+          >
+            {build.shortSha}
+          </a>
+        </span>
+      )}
+    </li>
+  )
+
   let ledger: ReactNode
   if (state.status === 'loading') {
-    ledger = <li className="dim">eval ledger · loading…</li>
+    ledger = (
+      <>
+        <li className="dim">eval ledger · loading…</li>
+        {buildLi}
+      </>
+    )
   } else if (state.status === 'error') {
-    ledger = <li className="dim">eval ledger · unavailable</li>
+    ledger = (
+      <>
+        <li className="dim">eval ledger · unavailable</li>
+        {buildLi}
+      </>
+    )
   } else {
     const { meta } = state.contract
     ledger = (
@@ -68,6 +103,7 @@ function App() {
         <li className="dim">
           pass@k · Wilson 95% · <span className="g">/eval</span>
         </li>
+        {buildLi}
       </>
     )
   }

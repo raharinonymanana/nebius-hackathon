@@ -15,6 +15,8 @@ build-DemoFunction:
 	# --- handler + static assets (from demo/, flattened to bundle root) ---
 	cp demo/app.py          "$(ARTIFACTS_DIR)/app.py"
 	cp demo/demo_data.json  "$(ARTIFACTS_DIR)/demo_data.json"
+	# No identity, no deploy: a missing build_info.json FAILS the build (no fallback).
+	cp demo/build_info.json "$(ARTIFACTS_DIR)/build_info.json"
 	mkdir -p "$(ARTIFACTS_DIR)/web"
 	cp -r demo/web/.        "$(ARTIFACTS_DIR)/web/"
 	# --- prover package: ONLY the empty __init__ + the verify service ---

@@ -25,5 +25,8 @@ samconfig.toml
 # compiled React UI copied from frontend/dist (sam ships it from the filesystem)
 demo/web/
 
+# build identity, regenerated per deploy by `python -m demo.build_info`
+demo/build_info.json
+
 # private design workspace (handoff drafts), not part of the build
 design/

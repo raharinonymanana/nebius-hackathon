@@ -1,8 +1,9 @@
 """AWS Lambda handler for the Mélodie demo, served behind a Function URL.
 
-The STATIC router (GET /, /api/data, /assets/*) is pure Python standard library
-only -- NO third-party imports, NO model / API / network / priced call -- it
-just reads files that sit beside it at deploy time and returns them.
+The STATIC router (GET /, /api/data, /api/version, /assets/*) is pure Python
+standard library only -- NO third-party imports, NO model / API / network /
+priced call -- it just reads files that sit beside it at deploy time and returns
+them. GET /api/version serves the frozen build identity (demo/build_info.json).
 
 The ONE live branch, POST /api/verify, lazily imports prover.verify_service
 (which uses the ConTree SDK) only when a verify request arrives, so the static
@@ -30,6 +31,14 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 # Compiled React UI (Vite build) is copied here at deploy time: demo/web/.
 WEB = Path(BASE) / "web"
 
+# Frozen build identity, written per deploy by `python -m demo.build_info` and
+# copied beside the handler by the Makefile. Module-level so tests can repoint it.
+BUILD_INFO_PATH = Path(BASE) / "build_info.json"
+
+# Keys /api/version is allowed to echo. We never return arbitrary file content:
+# the response is rebuilt from these fields only (defense in depth).
+VERSION_KEYS = ("name", "version", "commit", "built_utc")
+
 # Maps a file suffix to the Content-Type we serve it with.
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
@@ -53,8 +62,9 @@ MAX_INPUT_LEN = 2000
 
 # PER-CONTAINER speed bumps ONLY. Both reset on cold start and are process-local
 # (one Lambda execution environment). They are NOT the global DoS guard -- the
-# real cap is Lambda RESERVED CONCURRENCY, set on the function in 3b-iii. Do not
-# mistake these for a global limit: 100 warm containers = 100x these numbers.
+# real cap is the account concurrency pool (~10), which template.yaml reserves
+# none of (the pool is too small to carve a reservation from). Do not mistake
+# these per-container numbers for a global limit.
 MAX_INFLIGHT = 3                         # concurrent verifies allowed in THIS container
 _RL_RATE = 1.0                           # sustained ~1 req/sec (token refill per second)
 _RL_BURST = 5.0                          # small burst bucket
@@ -197,6 +207,24 @@ def _read(filename):
         return f.read()
 
 
+def _version_payload():
+    """The build identity for GET /api/version. Reads BUILD_INFO_PATH and returns
+    ONLY the allowlisted VERSION_KEYS -- never arbitrary file content. A missing,
+    unreadable, or malformed file degrades to a well-formed 'unknown' identity;
+    this never raises and the route never 500s."""
+    out = {"name": "melodie", "version": "unknown", "commit": "unknown", "built_utc": None}
+    try:
+        info = json.loads(BUILD_INFO_PATH.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001 -- any read/parse failure degrades to unknown
+        return out
+    if not isinstance(info, dict):
+        return out
+    for key in VERSION_KEYS:
+        if key in info:
+            out[key] = info[key]
+    return out
+
+
 def _serve_web(path):
     """Serve a static file from demo/web for a GET path, or None if absent.
 
@@ -240,7 +268,11 @@ def handler(event, context):
                 )
             return _response(200, "application/json", body)
 
-        # 3. "/api/verify" -> live, model-free verification over ConTree (POST only)
+        # 3. GET "/api/version" -> the frozen build identity (allowlisted keys only)
+        if path == "/api/version" and method == "GET":
+            return _response(200, "application/json", json.dumps(_version_payload()))
+
+        # 4. "/api/verify" -> live, model-free verification over ConTree (POST only)
         if path == "/api/verify":
             if method != "POST":
                 return _response(
@@ -249,13 +281,13 @@ def handler(event, context):
                 )
             return _handle_verify(event)
 
-        # 4. any other GET -> a static file under demo/web (assets, favicon, ...)
+        # 5. any other GET -> a static file under demo/web (assets, favicon, ...)
         if method == "GET":
             served = _serve_web(path)
             if served is not None:
                 return served
 
-        # 5. anything else
+        # 6. anything else
         return _response(
             404, "application/json",
             json.dumps({"error": "not_found", "path": path}),
@@ -282,6 +314,8 @@ if __name__ == "__main__":
     cases = [
         ("GET /", "GET", "/", None, 200),
         ("GET /api/data", "GET", "/api/data", None, 200),
+        ("GET /api/version", "GET", "/api/version", None, 200),
+        ("POST /api/version (wrong method)", "POST", "/api/version", None, 404),
         ("GET /nope", "GET", "/nope", None, 404),
         ("GET /../app.py (traversal)", "GET", "/../app.py", None, 404),
         ("GET /api/verify (wrong method)", "GET", "/api/verify", None, 405),
@@ -304,7 +338,14 @@ if __name__ == "__main__":
     assert root_resp["headers"]["Content-Type"].startswith("text/html")
     assert "<!doctype html" in root_resp["body"].lower()
     assert json.loads(handler(_fake_event("GET", "/api/data"), None)["body"])["schema_version"] == 1
-    print("router self-test OK (static + /api/verify guards, no network)")
+
+    # /api/version carries exactly the allowlisted keys (value may be "unknown"
+    # when build_info.json has not been generated locally)
+    ver_resp = handler(_fake_event("GET", "/api/version"), None)
+    assert ver_resp["headers"]["Content-Type"] == "application/json"
+    ver = json.loads(ver_resp["body"])
+    assert set(ver) == set(VERSION_KEYS), ver
+    print("router self-test OK (static + /api/version + /api/verify guards, no network)")
 
     # --- live verify path: ConTree, only when explicitly enabled ------------
     if os.environ.get("PROVE_IT_LIVE") == "1":

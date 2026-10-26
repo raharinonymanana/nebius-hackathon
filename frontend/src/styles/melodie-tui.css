@@ -50,6 +50,9 @@ body { display: block; min-width: 0; min-height: 0; }
 .status { grid-area: status; display: flex; align-items: center; gap: 2ch; height: var(--row); padding: 0 1ch; background: var(--surface); color: var(--dim); white-space: nowrap; overflow: hidden; }
 .status ul { display: flex; gap: 1ch; min-width: 0; margin: 0; padding: 0; list-style: none; overflow: hidden; }
 .status li + li::before { content: "·"; margin-right: 1ch; }
+/* build-stamp commit link — same underline treatment as .example (dim rule, green on hover) */
+.status .src { color: inherit; text-decoration: underline; text-decoration-color: var(--dim); text-underline-offset: 3px; }
+.status .src:hover { text-decoration-color: var(--green); }
 .status .n { color: var(--fg); }
 
 /* 5. Boxes — the border runs through the middle of a cell, where ╭─╮ would draw.
