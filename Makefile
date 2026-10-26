@@ -7,7 +7,7 @@
 # (it resolves targets/ormar/spec.py as dirname(dirname(verify_service.py))/
 # targets/ormar/spec.py), then pip-installs ONLY contree-sdk into the same dir.
 #
-# Deliberately NOT copied: .env, receipts/, frontend/, LOG/DECISIONS/FEEDBACK/
+# Deliberately NOT copied: .env, receipts/, frontend/, docs/, TESTING.md, SECURITY.md,
 # README, usage_log.jsonl, samconfig.toml, root requirements.txt, and every
 # prover/ or targets/ file other than the four named below.
 

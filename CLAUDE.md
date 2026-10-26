@@ -1,48 +1,47 @@
-# Nebius x NVIDIA Hackathon — prover (Claude Code operating rules)
+# CLAUDE.md — operating rules for Claude Code in this repo
 
-This repo is a finding-validation security agent: it PROVES a vulnerability by
-replaying a payload against a target in a Token Factory sandbox (patch step later).
+Mélodie was built with Claude Code as the "hands": a separate planning chat wrote
+per-step briefs, Claude Code edited and tested code from those briefs, and the author
+reviewed every change, committed, and deployed. Claude Code reads this file at the start
+of every session. It stays in the repo on purpose, as a record of how AI-assisted changes
+were constrained.
 
-## Source of truth
-- The canonical plan, decisions, status and schedule live in Hasina's Claude CHAT
-  brief, NOT in this repo. This file is only the rules of engagement.
-- If a step needs a decision not covered here, STOP and ask Hasina. Do not invent
-  scope, pick targets, or change architecture on your own.
+## What this repo is
+A runtime proof harness for known dependency vulnerabilities. A payload is replayed
+against the real vulnerable package inside a disposable Nebius Token Factory sandbox
+(ConTree), and the verdict comes only from whether a planted canary leaks. See README.md.
 
-## Your role (the "hands")
-- You write and run code from an explicit per-step brief. Hasina + the chat = the "brain".
-- Do exactly the briefed step. Report the diff/output. Don't expand scope or pre-build
-  future steps.
+## Hard rules
+- Verdicts are PROVEN / NOT PROVEN (and FIX VERIFIED for a verified patch) only. Never output
+  or imply "safe", "secure" or "prevents". A NOT PROVEN is never upgraded to safe.
+- Evidence = the sealed replay harness ONLY. Nothing a model says about its own actions is
+  evidence. Never weaken the harness or let a model control harness code.
+- Do not spend API credits (Nemotron calls, live agent runs) unless the brief says to.
+- Secrets live in .env (gitignored; template in .env.example). Never write a key into a
+  tracked file, code, or output.
+- Do not install packages or edit requirements*.txt / package.json unless the brief says to.
+- Do not edit the records in docs/ (LOG.md, DECISIONS.md, FEEDBACK.md); the author keeps them.
+- If a brief conflicts with this file, follow this file and say so.
 
-## Hard rules — never break
-- Verdicts are PROVEN / NOT PROVEN only. NEVER output or imply "safe", "secure", or
-  "prevents". A NOT PROVEN is never upgraded to safe.
-- Evidence = the replay harness ONLY. Nothing a model says about its own actions, and no
-  exploration stdout, is evidence. Never weaken the harness or let the model control
-  harness code.
-- Do NOT spend API tokens or run the live sandbox agent (python -m prover.agent_v4,
-  Nemotron calls, billable ConTree runs) unless the brief explicitly says to. Local
-  confirms only, by default.
-- Don't install packages into the venv or edit requirements.txt unless the brief says to.
-- Secrets live in .env (gitignored). Never write a key/token into any tracked file,
-  code, or output.
-- Git is Hasina's. Do NOT commit, push, rewrite history, or change .gitignore.
-- Do NOT edit the records: LOG.md, DECISIONS.md, FEEDBACK.md. The chat maintains those.
-- Don't touch targets/seeded/, receipts/, or the engine contract unless the brief says to.
-- If an instruction here conflicts with a pasted brief, follow THIS file and flag it.
+## Git
+- Commit only from an explicit per-file brief: `git add <file>` by name, never `git add .`.
+- Commit messages are one line with NO trailers (no Co-Authored-By, no session links).
+- Never push and never rewrite history. Pushing and deploying belong to the author.
 
-## Build / run commands
-- Activate venv first: source .venv/bin/activate  (pip fails otherwise: externally-managed)
-- Verdict-integrity suite (no tokens): python -m tests.agent_v4_verify   (expect 5/5)
-- Live agent run (SPENDS tokens — only when briefed): python -m prover.agent_v4
-- Cost summary: python -m prover.costlog
+## Layout
+- `prover/`   the engine (agent_v4.py), the model-free live verify (verify_service.py),
+              remediation, eval report, MCP server
+- `targets/`  one folder per vulnerable target ("cartridge"): spec.py (+ adapter.py).
+              The engine never hardcodes a target.
+- `demo/`     the Lambda handler (app.py) and the frozen data-contract builder
+- `frontend/` the terminal UI (Vite + React + TypeScript)
+- `tests/`    offline suites (run in CI) and live suites (need ConTree); see TESTING.md
+- `receipts/` the committed eval dataset (one JSON receipt per run)
+- `docs/`     decision log, build log, tool feedback
 
-## Project shape (engine never hardcodes a target)
-- prover/ = the product (engine agent_v4.py). tests/ = verdict-integrity suite.
-- targets/<name>/spec.py = swappable cartridge the engine loads by file path.
-- Clock is UTC in WSL; log timestamps show +0000.
-
-## Git (updated Day 13)
-- Claude Code MAY commit CODE, but only from an explicit per-file brief (explicit `git add <file>`, never `git add .`; `git status --ignored` safety-check first). No need to re-ask each time once a commit brief is given.
-- Claude Code NEVER pushes. Pushing is Hasina's alone. The brain (this chat) supplies the exact push command after verifying the state is green; Hasina runs it himself.
-- Records files (LOG.md, DECISIONS.md, FEEDBACK.md, the brief) stay brain-side — Hasina edits them, not CC.
+## Commands (activate the venv first: source .venv/bin/activate)
+- Offline tests:  python -m tests.<suite>   (full list in TESTING.md)
+- Eval table:     python -m prover.eval_report
+- Data contract:  python -m demo.build_data
+- Frontend:       cd frontend && npm run dev | test | lint | build
+- Live agent run (SPENDS credits, only when briefed): python -m prover.agent_v4
