@@ -102,8 +102,9 @@ function Verify({
   }, [entries])
 
   useEffect(() => {
-    if (!verifying) inputRef.current?.focus()
-  }, [verifying])
+    const input = inputRef.current
+    if (!verifying) input?.focus()
+  }, [verifying, inputRef])
 
   // After a history recall, drop the caret at the end of the recalled text and
   // resync the block cursor. Keyed on histIdx so it fires only on a recall step;
@@ -115,7 +116,7 @@ function Verify({
     const end = el.value.length
     el.setSelectionRange(end, end)
     place()
-  }, [histIdx, place])
+  }, [histIdx, place, inputRef])
 
   // Live elapsed timer for the in-flight spinner. Ephemeral UI state ONLY — it
   // never touches entries / idRef / the append-only log. Ticks ~10x/s while a
@@ -124,6 +125,7 @@ function Verify({
   useEffect(() => {
     if (!verifying) return
     const start = Date.now()
+    // oxlint-disable-next-line react/set-state-in-effect -- intentional reset of the ephemeral elapsed timer when a run starts
     setElapsedMs(0)
     const id = setInterval(() => setElapsedMs(Date.now() - start), 100)
     return () => clearInterval(id)

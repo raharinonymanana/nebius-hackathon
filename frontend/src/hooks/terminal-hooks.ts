@@ -57,6 +57,7 @@ export function usePrefersReducedMotion(): boolean {
 export function useGlint(length: number, enabled: boolean): number {
   const [at, setAt] = useState(-3)
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- intentional reset of the glint index when length/enabled change
     setAt(-3)
     if (!enabled) return
     const id = window.setInterval(() => setAt((n) => (n > length + 12 ? -3 : n + 1)), 80)
@@ -136,6 +137,7 @@ export function useRotatingConcept(running: boolean): string {
   const [i, setI] = useState(0)
   useEffect(() => {
     if (!running || reduce) return
+    // oxlint-disable-next-line react/set-state-in-effect -- intentional restart of the concept story on each fresh run
     setI(0) // restart the story at line 0 on each fresh run
     const id = window.setInterval(
       () => setI((prev) => (prev + 1) % CONCEPT_LINES.length),
@@ -144,19 +146,4 @@ export function useRotatingConcept(running: boolean): string {
     return () => window.clearInterval(id)
   }, [running, reduce])
   return CONCEPT_LINES[i]
-}
-
-export function Verb({ text }: { text: string }) {
-  const reduce = usePrefersReducedMotion()
-  const chars = Array.from(text + '…')
-  const at = useGlint(chars.length, !reduce)
-  return (
-    <span className="verb">
-      {chars.map((c, i) => (
-        <span key={i} className={i >= at && i < at + 3 ? 'hi' : undefined}>
-          {c}
-        </span>
-      ))}
-    </span>
-  )
 }

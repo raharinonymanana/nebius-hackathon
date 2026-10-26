@@ -1,4 +1,5 @@
-import { PIPELINE_STEPS, Verb } from '../hooks/terminal-hooks'
+import { PIPELINE_STEPS } from '../hooks/terminal-hooks'
+import { Verb } from './Verb'
 
 export function RunningBlock({
   verb,
