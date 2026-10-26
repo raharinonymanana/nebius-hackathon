@@ -1,0 +1,2 @@
+# Dev/CI tooling only (not needed to run Mélodie).
+ruff==0.17.2

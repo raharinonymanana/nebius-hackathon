@@ -1,0 +1,6 @@
+# Lint for real bugs only (pyflakes + syntax errors), not style.
+target-version = "py312"
+extend-exclude = ["archive", "frontend", ".aws-sam", "demo/web"]
+
+[lint]
+select = ["F", "E9"]

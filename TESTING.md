@@ -29,15 +29,24 @@ No ConTree, no network, no model calls. `.github/workflows/ci.yml` runs all of t
 | `tests/advisory_tool_verify.py` | search_advisory dispatch, compacting, per-run call cap |
 | `tests/app_router_verify.py` | Lambda router: traversal→404, bad method→405, bad JSON / oversize / missing input→400, no source leak |
 | `tests/sqlite_harden_verify.py` | in-sandbox SQLite hardening: ATTACH/DETACH denied, ordinary SQL unaffected |
+| `tests/fuzz_input_verify.py` | /api/verify input-validation fuzz: hundreds of hostile bodies are rejected cleanly, handler never 500s |
 | `frontend/src/normalise.test.ts` | the runtime honesty boundary: contract-shape guard + verdict-discriminant guard (rejects unknown / spoofed verdicts) |
 
+The workflow has two jobs. `python` lints with ruff, then runs the offline
+suites; `frontend` lints with oxlint, runs Vitest, then type-checks and builds.
+
 ```bash
+# python job: lint, then the offline suites
+ruff check .
 python -m tests.advisory_verify
 python -m tests.locate_verify
 python -m tests.advisory_tool_verify
 python -m tests.app_router_verify
 python -m tests.sqlite_harden_verify
-cd frontend && npm run test
+python -m tests.fuzz_input_verify
+
+# frontend job: lint, unit tests, type-check + build
+cd frontend && npm run lint && npm run test && npm run build
 ```
 
 ## Live suites — documented, not in CI (need ConTree + a real key)

@@ -6,19 +6,34 @@ on:
   pull_request:
     branches: [main]
 
+# The workflow token only needs to read the repo.
+permissions:
+  contents: read
+
+# A newer push to the same branch cancels the run it supersedes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  python:
     runs-on: ubuntu-latest
     env:
-      NEBIUS_API_KEY: dummy
+      NEBIUS_API_KEY: dummy   # offline suites never call the API; some modules read the var at import
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
       - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Run offline test suite
+        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Lint (ruff)
+        run: ruff check .
+      - name: Offline test suites
         run: |
           python -m tests.advisory_verify
           python -m tests.locate_verify
@@ -41,5 +56,9 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
         run: npm ci
-      - name: Run frontend unit tests
+      - name: Lint (oxlint)
+        run: npm run lint
+      - name: Unit tests (Vitest)
         run: npm run test
+      - name: Type-check and build
+        run: npm run build
