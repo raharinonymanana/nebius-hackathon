@@ -56,7 +56,7 @@ Mélodie attacks the step after discovery: **proof-based prioritization**. In CT
 ## How it works
 
 ```mermaid
-flowchart LR
+flowchart TD
   U[Security engineer<br/>submits one input] --> FE[React terminal UI]
   FE -->|POST /api/verify| LMB[AWS Lambda<br/>Function URL]
   LMB -->|fresh disposable sandbox| CT[Nebius Token Factory<br/>ConTree]
