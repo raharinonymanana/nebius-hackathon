@@ -194,3 +194,15 @@
 - TESTING.md committed: documents the defence, never the attack; no bypass recipe in-tree. [not final]
 - Mobile (E2E item 8) = verified via CSS source (page html,body overflow:hidden; wordmark display:none on mobile; 640px breakpoint stacks + 44px targets + 16px field). A live pixel-render eyeball is optional, NOT a gate. [not final]
 - ATTRIBUTION: the 2 Day-31 commits (2a05220, 80b6d81) carry Co-Authored-By + Claude-Session trailers, against the FINAL trailer-free rule (added per a session reminder; the standing user rule takes precedence). FIX = add them to the P4 history-strip target (6262fbc...f693f52 + 2a05220 + 80b6d81), NOT a force-push. [the trailer-free direction stays FINAL; the fix routes through the P4 strip]
+
+## Day 31 s2 — 25 Oct 2026 (none final unless marked)
+- Running state = honest enrichment, not fabrication: static pipeline + true-fact rail + post-hoc reveal; music verb kept as flavour. Latest trace stays open, older ones fold. [not final]
+- About = action-first order, only ADVISORY folds (SUPPORTED CLASSES stays open: it carries the honest 0/4). [not final]
+
+## Day 32 — 26 Oct 2026 (none final unless marked)
+- Release-readiness pass before the README: behaviour-preserving only; legacy `prove-it-*` infra names are documented, not renamed (renaming live infra isn't worth the risk). [not final]
+- Verify.tsx = full component split (container + presentational), gated by a golden-master DOM diff + live witness. [not final]
+- Project records live in docs/. CLAUDE.md stays in the repo, rewritten as a public record of how AI-assisted changes were constrained. [not final]
+- REVERSES the Day-9 FINAL "receipts/ gitignored": top-level receipts/*.json are committed as the eval dataset (receipts/suites/ stays ignored), so the eval reproduces from a clone. [not final]
+- History rewrite DONE (the planned P4 strip): trailers removed, account id scrubbed, doc hashes remapped, force-push with lease. Backup bundle kept until after submission. The trailer-free rule (Day-25 FINAL) stands.
+- CI = lint + type-check + test + build on both stacks; pinned runner and current action majors; lint warnings fixed or suppressed with a written reason. [not final]
