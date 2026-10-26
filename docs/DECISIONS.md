@@ -206,3 +206,10 @@
 - REVERSES the Day-9 FINAL "receipts/ gitignored": top-level receipts/*.json are committed as the eval dataset (receipts/suites/ stays ignored), so the eval reproduces from a clone. [not final]
 - History rewrite DONE (the planned P4 strip): trailers removed, account id scrubbed, doc hashes remapped, force-push with lease. Backup bundle kept until after submission. The trailer-free rule (Day-25 FINAL) stands.
 - CI = lint + type-check + test + build on both stacks; pinned runner and current action majors; lint warnings fixed or suppressed with a written reason. [not final]
+
+## Day 32 s2 — 26 Oct 2026 (none final unless marked)
+- README lead = "Try it in 30 seconds" (A1); diagram = Mermaid in-README (A1), drawn top-down with the offline eval outside the live path. [not final]
+- README prerequisites say "Node 20+" (a true floor); "built 5–30 October 2026" = the build phase of this codebase (fresh-project note). [not final]
+- Repo PUBLIC with the README (Day-32 A1 executed). Witness the README render privately in the signed-in browser BEFORE flipping visibility, so a broken render is never public. [not final]
+- main protected by a ruleset (deletion + non-fast-forward, no bypass): enforces "history rewritten once, never again". No required status checks (they would reject direct pushes to main). [not final]
+- Private vulnerability reporting enabled to back SECURITY.md. [not final]

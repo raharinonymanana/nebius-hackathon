@@ -108,5 +108,6 @@ harness-only control, distinct from the other targets' model-driven fixed runs.
 - No sandbox-escape or canary-defeat recipe. Every security test asserts a guard
   holds; none demonstrates a working bypass (there is none in-tree).
 - No secrets. `.env` is gitignored from the first commit; CI uses a dummy key.
-- Per-run receipts are gitignored run outputs. The committed, frozen artifact is
-  `demo/demo_data.json`, regenerated from receipts by `demo/build_data.py`.
+- No untracked eval data. The 31 receipts in `receipts/` are committed as the eval
+  dataset, so `python -m prover.eval_report` reproduces from a fresh clone; the demo's
+  frozen contract `demo/demo_data.json` is regenerated from them by `demo/build_data.py`.
