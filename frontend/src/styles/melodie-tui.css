@@ -198,6 +198,27 @@ body { display: block; min-width: 0; min-height: 0; }
 .steps.reveal li { animation: stepIn 0.32s ease both; animation-delay: calc(var(--i) * 0.12s); }
 @keyframes stepIn { from { opacity: 0; transform: translateX(-0.5ch); } to { opacity: 1; transform: none; } }
 
+/* 6d. About entrance + wordmark sweep (load-only enhancement). Both are plain CSS
+   animations on elements that mount once, so they play on first load / reload and
+   never on a run or re-render. Resting state IS the visible state: the keyframes
+   only define the hidden `from`, fill is `backwards` (hidden during the stagger
+   delay, natural style after), and the sweep band rests at opacity 0.
+   Entrance: whole blocks in reading order (--i set in AboutBox), 90ms apart — the
+   last one settles at ~0.86s. Sweep: a 3ch band, colour-dodged with --line (≈ ×1.4
+   brightness — lifts the --mk tones, leaves the near-black canvas ~unchanged, no new
+   hue), crosses the wordmark once by transform, starting after the mark's own
+   entrance ends (an animating ancestor would isolate the blend). Motion off under rule 9. */
+.about-in { animation: aboutIn 0.32s ease-out backwards; animation-delay: calc(var(--i, 0) * 0.09s); }
+@keyframes aboutIn { from { opacity: 0; transform: translateY(5px); } }
+.splash-mark > pre, .about-hero > .sweep { position: relative; overflow-x: clip; }   /* clip the band to the text; no layout change */
+.splash-mark > pre::after, .about-hero > .sweep::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; background: linear-gradient(90deg, transparent calc(100% - 3ch), var(--line) 0); mix-blend-mode: color-dodge; animation: markSweep 0.7s ease-in-out var(--sweep-at, 0.38s); }
+/* Same band on the two loading placeholders: loading… then loading classes…, each
+   started after its own entrance ends (0.59s / 0.77s). fit-content so the band
+   crosses the words, not the whole flex row. */
+.about-hero > .sweep { width: fit-content; --sweep-at: 0.8s; }
+.about-hero > .sweep-2 { --sweep-at: 0.9s; }
+@keyframes markSweep { from { opacity: 1; transform: translateX(-100%); } to { opacity: 1; transform: translateX(3ch); } }
+
 /* 7. Prompt box — full width, block cursor, native caret hidden */
 .prompt-box { display: flex; align-items: center; gap: 1ch; margin: calc(var(--row) / 2) 0.5ch; padding: calc(var(--row) / 2 - 1px) calc(1.5ch - 1px); border: 1px solid var(--dim); border-radius: 4px; }
 .prompt-box:focus-within { border-color: var(--green); }
@@ -234,6 +255,8 @@ body { display: block; min-width: 0; min-height: 0; }
   .pipeline .s { animation: none; opacity: 0.7; }
   .concept { animation: none; }
   .steps.reveal li { animation: none; }
+  .about-in { animation: none; }
+  .splash-mark > pre::after, .about-hero > .sweep::after { content: none; }  /* no sweep band at all */
 }
 
 /* 10. Phone (≤640px) — same grid and rows, bigger touch targets, fewer extras */

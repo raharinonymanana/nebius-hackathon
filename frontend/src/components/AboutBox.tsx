@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import type { Contract, Run, Target } from '../lib/contract'
 import { TARGET } from '../lib/config'
 import { evalRate } from '../lib/commands'
@@ -7,6 +8,10 @@ import { WORDMARK_BOLD } from '../lib/melodie-art'
 // One TRY IT gallery shot: a payload the user can fire. `live` shots POST
 // /api/verify; replay shots push a stored run with a [replay] note.
 type Shot = { payload: string; tag: string; live: boolean; run: () => void }
+
+// Load-only entrance: each major block carries .about-in + its reading-order
+// index (--i), which staggers the CSS fade/rise. Plays once on mount.
+const at = (i: number) => ({ ['--i']: i }) as CSSProperties
 
 export function AboutBox({
   contract,
@@ -65,8 +70,8 @@ export function AboutBox({
       <div className="splash-row">
         <div className="about-hero">
           {/* BLOCK 1 — name + lede (prose: the only wrapping text). */}
-          <p className="hero-name">Mélodie</p>
-          <p className="hero-lede">
+          <p className="hero-name about-in" style={at(0)}>Mélodie</p>
+          <p className="hero-lede about-in" style={at(1)}>
             Replays a{' '}
             <span className="g">proof-of-concept</span> in a sealed{' '}
             <span className="g">Nebius Token Factory</span> sandbox,
@@ -77,8 +82,8 @@ export function AboutBox({
           </p>
           {/* BLOCK 3 — try-it: interactive gallery. LIVE shots POST
               /api/verify; REPLAY shots push a stored receipt run. */}
-          <p className="try-head dim">TRY IT</p>
-          <p className="try-lead">
+          <p className="try-head dim about-in" style={at(2)}>TRY IT</p>
+          <p className="try-lead about-in" style={at(2)}>
             Type your own input in the prompt below and press{' '}
             <kbd>⏎</kbd> — it runs live against a sealed sandbox.{' '}
             <span className="dim">Live class: SQL injection. Try{' '}
@@ -93,8 +98,8 @@ export function AboutBox({
                 <>
                   {liveShots.length > 0 && (
                     <>
-                      <p className="shots-group dim">try it live</p>
-                      <ul className="shots">
+                      <p className="shots-group dim about-in" style={at(3)}>try it live</p>
+                      <ul className="shots about-in" style={at(3)}>
                         {liveShots.map((s, i) => (
                           <li key={i}>
                             <button
@@ -128,8 +133,8 @@ export function AboutBox({
                   )}
                   {replayShots.length > 0 && (
                     <>
-                      <p className="shots-group dim">recorded runs</p>
-                      <ul className="shots">
+                      <p className="shots-group dim about-in" style={at(4)}>recorded runs</p>
+                      <ul className="shots about-in" style={at(4)}>
                         {replayShots.map((s, i) => (
                           <li key={i}>
                             <button
@@ -153,13 +158,13 @@ export function AboutBox({
               )
             })()
           ) : (
-            <span className="dim">loading…</span>
+            <span className="fg about-in sweep" style={at(3)}>loading…</span>
           )}
           {/* BLOCK 2a — SUPPORTED CLASSES: all three target cards
               from the loaded contract. LIVE is the target the live
               /api/verify POST hits (TARGET); the rest are REPLAY. */}
           {contract ? (
-            <div className="supported">
+            <div className="supported about-in" style={at(5)}>
               <span className="dim supported-label">
                 SUPPORTED CLASSES
               </span>
@@ -190,10 +195,10 @@ export function AboutBox({
               </ul>
             </div>
           ) : (
-            <span className="dim">loading classes…</span>
+            <span className="fg about-in sweep sweep-2" style={at(5)}>loading classes…</span>
           )}
           {/* BLOCK 2 — spec grid (fixed label column, --fg values). */}
-          <dl className="spec">
+          <dl className="spec about-in" style={at(6)}>
             <dt className="dim">STACK</dt>
             <dd>
               <span className="mk4">
@@ -212,7 +217,7 @@ export function AboutBox({
               (click-to-expand, like a trace) and placed last — least
               load-bearing, tucked out of the 2-second read. */}
           {contract ? (
-            <details className="trace advisory-fold">
+            <details className="trace advisory-fold about-in" style={at(6)}>
               <summary>ADVISORY · via Tavily</summary>
               <div className="advisory-note">
                 <ul className="advisories">
@@ -249,7 +254,7 @@ export function AboutBox({
             </details>
           ) : null}
         </div>
-        <div className="splash-mark">
+        <div className="splash-mark about-in" style={at(0)}>
           <AsciiArt piece={WORDMARK_BOLD} />
         </div>
       </div>
