@@ -213,3 +213,15 @@
 - Repo PUBLIC with the README (Day-32 A1 executed). Witness the README render privately in the signed-in browser BEFORE flipping visibility, so a broken render is never public. [not final]
 - main protected by a ruleset (deletion + non-fast-forward, no bypass): enforces "history rewritten once, never again". No required status checks (they would reject direct pushes to main). [not final]
 - Private vulnerability reporting enabled to back SECURITY.md. [not final]
+
+## Day 32 s3 — 26–27 Oct 2026 (none final unless marked)
+
+- Release/ops list = the 6 items that survived a primary-source check: build identity, immutable `v1.0.0` release, daily black-box demo check, budget alert, freeze policy + "if red" procedure, Devpost images. Dropped: commit signing, SBOM, CloudWatch error alarms; a CHANGELOG folded into release notes. Skipped for the freeze window: Scorecard badge, Dependabot/CodeQL, PR-only flow. [not final]
+- The daily check asserts both directions + freshness + identity (example PROVEN, benign NOT PROVEN, a different canary, a real version), not just "the URL answers". [not final]
+- Versioning = SemVer: `v1.0.0` is the judged build, fixes are `v1.0.x`. Tag after the monitor commit so one tag covers both; deploy once, from the tag; publish as an immutable release. [not final]
+- The deploy loop regenerates build identity first; redeploy only from a tag (docs-only commits are never deployed). [not final]
+- Budget alert = $5/month with credits excluded. [not final]
+
+## Day 33 — 27 Oct 2026 (none final unless marked)
+
+- Freeze policy = A1: docs-only commits allowed until our submission (Thu 29 Oct); from then until judging ends (Tue 15 Dec, 12:00 PT) nothing lands on `main` and nothing is redeployed, except a redeploy of the same tag if the live build drifts, or a `v1.0.x` hotfix if the live demo breaks because of our code. Each is logged and disclosed. Rejected A2 (docs-only commits after the deadline: the README is judged content) and A3 (freeze only the demo: the repo would drift from the release judges see). Written up in `docs/RELEASE.md`. [not final]

@@ -103,6 +103,19 @@ harness-only control, distinct from the other targets' model-driven fixed runs.
 | NOT PROVEN framed as the harness working | pass |
 | ormar discrimination 1/1 live in `/eval` | pass |
 
+## Live monitor — daily, against the deployed URL
+
+`.github/workflows/demo-check.yml` checks the public demo once a day (and on demand) from outside, the way a judge uses it: read-only token, no checkout, no secrets, curl and jq only. It makes no model calls; each run is three to five sandbox replays in ConTree.
+
+| Check | Expect |
+|---|---|
+| the demo's example exploit (up to 3 attempts, 15 s apart, to ride out a cold start) | PROVEN, with a canary |
+| benign `price` (matched control, no retry) | NOT PROVEN |
+| the example exploit again | PROVEN, with a different canary (a fresh run, not a reused reply) |
+| `GET /api/version` | a real version, not `unknown` |
+
+Its badge sits next to CI in the README. What to do when it goes red is in `docs/RELEASE.md`.
+
 ## What this repo deliberately does not contain
 
 - No sandbox-escape or canary-defeat recipe. Every security test asserts a guard

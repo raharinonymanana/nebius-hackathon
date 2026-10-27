@@ -394,3 +394,25 @@ app.py now serves the compiled React UI at GET / (+ /assets/*, path-traversal gu
 - LESSON: draft from the plan, verify against the code. Two README sentences came from the handoff and memory, and both were wrong.
 - LESSON: a diagram can parse and still lie. Only the rendered view showed the live path drawn inside the offline box.
 - LESSON: check the installed CLI version before giving a flag. gh 2.45 lacks `--accept-visibility-change-consequences`; the REST API (`gh api -X PATCH … -f visibility=public`) has no version dependency. Two follow-on steps failed only because the first one had.
+
+## Day 32 s3 — 26–27 Oct 2026 (release engineering)
+
+- Audited the build process against primary sources only (NIST SSDF SP 800-218, the Google SRE book, Twelve-Factor, semver.org, GitHub and AWS docs, the official rules). An item stayed only if it tied to a hackathon rule, a judging criterion, or a real failure mode of this system. Kept 6: build identity, an immutable versioned release, a daily black-box check of the live demo, a budget alert, a freeze policy with an "if red" procedure, Devpost images. Dropped 3: commit signing and an SBOM (both protect people who download and run our artifacts; judges read source and use a hosted URL, and GitHub already builds the dependency graph for public repos), and CloudWatch error alarms (`/api/verify` never returns 500, so they would stay silent through a sandbox outage). Two first-draft "above standard" claims were overclaims and were corrected; the honest gap left is no independent human review (solo project).
+- ed97800 build identity: `python -m demo.build_info` writes name, version (`git describe --tags --always --dirty`), commit and build time to `demo/build_info.json` (gitignored); the Makefile ships it with no fallback, so no identity means no deploy. `GET /api/version` returns allowlisted keys only (`unknown` when the file is missing, never a 500); the UI footer shows `build <version> · <sha>`, the sha linking to the commit. `tests/app_router_verify.py` now has 16 checks (missing file → unknown, commit echo, an extra key is not leaked); Vitest 18. Fixed a stale comment that claimed reserved concurrency (template.yaml sets none).
+- 0afebeb daily demo check `.github/workflows/demo-check.yml`: 06:17 UTC daily + manual, read-only token, curl + jq against the public URL, no checkout, no secrets. Asserts example → PROVEN with a canary (3 attempts, 15 s apart), benign `price` → NOT PROVEN (matched control, no retry), a second example run → PROVEN with a different canary, `/api/version` → a real version. Badge next to CI in the README.
+- Its first run was red on the version check alone (404: `/api/version` was not deployed yet). The check had caught real deploy drift; green after the deploy.
+- Release v1.0.0: annotated tag on 0afebeb → one deploy from the tag (identity `v1.0.0`, not dirty; same URL) → witnessed in Chrome (`/api/version`, example PROVEN with a fresh canary, footer stamp) → check green → tag pushed → release published. The first `gh release create` ran before release immutability was switched on and published a mutable release; deleted it (tag kept), switched immutability on in the repo settings, re-created it: Latest · Immutable, with GitHub's release attestation.
+- AWS Budgets `melodie-demo-usage`: $5/month on cost, credits and refunds excluded; email at $1 actual and at 100% forecast.
+- LESSON: check each standard against its primary source and its purpose before adopting it. Signing and SBOMs protect people who install your artifacts; nobody installs this project's.
+- LESSON: a generated file is a photo of one moment. `build_info.json` generated before a commit still said `-dirty`; the deploy loop now regenerates identity as its first step.
+- LESSON: under `set -e` an unguarded command kills the script instead of reporting. A monitor must turn its own request failures into clear failures.
+- LESSON: a black-box check that fails before you deploy is telling the truth.
+- LESSON: release immutability applies at publish time. Switch it on first.
+- LESSON: AWS Budgets count credits by default, so an account running on credits shows $0 and never alerts. Exclude them.
+- LESSON: after a push, confirm the run's commit and title, not only its status; `gh run list` can still show the previous run.
+
+## Day 33 — 27 Oct 2026 (freeze policy + runbook)
+
+- Health check: today's scheduled check green (it started about 6 hours after its slot; GitHub delays scheduled runs under load); live `/api/version` = v1.0.0 / 0afebeb; tree clean, `git describe` = v1.0.0.
+- Freeze policy decided (A1) and written up with the "if red" procedure, redeploy-from-tag and hotfix steps in `docs/RELEASE.md`. TESTING.md gains the daily live check (it only listed CI and local suites); `docs/README.md` indexes RELEASE.md.
+- Docs-only commit, not deployed: the live demo stays v1.0.0 while `git describe` on main now reads `v1.0.0-1-g<sha>`.
