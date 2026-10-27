@@ -4,14 +4,14 @@ export function TitleStatus({
   notProven,
   failed,
   verifying,
-  inFlightId,
+  inFlightRun,
 }: {
   runs: number
   proven: number
   notProven: number
   failed: number
   verifying: boolean
-  inFlightId: number
+  inFlightRun: number
 }) {
   return (
     <>
@@ -56,7 +56,7 @@ export function TitleStatus({
         className={`mode${verifying ? ' is-busy' : ''}`}
         role="status"
       >
-        {verifying ? <>RUNNING #{inFlightId}</> : 'READY'}
+        {verifying ? <>RUNNING #{inFlightRun}</> : 'READY'}
       </span>
     </>
   )

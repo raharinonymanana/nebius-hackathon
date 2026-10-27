@@ -5,7 +5,7 @@ import type { Run, Contract } from './lib/contract'
 import { normaliseRun } from './lib/normalise'
 import { TARGET, TIMEOUT_MS } from './lib/config'
 import type { Entry } from './lib/transcript'
-import { TRANSCRIPT_KEY, loadEntries } from './lib/transcript'
+import { TRANSCRIPT_KEY, loadEntries, isTalliedRun, runStamps } from './lib/transcript'
 import { buildCommand, DATA_COMMANDS } from './lib/commands'
 import { useBlockCursor, useRotatingVerb, useRotatingConcept } from './hooks/terminal-hooks'
 import { TitleStatus } from './components/TitleStatus'
@@ -302,15 +302,12 @@ function Verify({
     (e) => e.kind === 'verdict' && e.run.verdict === 'NOT PROVEN',
   ).length
   const failed = entries.filter((e) => e.kind === 'error').length
-  const runs = proven + notProven
-  // While a verify is in flight the mode shows the SAME number as that run's echo
-  // row (the id of the most recent input entry). It is rendered with the exact
-  // same expression the echo uses — a bare #{id}, no padding — so the two formats
-  // can never diverge.
-  const inFlightId = entries.reduce(
-    (acc, e) => (e.kind === 'input' ? e.id : acc),
-    0,
-  )
+  const runs = entries.filter(isTalliedRun).length // = proven + notProven
+  // Echo stamps are run ordinals under the SAME rule (runStamps → isTalliedRun),
+  // not entry ids. While a verify is in flight the mode shows the number its echo
+  // carries — the next run number — rendered as the same bare #{n}.
+  const stamps = runStamps(entries, verifying)
+  const inFlightRun = runs + 1
   // Spinner elapsed: one decimal under 10s (e.g. "3.2s"), whole seconds beyond.
   const elapsedSeconds = elapsedMs / 1000
   const elapsedLabel =
@@ -334,7 +331,7 @@ function Verify({
             notProven={notProven}
             failed={failed}
             verifying={verifying}
-            inFlightId={inFlightId}
+            inFlightRun={inFlightRun}
           />,
           statusSlot,
         )}
@@ -377,7 +374,7 @@ function Verify({
               )
             }
             if (e.kind === 'input') {
-              return <EchoRow key={e.id} id={e.id} text={e.text} />
+              return <EchoRow key={e.id} n={stamps.get(e.id)} text={e.text} />
             }
             if (e.kind === 'verdict') {
               return (

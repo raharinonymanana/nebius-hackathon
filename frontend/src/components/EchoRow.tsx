@@ -1,4 +1,5 @@
-export function EchoRow({ id, text }: { id: number; text: string }) {
+// `n` is the run number (runStamps); omitted for echoes that aren't a tallied run.
+export function EchoRow({ n, text }: { n?: number; text: string }) {
   return (
     <div className="echo">
       <p className="cmd">
@@ -7,7 +8,7 @@ export function EchoRow({ id, text }: { id: number; text: string }) {
         </span>
         {text}
       </p>
-      <span className="stamp">#{id}</span>
+      {n !== undefined && <span className="stamp">#{n}</span>}
     </div>
   )
 }

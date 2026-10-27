@@ -39,3 +39,35 @@ export function loadEntries(): Entry[] {
     return DEFAULT_ENTRIES
   }
 }
+
+// The title-bar tally's definition of a run: a landed PROVEN / NOT PROVEN verdict.
+// A RUN FAILED (kind 'error') is neither ✓ nor ✗ and FIX VERIFIED is not a tally
+// bucket, so neither counts. Shared by the tally and runStamps so the two can't drift.
+export function isTalliedRun(e: Entry): boolean {
+  return (
+    e.kind === 'verdict' &&
+    (e.run.verdict === 'PROVEN' || e.run.verdict === 'NOT PROVEN')
+  )
+}
+
+// Run-number stamps, DERIVED from entries (never stored): input entry id → its
+// ordinal among tallied runs. Each outcome entry pairs with the input just before
+// it; only an input whose outcome isTalliedRun gets a number, so slash commands,
+// RUN FAILED and FIX VERIFIED echoes carry none. While `inFlight`, a trailing
+// input with no outcome yet is stamped with the next number (= what RUNNING #n
+// shows). Survives a sessionStorage restore unchanged; /clear restarts at #1.
+export function runStamps(entries: Entry[], inFlight: boolean): Map<number, number> {
+  const stamps = new Map<number, number>()
+  let n = 0
+  let pending: number | null = null // id of the input awaiting its outcome
+  for (const e of entries) {
+    if (e.kind === 'input') {
+      pending = e.id
+    } else if (pending !== null) {
+      if (isTalliedRun(e)) stamps.set(pending, ++n)
+      pending = null
+    }
+  }
+  if (inFlight && pending !== null) stamps.set(pending, n + 1)
+  return stamps
+}
