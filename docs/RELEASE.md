@@ -6,9 +6,9 @@ How the live demo is released, watched and kept unchanged until judging ends (Tu
 
 | Item | Value |
 |---|---|
-| Release | `v1.0.0`: an immutable GitHub release, locked to commit `0afebeb` |
+| Release | the latest immutable GitHub release (currently `v1.0.2`, locked to commit `acb81cf`) |
 | Demo | one AWS Lambda behind a public Function URL: https://h5cgebthqaawxpwe4tcutkzl540fshgj.lambda-url.us-east-1.on.aws/ |
-| Build identity | `GET /api/version` (name, version, commit, build time); the UI footer shows `build v1.0.0 · 0afebeb` |
+| Build identity | `GET /api/version` (name, version, commit, build time); the UI footer shows the build stamp (currently `build v1.0.2 · acb81cf`) |
 | Monitor | `.github/workflows/demo-check.yml`: daily, and on demand |
 | Cost guard | an AWS Budgets alert on real usage, credits excluded |
 
@@ -16,14 +16,14 @@ The identity is written at build time by `python -m demo.build_info` from `git d
 
 ~~~bash
 curl -sS https://h5cgebthqaawxpwe4tcutkzl540fshgj.lambda-url.us-east-1.on.aws/api/version
-git rev-parse 'v1.0.0^{commit}'
+git rev-parse "$(git describe --tags --abbrev=0)^{commit}"
 ~~~
 
 ## Freeze policy
 
-- **Until we submit (Thu 29 Oct 2026):** docs-only commits are allowed. They are never deployed, so the live demo stays `v1.0.0`.
+- **Until we submit (Thu 29 Oct 2026):** a code change ships only as a new `v1.0.x` release, through the same steps as a hotfix (below); docs-only commits are never deployed, so the live demo stays on the latest released tag.
 - **From submission until judging ends:** nothing lands on `main` and nothing is redeployed, with two exceptions, each logged in `docs/LOG.md` and disclosed:
-  1. **Redeploy the same tag** if the live build drifts from `v1.0.0`.
+  1. **Redeploy the same tag** if the live build drifts from the released tag.
   2. **Hotfix `v1.0.x`** if the live demo breaks because of our code: the smallest change that restores the documented behaviour, no new features.
 - **Why:** the hackathon rules fix the submission after the deadline and require the demo to keep working, free, until judging ends. A frozen repo keeps what judges read identical to what was submitted; the two exceptions keep the demo working.
 - **Not frozen:** the daily check keeps running; security reports (private vulnerability reporting, see `SECURITY.md`) are still read and answered, and any fix follows the hotfix path; alerts are still watched.
@@ -78,15 +78,15 @@ Follow the hotfix path below.
 
 ## Redeploy the tag (no code change)
 
-Always deploy from a tag, never from `main`: after a docs commit, `main` describes itself as `v1.0.0-1-g…`, and that is what the footer would show.
+Always deploy from a tag, never from `main`: after a docs commit, `main` describes itself as `v1.0.2-1-g…`, and that is what the footer would show.
 
 ~~~bash
-git switch --detach v1.0.0
+git switch --detach v1.0.2
 python -m demo.build_info && npm --prefix frontend run build && rm -rf demo/web && mkdir -p demo/web && cp -r frontend/dist/. demo/web/ && sam build && sam deploy
 git switch main
 ~~~
 
-Then confirm `/api/version` shows `v1.0.0` with the tag's commit, and run the check by hand.
+Then confirm `/api/version` shows the tag's version (currently `v1.0.2`) and the tag's commit, and run the check by hand.
 
 ## Hotfix `v1.0.x`
 

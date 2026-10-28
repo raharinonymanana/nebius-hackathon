@@ -416,3 +416,23 @@ app.py now serves the compiled React UI at GET / (+ /assets/*, path-traversal gu
 - Health check: today's scheduled check green (it started about 6 hours after its slot; GitHub delays scheduled runs under load); live `/api/version` = v1.0.0 / 0afebeb; tree clean, `git describe` = v1.0.0.
 - Freeze policy decided (A1) and written up with the "if red" procedure, redeploy-from-tag and hotfix steps in `docs/RELEASE.md`. TESTING.md gains the daily live check (it only listed CI and local suites); `docs/README.md` indexes RELEASE.md.
 - Docs-only commit, not deployed: the live demo stays v1.0.0 while `git describe` on main now reads `v1.0.0-1-g<sha>`.
+
+## Day 33 s2 — 27 Oct 2026 (last FE polish, v1.0.1 + v1.0.2)
+
+- 95e9808 dropped the executable bit from 7 non-executable files (TESTING.md, normalise.test.ts, 5 tests/*.py; none has a shebang; mode-only change). CI green.
+- d7c5d37 About entrance: on first load the About blocks fade in with a 5 px rise in reading order (0.32 s each, 90 ms apart, settled in about 0.86 s) and a three-cell brightness band sweeps the wordmark once (0.7 s); the "loading…" placeholders get the same sweep while data loads. Under `prefers-reduced-motion` nothing moves; the resting state is the final visible state; transform and opacity only, so the page never scrolls. No typewriter effect or glow (the design handoff bans both). Witnessed on localhost before committing.
+- Release v1.0.1: CI green → annotated tag → one deploy from the tag (Lambda updated in place, same URL) → `/api/version` commit = HEAD → prod witness (footer `v1.0.1 · d7c5d37`, motion live, example PROVEN, `price` NOT PROVEN, fresh canaries) → check green → tag pushed → immutable release. The first deploy run was interrupted during the frontend build, before `sam`: nothing was deployed, and the full chain was re-run.
+- The two-run prod witness found a pre-existing bug: run stamps showed the transcript entry id, so consecutive runs read #1, #3, #5 (other entries also take ids).
+- acb81cf fix: `isTalliedRun()` in `lib/transcript.ts` (PROVEN or NOT PROVEN, the title-bar tally's own rule) now drives both the tally and the run stamps, so the two numbers cannot disagree. RUNNING #n = runs so far + 1; slash commands, FIX VERIFIED replays and RUN FAILED attempts carry no stamp. Stamps are derived from the entries, so reload and `/clear` stay correct; entry ids are unchanged. New `lib/transcript.test.ts` (5 cases) → Vitest 23. Localhost witness: #1 → `/help` (no stamp) → #2 → path-traversal replay #3 → FIX VERIFIED (no stamp) → reload identical → `/clear` → #1.
+- Release v1.0.2, same loop: prod witness `RUNNING #1` → #1 PROVEN, `RUNNING #2` → #2 NOT PROVEN (`price`), tally `2 runs ✓1 ✗1`, fresh canaries, footer `v1.0.2 · acb81cf` → check green → tag pushed → immutable release, Latest.
+- Hosting re-checked against primary sources: keep the Lambda Function URL. Amplify Hosting is a frontend host; the live verify would still be the same Lambda behind an Amplify rewrite, so it adds a second service without removing the public API, its WAF integration alone ($15/app/month plus WAF costs) exceeds the $5 budget, and the URL would change across the README, monitor, runbook and Devpost. Known weaknesses kept and disclosed: a long generated URL, no CDN for static files, no edge WAF (mitigated by in-app limits, the concurrency cap and the budget alert). Post-hackathon upgrade path: CloudFront + Origin Access Control + a custom domain.
+- LESSON: a two-run witness finds what a one-run witness can't. The stamp bug only showed on the second run.
+- LESSON: a displayed number must share one definition with the count it mirrors.
+- LESSON: don't type ahead during a deploy; an interactive prompt swallows the input. Interrupting the chain before `sam` is harmless: re-run the whole chain.
+- LESSON: `gh` 2.45 `release view` has no immutable/latest fields. Verify on the release page.
+- LESSON: a FINAL decision still deserves a fresh primary-source check when it is questioned.
+
+## Day 34 — 28 Oct 2026 (records)
+
+- `docs/RELEASE.md` made tag-agnostic: it still described live as `v1.0.0 · 0afebeb`. The "what is live" table and freeze bullets now say the latest released tag (currently `v1.0.2 · acb81cf`); the check command resolves the tag with `git describe --tags --abbrev=0`; the redeploy commands name `v1.0.2`. A repo-wide grep found no other doc describing the live build; the remaining `v1.0.0` mentions are dated history in LOG/DECISIONS and stay as written.
+- Docs-only commit, not deployed: live stays v1.0.2; `git describe` on main reads `v1.0.2-1-g<sha>`.
