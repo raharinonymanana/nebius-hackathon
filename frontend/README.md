@@ -7,7 +7,7 @@ The Lambda in `demo/` serves the built files plus the two API routes the UI call
 ```bash
 npm ci
 npm run dev     # dev server; proxies /api/* to the deployed Lambda
-npm run test    # Vitest unit tests (contract normalisation)
+npm run test    # Vitest unit tests (normalise, commands, build, transcript)
 npm run lint    # oxlint
 npm run build   # tsc -b && vite build -> dist/
 ```

@@ -234,3 +234,18 @@
 - SUPERSEDES the Day 32 s3 line "`v1.0.0` is the judged build": the judged build is the latest `v1.0.x` release at submission (currently `v1.0.2 · acb81cf`). The freeze exceptions refer to "the released tag", and `docs/RELEASE.md` was made tag-agnostic on Day 34 to match. [not final]
 - Hosting re-checked against primary sources when questioned: keep the Lambda Function URL (re-confirms the Day 8 FINAL). Rejected Amplify Hosting: the live verify would stay on the same Lambda behind an Amplify rewrite (a second service, the API still public), its WAF integration alone exceeds the $5 budget, and the URL would change across the README, monitor, runbook and Devpost. Post-hackathon upgrade path: CloudFront + Origin Access Control + a custom domain. [the Day 8 hosting choice stays FINAL; the upgrade path is not final]
 - Devpost screenshots are taken in the video session, from the same live build (A1). [not final]
+
+## Day 34 — 28 Oct 2026 (none final unless marked)
+
+- Video = no voice (A1); voice only as a fallback after watching the first cut (not needed). Captions carry the meaning; the rules have no audio requirement. [not final]
+- The Final summary slide stays in the video and doubles as a Devpost gallery image (Hasina's call over the recommendation to keep it gallery-only). [not final]
+- Slide style = Excalidraw (A1), locked on the Architecture slide. Standing rules: no overlapping components, every component proportionate, enforced by a code check before rendering. [not final]
+- Optional backlog closed as "won't do" (A1): portable `.mcp.json`, `docs/SRS.md`, bundle-debris cleanup, the README "Nemotron agent" label, a copy-block, a glyph audit, a grayscale toggle. [not final]
+
+## Day 35 — 29 Oct 2026 (none final unless marked)
+
+- Live waits in the video: run #1 in real time, later waits trimmed with an on-screen marker (A1). Recording zoom was planned at 150% (A1); the footage was recorded at 100% and compensated in the edit with zooms. [not final]
+- Edit approach (A1): cut in code (frame-accurate trims, zooms, Excalidraw-drawn captions and pen marks) plus an editable Clipchamp kit; the cut was approved as-is, so the final file was produced from it directly. [not final]
+- Length: keep 1:59 (A1) rather than pad toward the 3-minute limit. [not final]
+- Music: YouTube Audio Library planned (A1); the final pick is Hasina's, "Grandmother's Porch" from Pixabay, after a Content ID check (not registered). Rejected: Content-ID-registered tracks, a paid AudioJungle track, ripping audio from a YouTube video. [not final]
+- YouTube settings: Public; not made for kids; altered or synthetic content = No (no real person, event or realistic scene altered; the AI-generated music is a background bed, not the main element); embedding allowed (Devpost embeds the player); no Premiere. [not final]
