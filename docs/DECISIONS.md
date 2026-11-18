@@ -249,3 +249,9 @@
 - Length: keep 1:59 (A1) rather than pad toward the 3-minute limit. [not final]
 - Music: YouTube Audio Library planned (A1); the final pick is Hasina's, "Grandmother's Porch" from Pixabay, after a Content ID check (not registered). Rejected: Content-ID-registered tracks, a paid AudioJungle track, ripping audio from a YouTube video. [not final]
 - YouTube settings: Public; not made for kids; altered or synthetic content = No (no real person, event or realistic scene altered; the AI-generated music is a background bed, not the main element); embedding allowed (Devpost embeds the player); no Premiere. [not final]
+
+## Day 55 — 18 Nov 2026 (none final unless marked)
+
+- Flaky live verdicts during judging: ship hotfix `v1.0.3` now (A2), over asking the organizers first (A1) or changing nothing (A3). Time budgets only (replay 40 s, browser 55 s, daily check 55 s; Lambda ceiling 60 s); verdict logic untouched. [not final]
+- Disclose the hotfix to the organizers by email alongside shipping it (A1), as a notice rather than a request for permission; sent to Devpost support. [not final]
+- Judging Period corrected to 16 Nov to 4 Dec 2026 (12:00 PT) from the official rules; SUPERSEDES the 15 Dec end date in earlier entries. [not final]

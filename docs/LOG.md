@@ -460,3 +460,14 @@ app.py now serves the compiled React UI at GET / (+ /assets/*, path-traversal gu
 - LESSON: "free" music is not "claim-free". Check Content ID registration before using a track.
 - LESSON: read events from the footage itself (the UI's own status chip) instead of guessing timestamps.
 - LESSON: the video needs only what the rules ask; shorter is fine when every claim is shown.
+
+## Day 55 — 18 Nov 2026 (hotfix v1.0.3)
+
+- The daily check failed twice during judging: #23 (14 Nov: the freshness re-run returned NOT PROVEN) and #26 (17 Nov: the example returned NOT PROVEN on all 3 attempts). Same commit throughout (`ec7c7c7`), and the demo answered every request: a wrong verdict, not an outage.
+- The Lambda logs showed the cause: the failing requests ended at 25.0 s, the replay budget in `verify_service.verify`. ConTree replays had slowed from about 7 s at release to 15-25 s, so the budget began to fire and the demo failed closed with NOT PROVEN, as designed. A second defect surfaced: the browser aborted at 30 s, below the backend's cold-start worst case (25 s budget + about 12 s cold start); a cold request on 18 Nov took 30.2 s.
+- Treated as our defect (budgets sized for 7 s replays) and fixed on the freeze's hotfix path: `c4a222d` widens the replay budget 25 -> 40 s, the browser abort 30 -> 55 s and the daily check's request limit 40 -> 55 s; the Lambda ceiling stays 60 s. Verdict logic unchanged. CI green; tagged `v1.0.3`; deployed from the tag; witnessed on prod (`/api/version` = v1.0.3 · c4a222d, footer stamp, the example PROVEN twice with different canaries, `price` NOT PROVEN, the example PROVEN through the UI); daily check by hand green (run 44246846387); immutable release published, Latest.
+- Rules re-read: the official Judging Period is 16 Nov to 4 Dec 2026 (12:00 PT), not to 15 Dec as our records said; `docs/RELEASE.md` corrected. The rules require the project to keep running consistently, limit changes to the Submission after the deadline, and do not say whether repository commits count. Shipped with full disclosure: the release notes, this log, and an email to Devpost support (the contact address in the rules) linking the diff and offering to redeploy v1.0.2 if the change is not acceptable.
+- The hotfix commit message was first drafted multi-line, against the one-line rule in CLAUDE.md; amended before the push.
+- LESSON: a timeout budget is a guess about someone else's speed. Write the assumption next to it, and recheck it when the monitor turns red.
+- LESSON: each layer's timeout must exceed the layer below it plus overhead. Browser 30 s < backend 25 s + 12 s cold start was wrong from the start.
+- LESSON: re-read dates in the official rules; ours had drifted.

@@ -1,14 +1,14 @@
 # Release and operations
 
-How the live demo is released, watched and kept unchanged until judging ends (Tue 15 Dec 2026, 12:00 PT).
+How the live demo is released, watched and kept unchanged until judging ends (Fri 4 Dec 2026, 12:00 PT; the official Judging Period is 16 Nov to 4 Dec).
 
 ## What is live
 
 | Item | Value |
 |---|---|
-| Release | the latest immutable GitHub release (currently `v1.0.2`, locked to commit `acb81cf`) |
+| Release | the latest immutable GitHub release (currently `v1.0.3`, locked to commit `c4a222d`) |
 | Demo | one AWS Lambda behind a public Function URL: https://h5cgebthqaawxpwe4tcutkzl540fshgj.lambda-url.us-east-1.on.aws/ |
-| Build identity | `GET /api/version` (name, version, commit, build time); the UI footer shows the build stamp (currently `build v1.0.2 · acb81cf`) |
+| Build identity | `GET /api/version` (name, version, commit, build time); the UI footer shows the build stamp (currently `build v1.0.3 · c4a222d`) |
 | Monitor | `.github/workflows/demo-check.yml`: daily, and on demand |
 | Cost guard | an AWS Budgets alert on real usage, credits excluded |
 
@@ -27,7 +27,7 @@ git rev-parse "$(git describe --tags --abbrev=0)^{commit}"
   2. **Hotfix `v1.0.x`** if the live demo breaks because of our code: the smallest change that restores the documented behaviour, no new features.
 - **Why:** the hackathon rules fix the submission after the deadline and require the demo to keep working, free, until judging ends. A frozen repo keeps what judges read identical to what was submitted; the two exceptions keep the demo working.
 - **Not frozen:** the daily check keeps running; security reports (private vulnerability reporting, see `SECURITY.md`) are still read and answered, and any fix follows the hotfix path; alerts are still watched.
-- **Side effect:** GitHub disables scheduled workflows in a public repo after 60 days without repository activity. With the last commit by 29 Oct, that lands around 28 Dec, after judging ends.
+- **Side effect:** GitHub disables scheduled workflows in a public repo after 60 days without repository activity. With the last commit on 18 Nov (the v1.0.3 records), that lands around 17 Jan 2027, after judging ends.
 
 ## The daily check
 
@@ -62,7 +62,7 @@ gh run view "$(gh run list --workflow demo-check.yml --limit 1 --json databaseId
 |---|---|---|
 | version missing, `unknown`, or not the tag | deploy drift: live is not the tagged build | redeploy the tag (below) |
 | no response, or an HTTP error | AWS side: throttling, an outage | read the logs with `sam logs --stack-name prove-it-demo --tail`, check AWS Health, re-run later |
-| example → NOT PROVEN, or an empty canary | sandbox side: ConTree / Token Factory unreachable, an image or credential problem | reproduce locally with `python -m tests.verify_service_security` (venv + `.env`). Fails locally too: upstream. Passes locally: Lambda configuration (SSM parameter, IAM) |
+| example → NOT PROVEN, or an empty canary | sandbox side: ConTree / Token Factory unreachable, an image or credential problem, or a replay slower than its 40 s budget (in `sam logs`, a request ending at about `Duration: 40000 ms`; see v1.0.3) | reproduce locally with `python -m tests.verify_service_security` (venv + `.env`). Fails locally too: upstream. Passes locally: Lambda configuration (SSM parameter, IAM) |
 | benign control → PROVEN | integrity failure: the harness proved something that is not there | defect: hotfix |
 | second canary equals the first | freshness failure: a reply is being reused | defect: hotfix |
 
@@ -78,15 +78,15 @@ Follow the hotfix path below.
 
 ## Redeploy the tag (no code change)
 
-Always deploy from a tag, never from `main`: after a docs commit, `main` describes itself as `v1.0.2-1-g…`, and that is what the footer would show.
+Always deploy from a tag, never from `main`: after a docs commit, `main` describes itself as `v1.0.3-1-g…`, and that is what the footer would show.
 
 ~~~bash
-git switch --detach v1.0.2
+git switch --detach v1.0.3
 python -m demo.build_info && npm --prefix frontend run build && rm -rf demo/web && mkdir -p demo/web && cp -r frontend/dist/. demo/web/ && sam build && sam deploy
 git switch main
 ~~~
 
-Then confirm `/api/version` shows the tag's version (currently `v1.0.2`) and the tag's commit, and run the check by hand.
+Then confirm `/api/version` shows the tag's version (currently `v1.0.3`) and the tag's commit, and run the check by hand.
 
 ## Hotfix `v1.0.x`
 

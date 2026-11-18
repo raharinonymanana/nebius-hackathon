@@ -88,3 +88,8 @@ With include_domains=["nvd.nist.gov", ...] + include_domains_mode="restrict", a 
 - image.run(...).wait() blocks indefinitely with no client-side deadline. A slow in-sandbox step (e.g. a cold pip install during checkpoint baking) is indistinguishable from a hang -- the first run of our discrimination suite looked frozen and needed Ctrl+C. Suggest a timeout/deadline parameter on run() or wait() that raises on expiry.
 - Workaround: verify_service.py wraps each sandbox run in a daemon-thread wall-clock budget (_run_with_budget); the discrimination runner bakes each variant once (not per-case) and logs progress so a slow bake is visible, not silent.
 - Positive: once warm, ormar bakes (python:3.12-slim + ormar + aiosqlite) were fast and reproducible (~10-11s each), and disposable per-request replays ran ~3-5s. The commit(disposable=False) -> reuse-image model works well for a bake-once / replay-many pattern.
+
+## 2026-11-18 — Sandboxes (ConTree): replay latency regression (contree-sdk 0.3.6)
+- The same disposable replay (pre-baked python:3.12-slim + ormar image, same command, called from AWS Lambda in us-east-1) took about 3-7 s at the end of October and 15-25 s by mid-November, with no change on our side. Replays that crossed our 25 s budget became false NOT PROVEN verdicts on our live demo during judging (daily check failed on 14 and 17 Nov).
+- Suggest a public status page or latency target for Sandboxes, and per-run timings in the run result (queue, boot, exec), so a client can tell "slow to start" from "slow to run" and size its budgets.
+- Workaround: widened our budget to 40 s (v1.0.3).
