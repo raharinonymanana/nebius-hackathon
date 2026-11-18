@@ -24,7 +24,7 @@ import types
 # --- stub prover.verify_service BEFORE demo.app's lazy import reaches it ------
 import prover  # empty package, cheap
 
-def _fake_verify(target, user_input, *, timeout_s=25.0, base_image=None):
+def _fake_verify(target, user_input, *, timeout_s=40.0, base_image=None):
     return {"verdict": "NOT PROVEN", "mode": "handed", "input": user_input,
             "canary": "", "model": "none (stub)", "verification_is_model_free": True,
             "utc": "2026-01-01T00:00:00+00:00", "source_receipt": "stub.json",
