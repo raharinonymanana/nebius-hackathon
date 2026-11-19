@@ -93,3 +93,8 @@ With include_domains=["nvd.nist.gov", ...] + include_domains_mode="restrict", a 
 - The same disposable replay (pre-baked python:3.12-slim + ormar image, same command, called from AWS Lambda in us-east-1) took about 3-7 s at the end of October and 15-25 s by mid-November, with no change on our side. Replays that crossed our 25 s budget became false NOT PROVEN verdicts on our live demo during judging (daily check failed on 14 and 17 Nov).
 - Suggest a public status page or latency target for Sandboxes, and per-run timings in the run result (queue, boot, exec), so a client can tell "slow to start" from "slow to run" and size its budgets.
 - Workaround: widened our budget to 40 s (v1.0.3).
+
+## 2026-11-19 — Sandboxes (ConTree): replay latency varies minute to minute (follow-up)
+- The same disposable replay (pre-baked image, same command), measured the same evening: from WSL in India 4.5-8.4 s warm; from AWS Lambda in us-east-1 8-29 s warm within a 6-minute window, and one replay over 40 s the night before. Giving the client a full vCPU did not change warm times (median 12.7 s at about 1/7 vCPU against 11.6 s at 1 vCPU), so the variance sits on the service side or the network path, not in the client.
+- The first sandbox call in a new process costs about 20 s more than later ones, from both locations.
+- Ask (adds to 18 Nov): publish a latency target or p95 for disposable runs, return queue / boot / exec timings with each run, and document the one-time first-call cost (what it is, and how a client can keep it warm).

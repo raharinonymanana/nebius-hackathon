@@ -255,3 +255,9 @@
 - Flaky live verdicts during judging: ship hotfix `v1.0.3` now (A2), over asking the organizers first (A1) or changing nothing (A3). Time budgets only (replay 40 s, browser 55 s, daily check 55 s; Lambda ceiling 60 s); verdict logic untouched. [not final]
 - Disclose the hotfix to the organizers by email alongside shipping it (A1), as a notice rather than a request for permission; sent to Devpost support. [not final]
 - Judging Period corrected to 16 Nov to 4 Dec 2026 (12:00 PT) from the official rules; SUPERSEDES the 15 Dec end date in earlier entries. [not final]
+
+## Day 56 — 19 Nov 2026 (none final unless marked)
+
+- No change to the live demo during judging (A1). Memory 256 -> 1769 MB would cut cold starts from about 24 s to about 10 s but would not stop the false NOT PROVENs (upstream ConTree latency), and a performance change is not a hotfix under the freeze. Rejected for now: v1.0.4 memory-only (A2) and memory plus larger time limits (A3). After judging: MemorySize 1769. [not final]
+- A red daily check is handled by re-running it once by hand (runbook step 1), not by changing the monitor to retry more. [not final]
+- During the freeze, a temporary copy stack is an allowed experiment when it leaves the live demo and `main` untouched and is deleted afterwards. [not final]

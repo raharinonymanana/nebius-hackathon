@@ -471,3 +471,19 @@ app.py now serves the compiled React UI at GET / (+ /assets/*, path-traversal gu
 - LESSON: a timeout budget is a guess about someone else's speed. Write the assumption next to it, and recheck it when the monitor turns red.
 - LESSON: each layer's timeout must exceed the layer below it plus overhead. Browser 30 s < backend 25 s + 12 s cold start was wrong from the start.
 - LESSON: re-read dates in the official rules; ours had drifted.
+
+## Day 56 — 19 Nov 2026 (daily check #28 + latency diagnosis)
+
+- Daily check #28 (18 Nov, 15:47 UTC, on v1.0.3) failed: the example PROVEN, `price` NOT PROVEN, then the freshness re-run NOT PROVEN. Lambda logs: 31.9 s, 23.7 s, then 40.003 s, the new replay budget firing. Two manual runs on 19 Nov passed (44519230386, 44529490969).
+- Diagnosed before choosing any fix:
+  - The same replay from WSL in India (8 runs, pre-baked image, budget raised to 120 s for the test only): 24.0 s for the first, then 4.5-8.4 s (median 5.7 s, 0 of 8 over 40 s). Our code and image are fine; the first ConTree call in a new process costs about 20 s extra.
+  - The same moment on AWS (manual check): 31.3 s cold, then 17.2 s and 18.5 s warm.
+  - CPU hypothesis tested on a temporary stack `prove-it-memtest` (the same v1.0.3 build at 1769 MB, one full vCPU, against about 1/7 of a vCPU at 256 MB), deleted afterwards; the live demo and `main` untouched. Alternating with the live demo for 6 rounds: warm median 12.7 s (256 MB) against 11.6 s (1769 MB), warm ranges 8.2-17.2 s against 8.7-28.8 s. More CPU does not explain the warm latency or the tail.
+  - Forced cold starts on the test copy only (memory toggled three times each way): 256 MB 24.4 / 24.2 / 16.9 s (median 24.2 s) against 1769 MB 9.8 / 13.5 / 9.4 s (median 9.8 s). The cold-start penalty at 256 MB is real, about 14 s.
+- Conclusion: two separate problems. (1) The occasional false NOT PROVEN comes from ConTree replay times that vary from about 5 s to over 40 s, minute to minute: upstream, not our code, and more CPU does not help. (2) The slow first click (about 24 s) is a cold start starved of CPU at 256 MB: ours, a configuration choice.
+- Decision: no change to the live demo during judging. The memory change would not stop the false NOT PROVENs, and a performance improvement is not a hotfix under the freeze (a hotfix is only for a demo broken by our code). A red daily check is re-run once by hand (runbook step 1). Memory 256 -> 1769 MB is planned for after judging ends.
+- Devpost Support (18 Nov) redirected the v1.0.3 disclosure to the hackathon managers; it was re-addressed to the manager contact listed on the hackathon page.
+- LESSON: measure before fixing. The first hypothesis (CPU) explained only part of the problem.
+- LESSON: when the thing you measure varies minute to minute, compare at the same moment, alternating.
+- LESSON: one sample is an anecdote. Forced repeats turned 27.0 s against 13.9 s into a finding.
+- LESSON: a performance improvement is not a hotfix. The freeze rule decides, not the size of the diff.
